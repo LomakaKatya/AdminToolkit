@@ -1,9 +1,11 @@
-#Requires -Version 5.1
-
 & {
     Set-StrictMode -Version Latest
     $ErrorActionPreference = 'Stop'
     $ProgressPreference = 'SilentlyContinue'
+
+    if ($PSVersionTable.PSVersion.Major -lt 3) {
+        throw 'Raccoon Admin Toolkit требует PowerShell 3.0 или новее.'
+    }
 
     [Net.ServicePointManager]::SecurityProtocol =
         [Net.ServicePointManager]::SecurityProtocol -bor
@@ -13,7 +15,10 @@
 
     function Test-IsAdministrator {
         $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
-        $principal = [Security.Principal.WindowsPrincipal]::new($identity)
+
+        $principal = New-Object `
+            -TypeName Security.Principal.WindowsPrincipal `
+            -ArgumentList $identity
 
         return $principal.IsInRole(
             [Security.Principal.WindowsBuiltInRole]::Administrator
