@@ -1,11 +1,16 @@
-#Requires -Version 5.1
-
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
+if ($PSVersionTable.PSVersion.Major -lt 3) {
+    throw 'Этот модуль требует PowerShell 3.0 или новее.'
+}
+
 function Test-RunAsAdministrator {
     $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
-    $principal = [Security.Principal.WindowsPrincipal]::new($identity)
+
+    $principal = New-Object `
+        -TypeName Security.Principal.WindowsPrincipal `
+        -ArgumentList $identity
 
     return $principal.IsInRole(
         [Security.Principal.WindowsBuiltInRole]::Administrator
