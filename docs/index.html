@@ -1,0 +1,21 @@
+& {
+    $ErrorActionPreference = 'Stop'
+    $ProgressPreference = 'SilentlyContinue'
+
+    [Net.ServicePointManager]::SecurityProtocol =
+        [Net.ServicePointManager]::SecurityProtocol -bor
+        [Net.SecurityProtocolType]::Tls12
+
+    $launcherUrl =
+        'https://raw.githubusercontent.com/LomakaKatya/AdminToolkit/main/Start-AdminToolkit.ps1'
+
+    $launcherCode = Invoke-RestMethod `
+        -Uri $launcherUrl `
+        -ErrorAction Stop
+
+    if ([string]::IsNullOrWhiteSpace([string]$launcherCode)) {
+        throw 'GitHub вернул пустой загрузчик.'
+    }
+
+    & ([ScriptBlock]::Create([string]$launcherCode))
+}
