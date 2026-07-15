@@ -31,15 +31,42 @@
             [string]$Path,
 
             [Parameter(Mandatory)]
-            [string]$Name
-        )
+            [string]$Name,
 
-        $uri = "$baseUrl/$Path"
+            [switch]$RequiresAdministrator,
+
+            [switch]$ChangesSystem
+        )
 
         Clear-Host
         Write-Host "Raccoon Admin Toolkit > $Name" -ForegroundColor Cyan
-        Write-Host ('=' * 64) -ForegroundColor DarkGray
+        Write-Host ('=' * 72) -ForegroundColor DarkGray
         Write-Host ''
+
+        if ($RequiresAdministrator -and -not (Test-IsAdministrator)) {
+            Write-Host 'Для этого действия нужны права администратора.' -ForegroundColor Red
+            Write-Host 'Закрой инструментарий и запусти PowerShell от имени администратора.' `
+                -ForegroundColor Yellow
+
+            Pause-RaccoonToolkit
+            return
+        }
+
+        if ($ChangesSystem) {
+            Write-Host 'Внимание: этот пункт изменяет систему.' -ForegroundColor Yellow
+            $confirmation = Read-Host 'Продолжить? [Y/N]'
+
+            if ($confirmation -notmatch '^(?i:y|yes|д|да)$') {
+                Write-Host ''
+                Write-Host 'Действие отменено.' -ForegroundColor Yellow
+                Pause-RaccoonToolkit
+                return
+            }
+
+            Write-Host ''
+        }
+
+        $uri = "$baseUrl/$Path"
 
         try {
             Write-Host 'Скачиваю актуальную версию скрипта...' -ForegroundColor DarkGray
@@ -82,16 +109,26 @@
             'Нет'
         }
 
-        Write-Host '============================================================' -ForegroundColor DarkCyan
-        Write-Host '                 RACCOON ADMIN TOOLKIT' -ForegroundColor Cyan
-        Write-Host '============================================================' -ForegroundColor DarkCyan
+        Write-Host '========================================================================' `
+            -ForegroundColor DarkCyan
+        Write-Host '                         RACCOON ADMIN TOOLKIT' `
+            -ForegroundColor Cyan
+        Write-Host '========================================================================' `
+            -ForegroundColor DarkCyan
         Write-Host ''
         Write-Host "Компьютер:     $env:COMPUTERNAME"
         Write-Host "Пользователь:  $env:USERDOMAIN\$env:USERNAME"
         Write-Host "PowerShell:    $($PSVersionTable.PSVersion)"
         Write-Host "Администратор: $adminText"
         Write-Host ''
-        Write-Host '  1. Проверить работу инструментария'
+
+        Write-Host '  СЕРВЕР / RDS' -ForegroundColor DarkCyan
+        Write-Host '  1. Создать или восстановить кнопку «Завершення сеансу»'
+        Write-Host '     [ADMIN] [CHANGES SYSTEM]'
+        Write-Host ''
+
+        Write-Host '  СЛУЖЕБНОЕ' -ForegroundColor DarkCyan
+        Write-Host '  9. Проверить работу инструментария [SAFE]'
         Write-Host ''
         Write-Host '  0. Выход'
         Write-Host ''
@@ -100,6 +137,14 @@
 
         switch ($choice) {
             '1' {
+                Invoke-RaccoonScript `
+                    -Path 'Scripts/Server/Create-LogoffShortcut.ps1' `
+                    -Name 'Кнопка корректного выхода из сеанса' `
+                    -RequiresAdministrator `
+                    -ChangesSystem
+            }
+
+            '9' {
                 Invoke-RaccoonScript `
                     -Path 'Test-Hello.ps1' `
                     -Name 'Проверка инструментария'
