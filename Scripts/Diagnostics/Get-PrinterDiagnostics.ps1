@@ -3,7 +3,10 @@ $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
 
 function Write-Section {
-    param([Parameter(Mandatory)][string]$Title)
+    param(
+        [Parameter(Mandatory)]
+        [string]$Title
+    )
 
     Write-Host ''
     Write-Host ('=' * 72) -ForegroundColor DarkCyan
@@ -14,8 +17,12 @@ function Write-Section {
 
 function Write-Value {
     param(
-        [Parameter(Mandatory)][string]$Label,
-        [AllowEmptyString()][string]$Value,
+        [Parameter(Mandatory)]
+        [string]$Label,
+
+        [AllowEmptyString()]
+        [string]$Value,
+
         [ConsoleColor]$Color = [ConsoleColor]::White
     )
 
@@ -30,15 +37,45 @@ function Write-Value {
 
 function Add-Issue {
     param(
-        [Parameter(Mandatory)][System.Collections.ArrayList]$List,
-        [Parameter(Mandatory)][string]$Text
+        [Parameter(Mandatory)]
+        [System.Collections.ArrayList]$List,
+
+        [Parameter(Mandatory)]
+        [string]$Text
     )
 
     [void]$List.Add($Text)
 }
 
+function Get-SafePropertyValue {
+    param(
+        [AllowNull()]
+        [object]$InputObject,
+
+        [Parameter(Mandatory)]
+        [string]$Name,
+
+        [AllowNull()]
+        [object]$DefaultValue = $null
+    )
+
+    if ($null -eq $InputObject) {
+        return $DefaultValue
+    }
+
+    $property = $InputObject.PSObject.Properties[$Name]
+
+    if ($null -eq $property) {
+        return $DefaultValue
+    }
+
+    return $property.Value
+}
+
 function Get-PrinterStatusText {
-    param([int]$Code)
+    param(
+        [int]$Code
+    )
 
     $map = @{
         1 = 'другое'
@@ -58,7 +95,9 @@ function Get-PrinterStatusText {
 }
 
 function Get-ErrorStateText {
-    param([int]$Code)
+    param(
+        [int]$Code
+    )
 
     $map = @{
         0  = 'неизвестно'
@@ -82,9 +121,30 @@ function Get-ErrorStateText {
     return "код $Code"
 }
 
+function Get-ShortText {
+    param(
+        [string]$Text,
+        [int]$MaxLength = 100
+    )
+
+    if ([string]::IsNullOrWhiteSpace($Text)) {
+        return ''
+    }
+
+    $clean = ($Text -replace '\s+', ' ').Trim()
+
+    if ($clean.Length -le $MaxLength) {
+        return $clean
+    }
+
+    return $clean.Substring(0, $MaxLength - 3) + '...'
+}
+
 function Test-PingHost {
     param(
-        [Parameter(Mandatory)][string]$HostName,
+        [Parameter(Mandatory)]
+        [string]$HostName,
+
         [int]$TimeoutMilliseconds = 1200
     )
 
@@ -92,10 +152,13 @@ function Test-PingHost {
 
     try {
         $reply = $ping.Send($HostName, $TimeoutMilliseconds)
+        $success =
+            $reply.Status -eq
+            [System.Net.NetworkInformation.IPStatus]::Success
 
         return [pscustomobject]@{
-            Success = ($reply.Status -eq [System.Net.NetworkInformation.IPStatus]::Success)
-            TimeMs  = if ($reply.Status -eq [System.Net.NetworkInformation.IPStatus]::Success) {
+            Success = $success
+            TimeMs  = if ($success) {
                 [int]$reply.RoundtripTime
             }
             else {
@@ -118,13 +181,17 @@ function Test-PingHost {
 
 function Test-TcpPort {
     param(
-        [Parameter(Mandatory)][string]$HostName,
-        [Parameter(Mandatory)][int]$Port,
+        [Parameter(Mandatory)]
+        [string]$HostName,
+
+        [Parameter(Mandatory)]
+        [int]$Port,
+
         [int]$TimeoutMilliseconds = 2500
     )
 
     $client = $null
-    $async = $null
+    $asyncResult = $null
     $waitHandle = $null
     $stopwatch = New-Object -TypeName System.Diagnostics.Stopwatch
 
@@ -132,8 +199,14 @@ function Test-TcpPort {
         $client = New-Object -TypeName System.Net.Sockets.TcpClient
         $stopwatch.Start()
 
-        $async = $client.BeginConnect($HostName, $Port, $null, $null)
-        $waitHandle = $async.AsyncWaitHandle
+        $asyncResult = $client.BeginConnect(
+            $HostName,
+            $Port,
+            $null,
+            $null
+        )
+
+        $waitHandle = $asyncResult.AsyncWaitHandle
 
         if (-not $waitHandle.WaitOne($TimeoutMilliseconds, $false)) {
             return [pscustomobject]@{
@@ -143,7 +216,7 @@ function Test-TcpPort {
             }
         }
 
-        $client.EndConnect($async)
+        $client.EndConnect($asyncResult)
 
         return [pscustomobject]@{
             Success = $client.Connected
@@ -171,25 +244,6 @@ function Test-TcpPort {
     }
 }
 
-function Get-ShortText {
-    param(
-        [string]$Text,
-        [int]$MaxLength = 110
-    )
-
-    if ([string]::IsNullOrWhiteSpace($Text)) {
-        return ''
-    }
-
-    $clean = ($Text -replace '\s+', ' ').Trim()
-
-    if ($clean.Length -le $MaxLength) {
-        return $clean
-    }
-
-    return $clean.Substring(0, $MaxLength - 3) + '...'
-}
-
 Write-Host ''
 Write-Host 'Диагностика печати' -ForegroundColor Cyan
 Write-Host 'Собираю состояние очереди, драйвера, порта и службы печати...' `
@@ -198,20 +252,44 @@ Write-Host 'Собираю состояние очереди, драйвера, 
 $issues = New-Object -TypeName System.Collections.ArrayList
 $warnings = New-Object -TypeName System.Collections.ArrayList
 
-$spooler = Get-Service -Name 'Spooler' -ErrorAction SilentlyContinue
+$spooler = Get-Service `
+    -Name 'Spooler' `
+    -ErrorAction SilentlyContinue
+
 $printers = @(
-    Get-WmiObject -Class Win32_Printer -ErrorAction Stop |
-    Sort-Object -Property @{ Expression = { -not [bool]$_.Default } }, Name
+    Get-WmiObject `
+        -Class Win32_Printer `
+        -ErrorAction Stop |
+    Sort-Object `
+        -Property @{
+            Expression = {
+                -not [bool](
+                    Get-SafePropertyValue `
+                        -InputObject $_ `
+                        -Name 'Default' `
+                        -DefaultValue $false
+                )
+            }
+        }, Name
 )
 
 Write-Section -Title 'СЛУЖБА ПЕЧАТИ'
 
 if ($null -eq $spooler) {
-    Write-Value -Label 'Print Spooler' -Value 'служба не найдена' -Color Red
-    Add-Issue -List $issues -Text 'Служба Print Spooler не найдена.'
+    Write-Value `
+        -Label 'Print Spooler' `
+        -Value 'служба не найдена' `
+        -Color Red
+
+    Add-Issue `
+        -List $issues `
+        -Text 'Служба Print Spooler не найдена.'
 }
 elseif ($spooler.Status -eq 'Running') {
-    Write-Value -Label 'Print Spooler' -Value 'работает' -Color Green
+    Write-Value `
+        -Label 'Print Spooler' `
+        -Value 'работает' `
+        -Color Green
 }
 else {
     Write-Value `
@@ -219,20 +297,15 @@ else {
         -Value "не запущена ($($spooler.Status))" `
         -Color Red
 
-    Add-Issue -List $issues -Text 'Служба Print Spooler не запущена.'
+    Add-Issue `
+        -List $issues `
+        -Text 'Служба Print Spooler не запущена.'
 }
 
 if ($printers.Count -eq 0) {
     Write-Section -Title 'ПРИНТЕРЫ'
     Write-Host '[FAIL] В системе не найдено ни одного принтера.' `
         -ForegroundColor Red
-    Add-Issue -List $issues -Text 'В системе не установлены принтеры.'
-
-    Write-Section -Title 'ИТОГ'
-
-    foreach ($issue in $issues) {
-        Write-Host "[FAIL] $issue" -ForegroundColor Red
-    }
 
     return
 }
@@ -243,15 +316,36 @@ for ($index = 0; $index -lt $printers.Count; $index++) {
     $printer = $printers[$index]
     $markers = @()
 
-    if ([bool]$printer.Default) {
+    $isDefault = [bool](
+        Get-SafePropertyValue `
+            -InputObject $printer `
+            -Name 'Default' `
+            -DefaultValue $false
+    )
+
+    $isOffline = [bool](
+        Get-SafePropertyValue `
+            -InputObject $printer `
+            -Name 'WorkOffline' `
+            -DefaultValue $false
+    )
+
+    $isShared = [bool](
+        Get-SafePropertyValue `
+            -InputObject $printer `
+            -Name 'Shared' `
+            -DefaultValue $false
+    )
+
+    if ($isDefault) {
         $markers += 'по умолчанию'
     }
 
-    if ([bool]$printer.WorkOffline) {
+    if ($isOffline) {
         $markers += 'офлайн'
     }
 
-    if ([bool]$printer.Shared) {
+    if ($isShared) {
         $markers += 'общий'
     }
 
@@ -261,7 +355,19 @@ for ($index = 0; $index -lt $printers.Count; $index++) {
         $markerText = ' [' + ($markers -join ', ') + ']'
     }
 
-    Write-Host ("  {0}. {1}{2}" -f ($index + 1), $printer.Name, $markerText)
+    $printerName = [string](
+        Get-SafePropertyValue `
+            -InputObject $printer `
+            -Name 'Name' `
+            -DefaultValue 'без имени'
+    )
+
+    Write-Host (
+        "  {0}. {1}{2}" -f
+        ($index + 1),
+        $printerName,
+        $markerText
+    )
 }
 
 Write-Host ''
@@ -269,7 +375,14 @@ Write-Host ''
 $defaultIndex = 1
 
 for ($index = 0; $index -lt $printers.Count; $index++) {
-    if ([bool]$printers[$index].Default) {
+    $isDefault = [bool](
+        Get-SafePropertyValue `
+            -InputObject $printers[$index] `
+            -Name 'Default' `
+            -DefaultValue $false
+    )
+
+    if ($isDefault) {
         $defaultIndex = $index + 1
         break
     }
@@ -288,105 +401,236 @@ if (-not [string]::IsNullOrWhiteSpace($selectionText)) {
 
 $selectedPrinter = $printers[$selection - 1]
 
+$printerName = [string](
+    Get-SafePropertyValue `
+        -InputObject $selectedPrinter `
+        -Name 'Name' `
+        -DefaultValue ''
+)
+
+$driverName = [string](
+    Get-SafePropertyValue `
+        -InputObject $selectedPrinter `
+        -Name 'DriverName' `
+        -DefaultValue ''
+)
+
+$portName = [string](
+    Get-SafePropertyValue `
+        -InputObject $selectedPrinter `
+        -Name 'PortName' `
+        -DefaultValue ''
+)
+
+$printerStatus = [int](
+    Get-SafePropertyValue `
+        -InputObject $selectedPrinter `
+        -Name 'PrinterStatus' `
+        -DefaultValue 0
+)
+
+$errorState = [int](
+    Get-SafePropertyValue `
+        -InputObject $selectedPrinter `
+        -Name 'DetectedErrorState' `
+        -DefaultValue 0
+)
+
+$workOffline = [bool](
+    Get-SafePropertyValue `
+        -InputObject $selectedPrinter `
+        -Name 'WorkOffline' `
+        -DefaultValue $false
+)
+
+$pausedRaw = Get-SafePropertyValue `
+    -InputObject $selectedPrinter `
+    -Name 'Paused' `
+    -DefaultValue $null
+
+$pausedKnown = $null -ne $pausedRaw
+$isPaused = $false
+
+if ($pausedKnown) {
+    $isPaused = [bool]$pausedRaw
+}
+
+$isDefault = [bool](
+    Get-SafePropertyValue `
+        -InputObject $selectedPrinter `
+        -Name 'Default' `
+        -DefaultValue $false
+)
+
+$isShared = [bool](
+    Get-SafePropertyValue `
+        -InputObject $selectedPrinter `
+        -Name 'Shared' `
+        -DefaultValue $false
+)
+
+$shareName = [string](
+    Get-SafePropertyValue `
+        -InputObject $selectedPrinter `
+        -Name 'ShareName' `
+        -DefaultValue ''
+)
+
+$comment = [string](
+    Get-SafePropertyValue `
+        -InputObject $selectedPrinter `
+        -Name 'Comment' `
+        -DefaultValue ''
+)
+
+$location = [string](
+    Get-SafePropertyValue `
+        -InputObject $selectedPrinter `
+        -Name 'Location' `
+        -DefaultValue ''
+)
+
+$statusText = Get-PrinterStatusText -Code $printerStatus
+$errorText = Get-ErrorStateText -Code $errorState
+
 Write-Section -Title 'СОСТОЯНИЕ ПРИНТЕРА'
 
-$statusText = Get-PrinterStatusText -Code ([int]$selectedPrinter.PrinterStatus)
-$errorText = Get-ErrorStateText -Code ([int]$selectedPrinter.DetectedErrorState)
+Write-Value -Label 'Имя' -Value $printerName -Color Cyan
+Write-Value -Label 'Драйвер' -Value $driverName
+Write-Value -Label 'Порт' -Value $portName
 
-Write-Value -Label 'Имя' -Value ([string]$selectedPrinter.Name) -Color Cyan
-Write-Value -Label 'Драйвер' -Value ([string]$selectedPrinter.DriverName)
-Write-Value -Label 'Порт' -Value ([string]$selectedPrinter.PortName)
-Write-Value -Label 'Состояние' -Value $statusText `
-    -Color $(if ([int]$selectedPrinter.PrinterStatus -in @(3, 4, 5)) {
-        [ConsoleColor]::Green
-    }
-    elseif ([int]$selectedPrinter.PrinterStatus -in @(6, 7)) {
-        [ConsoleColor]::Red
-    }
-    else {
-        [ConsoleColor]::Yellow
-    })
+$statusColor = [ConsoleColor]::Yellow
 
-Write-Value -Label 'Ошибка устройства' -Value $errorText `
-    -Color $(if ([int]$selectedPrinter.DetectedErrorState -eq 2) {
-        [ConsoleColor]::Green
-    }
-    elseif ([int]$selectedPrinter.DetectedErrorState -in @(3, 5)) {
-        [ConsoleColor]::Yellow
-    }
-    elseif ([int]$selectedPrinter.DetectedErrorState -ge 4) {
-        [ConsoleColor]::Red
-    }
-    else {
-        [ConsoleColor]::DarkGray
-    })
+if ($printerStatus -in @(3, 4, 5)) {
+    $statusColor = [ConsoleColor]::Green
+}
+elseif ($printerStatus -in @(6, 7)) {
+    $statusColor = [ConsoleColor]::Red
+}
 
-Write-Value -Label 'Работа офлайн' `
-    -Value $(if ([bool]$selectedPrinter.WorkOffline) { 'да' } else { 'нет' }) `
-    -Color $(if ([bool]$selectedPrinter.WorkOffline) {
-        [ConsoleColor]::Red
-    }
-    else {
-        [ConsoleColor]::Green
-    })
+Write-Value `
+    -Label 'Состояние' `
+    -Value $statusText `
+    -Color $statusColor
 
-Write-Value -Label 'Приостановлен' `
-    -Value $(if ([bool]$selectedPrinter.Paused) { 'да' } else { 'нет' }) `
-    -Color $(if ([bool]$selectedPrinter.Paused) {
+$errorColor = [ConsoleColor]::DarkGray
+
+if ($errorState -eq 2) {
+    $errorColor = [ConsoleColor]::Green
+}
+elseif ($errorState -in @(3, 5)) {
+    $errorColor = [ConsoleColor]::Yellow
+}
+elseif ($errorState -ge 4) {
+    $errorColor = [ConsoleColor]::Red
+}
+
+Write-Value `
+    -Label 'Ошибка устройства' `
+    -Value $errorText `
+    -Color $errorColor
+
+Write-Value `
+    -Label 'Работа офлайн' `
+    -Value $(if ($workOffline) { 'да' } else { 'нет' }) `
+    -Color $(if ($workOffline) {
         [ConsoleColor]::Red
     }
     else {
         [ConsoleColor]::Green
     })
 
-Write-Value -Label 'По умолчанию' `
-    -Value $(if ([bool]$selectedPrinter.Default) { 'да' } else { 'нет' })
+if ($pausedKnown) {
+    Write-Value `
+        -Label 'Приостановлен' `
+        -Value $(if ($isPaused) { 'да' } else { 'нет' }) `
+        -Color $(if ($isPaused) {
+            [ConsoleColor]::Red
+        }
+        else {
+            [ConsoleColor]::Green
+        })
+}
+else {
+    Write-Value `
+        -Label 'Приостановлен' `
+        -Value 'не сообщается этим драйвером' `
+        -Color DarkGray
+}
 
-Write-Value -Label 'Общий доступ' `
-    -Value $(if ([bool]$selectedPrinter.Shared) {
-        "да, $($selectedPrinter.ShareName)"
+Write-Value `
+    -Label 'По умолчанию' `
+    -Value $(if ($isDefault) { 'да' } else { 'нет' })
+
+Write-Value `
+    -Label 'Общий доступ' `
+    -Value $(if ($isShared) {
+        if ([string]::IsNullOrWhiteSpace($shareName)) {
+            'да'
+        }
+        else {
+            "да, $shareName"
+        }
     }
     else {
         'нет'
     })
 
-Write-Value -Label 'Комментарий' -Value ([string]$selectedPrinter.Comment)
-Write-Value -Label 'Расположение' -Value ([string]$selectedPrinter.Location)
+Write-Value -Label 'Комментарий' -Value $comment
+Write-Value -Label 'Расположение' -Value $location
 
-if ([bool]$selectedPrinter.WorkOffline) {
-    Add-Issue -List $issues -Text 'В Windows включён режим работы принтера офлайн.'
+if ($workOffline) {
+    Add-Issue `
+        -List $issues `
+        -Text 'В Windows включён режим работы принтера офлайн.'
 }
 
-if ([bool]$selectedPrinter.Paused) {
-    Add-Issue -List $issues -Text 'Печать на принтере приостановлена.'
+if ($pausedKnown -and $isPaused) {
+    Add-Issue `
+        -List $issues `
+        -Text 'Печать на принтере приостановлена.'
 }
 
-if ([int]$selectedPrinter.PrinterStatus -in @(6, 7)) {
-    Add-Issue -List $issues -Text "Принтер сообщает состояние: $statusText."
+if ($printerStatus -in @(6, 7)) {
+    Add-Issue `
+        -List $issues `
+        -Text "Принтер сообщает состояние: $statusText."
 }
 
-if ([int]$selectedPrinter.DetectedErrorState -ge 4 -and
-    [int]$selectedPrinter.DetectedErrorState -ne 5) {
-    Add-Issue -List $issues -Text "Устройство сообщает ошибку: $errorText."
+if ($errorState -ge 4 -and $errorState -ne 5) {
+    Add-Issue `
+        -List $issues `
+        -Text "Устройство сообщает ошибку: $errorText."
 }
-elseif ([int]$selectedPrinter.DetectedErrorState -in @(3, 5)) {
+elseif ($errorState -in @(3, 5)) {
     [void]$warnings.Add("Устройство сообщает: $errorText.")
 }
 
 Write-Section -Title 'ОЧЕРЕДЬ ПЕЧАТИ'
 
 $allJobs = @(
-    Get-WmiObject -Class Win32_PrintJob -ErrorAction SilentlyContinue
+    Get-WmiObject `
+        -Class Win32_PrintJob `
+        -ErrorAction SilentlyContinue
 )
 
 $jobs = @(
     $allJobs |
     Where-Object {
-        ([string]$_.Name).StartsWith(([string]$selectedPrinter.Name) + ',')
+        $jobName = [string](
+            Get-SafePropertyValue `
+                -InputObject $_ `
+                -Name 'Name' `
+                -DefaultValue ''
+        )
+
+        $jobName.StartsWith($printerName + ',')
     }
 )
 
-Write-Value -Label 'Заданий в очереди' -Value ([string]$jobs.Count) `
+Write-Value `
+    -Label 'Заданий в очереди' `
+    -Value ([string]$jobs.Count) `
     -Color $(if ($jobs.Count -eq 0) {
         [ConsoleColor]::Green
     }
@@ -405,51 +649,101 @@ else {
     Write-Host ''
 
     foreach ($job in $jobs | Select-Object -First 10) {
-        $jobState = @(
-            [string]$job.Status,
-            [string]$job.JobStatus
-        ) -join ' '
+        $jobId = Get-SafePropertyValue `
+            -InputObject $job `
+            -Name 'JobId' `
+            -DefaultValue '?'
 
-        $jobColor = if ($jobState -match '(?i)error|paused|offline|deleting|blocked|ошиб|приост|удален|офлайн') {
+        $document = [string](
+            Get-SafePropertyValue `
+                -InputObject $job `
+                -Name 'Document' `
+                -DefaultValue 'без имени'
+        )
+
+        $owner = [string](
+            Get-SafePropertyValue `
+                -InputObject $job `
+                -Name 'Owner' `
+                -DefaultValue 'неизвестно'
+        )
+
+        $status = [string](
+            Get-SafePropertyValue `
+                -InputObject $job `
+                -Name 'Status' `
+                -DefaultValue ''
+        )
+
+        $jobStatus = [string](
+            Get-SafePropertyValue `
+                -InputObject $job `
+                -Name 'JobStatus' `
+                -DefaultValue ''
+        )
+
+        $jobState = ($status + ' ' + $jobStatus).Trim()
+
+        $badStatePattern =
+            '(?i)error|paused|offline|deleting|blocked|' +
+            'ошиб|приост|удален|офлайн'
+
+        $jobColor = if ($jobState -match $badStatePattern) {
             [ConsoleColor]::Red
         }
         else {
             [ConsoleColor]::Yellow
         }
 
-        Write-Host ("  #{0,-5} {1}" -f $job.JobId, (Get-ShortText -Text ([string]$job.Document) -MaxLength 50)) `
-            -ForegroundColor $jobColor
+        Write-Host (
+            "  #{0,-5} {1}" -f
+            $jobId,
+            (Get-ShortText -Text $document -MaxLength 50)
+        ) -ForegroundColor $jobColor
 
-        Write-Host ("           Владелец: {0}; статус: {1}" -f `
-            $job.Owner,
-            (Get-ShortText -Text $jobState -MaxLength 70)) `
-            -ForegroundColor DarkGray
-    }
-
-    if ($jobs.Count -gt 10) {
-        Write-Host "  Показаны первые 10 из $($jobs.Count) заданий." `
-            -ForegroundColor DarkGray
+        Write-Host (
+            "           Владелец: {0}; статус: {1}" -f
+            $owner,
+            (Get-ShortText -Text $jobState -MaxLength 70)
+        ) -ForegroundColor DarkGray
     }
 
     $badJobs = @(
         $jobs |
         Where-Object {
-            (([string]$_.Status + ' ' + [string]$_.JobStatus) -match `
-                '(?i)error|paused|offline|deleting|blocked|ошиб|приост|удален|офлайн')
+            $status = [string](
+                Get-SafePropertyValue `
+                    -InputObject $_ `
+                    -Name 'Status' `
+                    -DefaultValue ''
+            )
+
+            $jobStatus = [string](
+                Get-SafePropertyValue `
+                    -InputObject $_ `
+                    -Name 'JobStatus' `
+                    -DefaultValue ''
+            )
+
+            ($status + ' ' + $jobStatus) -match
+                '(?i)error|paused|offline|deleting|blocked|ошиб|приост|удален|офлайн'
         }
     )
 
     if ($badJobs.Count -gt 0) {
-        Add-Issue -List $issues -Text 'В очереди есть задания с ошибкой или зависшим состоянием.'
+        Add-Issue `
+            -List $issues `
+            -Text 'В очереди есть задания с ошибкой или зависшим состоянием.'
     }
     else {
-        [void]$warnings.Add('В очереди есть ожидающие задания. Возможно, печать остановилась до отправки на устройство.')
+        [void]$warnings.Add(
+            'В очереди есть ожидающие задания. Возможно, печать остановилась до отправки на устройство.'
+        )
     }
 }
 
 Write-Section -Title 'ПОРТ И СЕТЕВОЕ ПОДКЛЮЧЕНИЕ'
 
-$portName = [string]$selectedPrinter.PortName
 $networkHost = ''
 $networkPort = 0
 $portType = 'локальный или неизвестный'
@@ -461,9 +755,28 @@ $tcpPort = Get-WmiObject `
     Select-Object -First 1
 
 if ($null -ne $tcpPort) {
-    $networkHost = [string]$tcpPort.HostAddress
-    $networkPort = [int]$tcpPort.PortNumber
-    $portType = if ([int]$tcpPort.Protocol -eq 2) {
+    $networkHost = [string](
+        Get-SafePropertyValue `
+            -InputObject $tcpPort `
+            -Name 'HostAddress' `
+            -DefaultValue ''
+    )
+
+    $networkPort = [int](
+        Get-SafePropertyValue `
+            -InputObject $tcpPort `
+            -Name 'PortNumber' `
+            -DefaultValue 0
+    )
+
+    $protocol = [int](
+        Get-SafePropertyValue `
+            -InputObject $tcpPort `
+            -Name 'Protocol' `
+            -DefaultValue 1
+    )
+
+    $portType = if ($protocol -eq 2) {
         'Standard TCP/IP, LPR'
     }
     else {
@@ -490,8 +803,14 @@ Write-Value -Label 'Тип порта' -Value $portType
 Write-Value -Label 'Имя порта' -Value $portName
 
 if (-not [string]::IsNullOrWhiteSpace($networkHost)) {
-    Write-Value -Label 'Адрес устройства' -Value $networkHost -Color Cyan
-    Write-Value -Label 'Проверяемый TCP-порт' -Value ([string]$networkPort)
+    Write-Value `
+        -Label 'Адрес устройства' `
+        -Value $networkHost `
+        -Color Cyan
+
+    Write-Value `
+        -Label 'Проверяемый TCP-порт' `
+        -Value ([string]$networkPort)
 
     $pingResult = Test-PingHost -HostName $networkHost
 
@@ -507,11 +826,15 @@ if (-not [string]::IsNullOrWhiteSpace($networkHost)) {
             -Value "нет ответа ($($pingResult.Status))" `
             -Color Yellow
 
-        [void]$warnings.Add('Сетевой принтер не отвечает на ping. ICMP может быть запрещён, поэтому проверяем порт.')
+        [void]$warnings.Add(
+            'Сетевой принтер не отвечает на ping. ICMP может быть запрещён, поэтому проверяем порт.'
+        )
     }
 
     if ($networkPort -gt 0) {
-        $tcpResult = Test-TcpPort -HostName $networkHost -Port $networkPort
+        $tcpResult = Test-TcpPort `
+            -HostName $networkHost `
+            -Port $networkPort
 
         if ($tcpResult.Success) {
             Write-Value `
@@ -579,14 +902,41 @@ if ($printEvents.Count -eq 0) {
 }
 else {
     foreach ($event in $printEvents) {
-        Write-Host ("[{0}] ID {1}: {2}" -f `
-            $event.TimeCreated.ToString('dd.MM HH:mm'),
-            $event.Id,
-            (Get-ShortText -Text ([string]$event.Message))) `
-            -ForegroundColor Yellow
+        $timeCreated = Get-SafePropertyValue `
+            -InputObject $event `
+            -Name 'TimeCreated' `
+            -DefaultValue $null
+
+        $eventTime = if ($null -ne $timeCreated) {
+            $timeCreated.ToString('dd.MM HH:mm')
+        }
+        else {
+            'время неизвестно'
+        }
+
+        $eventId = Get-SafePropertyValue `
+            -InputObject $event `
+            -Name 'Id' `
+            -DefaultValue '?'
+
+        $message = [string](
+            Get-SafePropertyValue `
+                -InputObject $event `
+                -Name 'Message' `
+                -DefaultValue ''
+        )
+
+        Write-Host (
+            "[{0}] ID {1}: {2}" -f
+            $eventTime,
+            $eventId,
+            (Get-ShortText -Text $message)
+        ) -ForegroundColor Yellow
     }
 
-    [void]$warnings.Add('В журналах PrintService есть недавние предупреждения или ошибки.')
+    [void]$warnings.Add(
+        'В журналах PrintService есть недавние предупреждения или ошибки.'
+    )
 }
 
 Write-Section -Title 'ИТОГ'
@@ -594,8 +944,11 @@ Write-Section -Title 'ИТОГ'
 if ($issues.Count -eq 0 -and $warnings.Count -eq 0) {
     Write-Host '[OK] Явных проблем в Windows не обнаружено.' `
         -ForegroundColor Green
-    Write-Host 'Если печати всё равно нет, проверь бумагу, тонер, экран самого принтера и тестовую страницу устройства.' `
-        -ForegroundColor DarkGray
+
+    Write-Host (
+        'Если печати всё равно нет, проверь бумагу, тонер, экран ' +
+        'самого принтера и тестовую страницу устройства.'
+    ) -ForegroundColor DarkGray
 }
 else {
     foreach ($issue in $issues) {
@@ -607,7 +960,8 @@ else {
     }
 
     if ($issues.Count -eq 0) {
-        Write-Host '[INFO] Критичных ошибок не видно, но есть пункты для проверки.' `
-            -ForegroundColor Cyan
+        Write-Host (
+            '[INFO] Критичных ошибок не видно, но есть пункты для проверки.'
+        ) -ForegroundColor Cyan
     }
 }
