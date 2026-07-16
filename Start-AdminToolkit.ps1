@@ -94,7 +94,8 @@
             Write-Host ''
         }
 
-        $uri = "$baseUrl/$Path"
+        $cacheToken = [DateTime]::UtcNow.Ticks
+        $uri = "$baseUrl/$Path`?nocache=$cacheToken"
 
         try {
             Write-Host 'Скачиваю актуальную версию скрипта...' `
