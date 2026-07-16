@@ -162,6 +162,9 @@
             Write-Host '  1. Проверить TCP-подключение к адресу и порту'
             Write-Host '     [SAFE] [MEMORY ONLY]'
             Write-Host ''
+            Write-Host '  2. Комплексная диагностика Wi-Fi'
+            Write-Host '     [SAFE] [MEMORY ONLY]'
+            Write-Host ''
             Write-Host '  0. Вернуться в главное меню'
             Write-Host ''
 
@@ -172,6 +175,12 @@
                     Invoke-RaccoonScript `
                         -Path 'Scripts/Diagnostics/Test-TcpConnection.ps1' `
                         -Name 'Проверка TCP-подключения'
+                }
+
+                '2' {
+                    Invoke-RaccoonScript `
+                        -Path 'Scripts/Diagnostics/Get-WifiDiagnostics.ps1' `
+                        -Name 'Комплексная диагностика Wi-Fi'
                 }
 
                 '0' {
