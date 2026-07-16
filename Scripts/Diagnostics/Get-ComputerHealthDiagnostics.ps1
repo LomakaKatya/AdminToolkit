@@ -30,7 +30,7 @@ function Write-Value {
 
 function Add-Issue {
     param(
-        [Parameter(Mandatory)][System.Collections.ArrayList]$List,
+        [Parameter(Mandatory)][AllowEmptyCollection()][System.Collections.ArrayList]$List,
         [Parameter(Mandatory)][string]$Text
     )
 
