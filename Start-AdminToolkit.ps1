@@ -27,7 +27,30 @@
 
     function Pause-RaccoonToolkit {
         Write-Host ''
-        [void](Read-Host 'Нажми Enter, чтобы вернуться в меню')
+        [void](Read-Host 'Нажми Enter, чтобы продолжить')
+    }
+
+    function Write-RaccoonHeader {
+        param (
+            [string]$SectionName
+        )
+
+        Clear-Host
+
+        Write-Host '========================================================================' `
+            -ForegroundColor DarkCyan
+        Write-Host '                         RACCOON ADMIN TOOLKIT' `
+            -ForegroundColor Cyan
+        Write-Host '========================================================================' `
+            -ForegroundColor DarkCyan
+
+        if (-not [string]::IsNullOrWhiteSpace($SectionName)) {
+            Write-Host ''
+            Write-Host "  $SectionName" -ForegroundColor Cyan
+            Write-Host ('  ' + ('-' * 68)) -ForegroundColor DarkGray
+        }
+
+        Write-Host ''
     }
 
     function Invoke-RaccoonScript {
@@ -43,13 +66,11 @@
             [switch]$ChangesSystem
         )
 
-        Clear-Host
-        Write-Host "Raccoon Admin Toolkit > $Name" -ForegroundColor Cyan
-        Write-Host ('=' * 72) -ForegroundColor DarkGray
-        Write-Host ''
+        Write-RaccoonHeader -SectionName $Name
 
         if ($RequiresAdministrator -and -not (Test-IsAdministrator)) {
-            Write-Host 'Для этого действия нужны права администратора.' -ForegroundColor Red
+            Write-Host 'Для этого действия нужны права администратора.' `
+                -ForegroundColor Red
             Write-Host 'Закрой инструментарий и запусти PowerShell от имени администратора.' `
                 -ForegroundColor Yellow
 
@@ -58,10 +79,12 @@
         }
 
         if ($ChangesSystem) {
-            Write-Host 'Внимание: этот пункт изменяет систему.' -ForegroundColor Yellow
+            Write-Host 'Внимание: этот пункт вносит изменения в систему.' `
+                -ForegroundColor Yellow
+
             $confirmation = Read-Host 'Продолжить? [Y/N]'
 
-            if ($confirmation -notmatch '^(?i:y|yes|д|да)$') {
+            if ($confirmation -notmatch '^(y|yes|д|да)$') {
                 Write-Host ''
                 Write-Host 'Действие отменено.' -ForegroundColor Yellow
                 Pause-RaccoonToolkit
@@ -74,9 +97,12 @@
         $uri = "$baseUrl/$Path"
 
         try {
-            Write-Host 'Скачиваю актуальную версию скрипта...' -ForegroundColor DarkGray
+            Write-Host 'Скачиваю актуальную версию скрипта...' `
+                -ForegroundColor DarkGray
 
-            $content = Invoke-RestMethod -Uri $uri -ErrorAction Stop
+            $content = Invoke-RestMethod `
+                -Uri $uri `
+                -ErrorAction Stop
 
             if ([string]::IsNullOrWhiteSpace([string]$content)) {
                 throw "GitHub вернул пустой файл: $Path"
@@ -98,6 +124,81 @@
         Pause-RaccoonToolkit
     }
 
+    function Show-EmptySection {
+        param (
+            [Parameter(Mandatory)]
+            [string]$SectionName
+        )
+
+        while ($true) {
+            Write-RaccoonHeader -SectionName $SectionName
+
+            Write-Host 'В этом разделе пока нет скриптов.' `
+                -ForegroundColor DarkYellow
+            Write-Host ''
+            Write-Host '  0. Вернуться в главное меню'
+            Write-Host ''
+
+            $choice = Read-Host 'Выбери действие'
+
+            switch ($choice) {
+                '0' {
+                    return
+                }
+
+                default {
+                    Write-Host ''
+                    Write-Host 'Такого пункта пока нет.' -ForegroundColor Yellow
+                    Start-Sleep -Seconds 1
+                }
+            }
+        }
+    }
+
+    function Show-DiagnosticsMenu {
+        while ($true) {
+            Write-RaccoonHeader -SectionName 'ДИАГНОСТИКА'
+
+            Write-Host '  1. Проверить TCP-подключение к адресу и порту'
+            Write-Host '     [SAFE] [MEMORY ONLY]'
+            Write-Host ''
+            Write-Host '  0. Вернуться в главное меню'
+            Write-Host ''
+
+            $choice = Read-Host 'Выбери действие'
+
+            switch ($choice) {
+                '1' {
+                    Invoke-RaccoonScript `
+                        -Path 'Scripts/Diagnostics/Test-TcpConnection.ps1' `
+                        -Name 'Проверка TCP-подключения'
+                }
+
+                '0' {
+                    return
+                }
+
+                default {
+                    Write-Host ''
+                    Write-Host 'Такого пункта пока нет.' -ForegroundColor Yellow
+                    Start-Sleep -Seconds 1
+                }
+            }
+        }
+    }
+
+    function Show-MonitoringMenu {
+        Show-EmptySection -SectionName 'МОНИТОРИНГ'
+    }
+
+    function Show-FixMenu {
+        Show-EmptySection -SectionName 'ФИКС'
+    }
+
+    function Show-SoftwareMenu {
+        Show-EmptySection -SectionName 'УСТАНОВКА СОФТА'
+    }
+
     try {
         $Host.UI.RawUI.WindowTitle = 'Raccoon Admin Toolkit'
     }
@@ -105,7 +206,7 @@
     }
 
     while ($true) {
-        Clear-Host
+        Write-RaccoonHeader -SectionName ''
 
         $adminText = if (Test-IsAdministrator) {
             'Да'
@@ -114,27 +215,24 @@
             'Нет'
         }
 
-        Write-Host '========================================================================' `
-            -ForegroundColor DarkCyan
-        Write-Host '                         RACCOON ADMIN TOOLKIT' `
-            -ForegroundColor Cyan
-        Write-Host '========================================================================' `
-            -ForegroundColor DarkCyan
-        Write-Host ''
         Write-Host "Компьютер:     $env:COMPUTERNAME"
         Write-Host "Пользователь:  $env:USERDOMAIN\$env:USERNAME"
         Write-Host "PowerShell:    $($PSVersionTable.PSVersion)"
         Write-Host "Администратор: $adminText"
         Write-Host ''
 
-        Write-Host '  СЕРВЕР / RDS' -ForegroundColor DarkCyan
-        Write-Host '  1. Создать или восстановить кнопку «Завершення сеансу»'
+        Write-Host '  РАЗДЕЛЫ' -ForegroundColor DarkCyan
+        Write-Host '  1. Диагностика'
+        Write-Host '  2. Мониторинг'
+        Write-Host '  3. Фикс'
+        Write-Host '  4. Установка софта'
+        Write-Host ''
+
+        Write-Host '  ЧАСТО ИСПОЛЬЗУЕМЫЕ СКРИПТЫ' -ForegroundColor DarkCyan
+        Write-Host '  5. Создать или восстановить кнопку «Завершення сеансу»'
         Write-Host '     [ADMIN] [CHANGES SYSTEM]'
         Write-Host ''
 
-        Write-Host '  СЛУЖЕБНОЕ' -ForegroundColor DarkCyan
-        Write-Host '  9. Проверить работу инструментария [SAFE]'
-        Write-Host ''
         Write-Host '  0. Выход'
         Write-Host ''
 
@@ -142,6 +240,22 @@
 
         switch ($choice) {
             '1' {
+                Show-DiagnosticsMenu
+            }
+
+            '2' {
+                Show-MonitoringMenu
+            }
+
+            '3' {
+                Show-FixMenu
+            }
+
+            '4' {
+                Show-SoftwareMenu
+            }
+
+            '5' {
                 Invoke-RaccoonScript `
                     -Path 'Scripts/Server/Create-LogoffShortcut.ps1' `
                     -Name 'Кнопка корректного выхода из сеанса' `
@@ -149,15 +263,10 @@
                     -ChangesSystem
             }
 
-            '9' {
-                Invoke-RaccoonScript `
-                    -Path 'Test-Hello.ps1' `
-                    -Name 'Проверка инструментария'
-            }
-
             '0' {
                 Clear-Host
-                Write-Host 'Raccoon Admin Toolkit завершил работу.' -ForegroundColor Cyan
+                Write-Host 'Raccoon Admin Toolkit завершил работу.' `
+                    -ForegroundColor Cyan
                 return
             }
 
