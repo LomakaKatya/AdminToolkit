@@ -171,12 +171,31 @@
             while ($true) {
                 Write-RaccoonHeader -SectionName 'ДИАГНОСТИКА'
 
+                Write-Host '  СЕТЬ И ДОСТУП' -ForegroundColor DarkCyan
                 Write-Host '  1. Проверить TCP-подключение к адресу и порту'
                 Write-Host '     [SAFE] [MEMORY ONLY]'
                 Write-Host ''
                 Write-Host '  2. Комплексная диагностика Wi-Fi'
                 Write-Host '     [SAFE] [MEMORY ONLY]'
                 Write-Host ''
+                Write-Host '  3. Комплексная диагностика интернета'
+                Write-Host '     [SAFE] [MEMORY ONLY]'
+                Write-Host ''
+                Write-Host '  4. Диагностика доступа к сайту'
+                Write-Host '     [SAFE] [MEMORY ONLY]'
+                Write-Host ''
+                Write-Host '  5. Диагностика удалённого доступа'
+                Write-Host '     [SAFE] [MEMORY ONLY]'
+                Write-Host ''
+
+                Write-Host '  КОМПЬЮТЕР И УСТРОЙСТВА' -ForegroundColor DarkCyan
+                Write-Host '  6. Диагностика печати'
+                Write-Host '     [SAFE] [MEMORY ONLY]'
+                Write-Host ''
+                Write-Host '  7. Диагностика зависаний и производительности ПК'
+                Write-Host '     [SAFE] [MEMORY ONLY]'
+                Write-Host ''
+
                 Write-Host '  0. Вернуться в главное меню'
                 Write-Host ''
 
@@ -193,6 +212,36 @@
                         Invoke-RaccoonScript `
                             -Path 'Scripts/Diagnostics/Get-WifiDiagnostics.ps1' `
                             -Name 'Комплексная диагностика Wi-Fi'
+                    }
+
+                    '3' {
+                        Invoke-RaccoonScript `
+                            -Path 'Scripts/Diagnostics/Get-InternetDiagnostics.ps1' `
+                            -Name 'Комплексная диагностика интернета'
+                    }
+
+                    '4' {
+                        Invoke-RaccoonScript `
+                            -Path 'Scripts/Diagnostics/Test-WebsiteAccess.ps1' `
+                            -Name 'Диагностика доступа к сайту'
+                    }
+
+                    '5' {
+                        Invoke-RaccoonScript `
+                            -Path 'Scripts/Diagnostics/Get-RemoteAccessDiagnostics.ps1' `
+                            -Name 'Диагностика удалённого доступа'
+                    }
+
+                    '6' {
+                        Invoke-RaccoonScript `
+                            -Path 'Scripts/Diagnostics/Get-PrinterDiagnostics.ps1' `
+                            -Name 'Диагностика печати'
+                    }
+
+                    '7' {
+                        Invoke-RaccoonScript `
+                            -Path 'Scripts/Diagnostics/Get-ComputerHealthDiagnostics.ps1' `
+                            -Name 'Диагностика зависаний и производительности ПК'
                     }
 
                     '0' {
