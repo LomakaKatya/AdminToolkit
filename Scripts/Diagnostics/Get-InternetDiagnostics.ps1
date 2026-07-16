@@ -30,11 +30,44 @@ function Write-Value {
 
 function Add-Issue {
     param(
-        [Parameter(Mandatory)][System.Collections.ArrayList]$List,
+        [Parameter(Mandatory)][AllowEmptyCollection()][System.Collections.ArrayList]$List,
         [Parameter(Mandatory)][string]$Text
     )
 
     [void]$List.Add($Text)
+}
+
+function Get-SafePropertyValue {
+    param(
+        [AllowNull()][object]$InputObject,
+        [Parameter(Mandatory)][string]$Name,
+        [AllowNull()][object]$DefaultValue = $null
+    )
+
+    if ($null -eq $InputObject) {
+        return $DefaultValue
+    }
+
+    $property = $InputObject.PSObject.Properties[$Name]
+
+    if ($null -eq $property) {
+        return $DefaultValue
+    }
+
+    return $property.Value
+}
+
+function Enable-Tls12 {
+    try {
+        [Net.ServicePointManager]::SecurityProtocol =
+            [Net.ServicePointManager]::SecurityProtocol -bor
+            [Net.SecurityProtocolType]::Tls12
+    }
+    catch {
+        # 3072 is TLS 1.2 for older .NET versions where the enum name is absent.
+        [Net.ServicePointManager]::SecurityProtocol =
+            [Net.ServicePointManager]::SecurityProtocol -bor 3072
+    }
 }
 
 function Invoke-PingSummary {
@@ -234,11 +267,12 @@ function Test-HttpsRequest {
         $watch.Stop()
 
         return [pscustomobject]@{
-            Success   = $true
-            Status    = "{0} {1}" -f `
+            Success    = $true
+            StatusCode = [int]$response.StatusCode
+            Status     = "{0} {1}" -f `
                 [int]$response.StatusCode,
                 [string]$response.StatusDescription
-            TimeMs    = [int]$watch.ElapsedMilliseconds
+            TimeMs     = [int]$watch.ElapsedMilliseconds
             FinalUrl  = [string]$response.ResponseUri.AbsoluteUri
             Error     = ''
         }
@@ -247,24 +281,40 @@ function Test-HttpsRequest {
         $watch.Stop()
 
         $status = ''
+        $finalUrl = ''
+        $httpResponseReceived = $false
 
         if ($_.Exception -is [System.Net.WebException] -and
             $null -ne $_.Exception.Response) {
             try {
+                $response = $_.Exception.Response
                 $status = "{0} {1}" -f `
-                    [int]$_.Exception.Response.StatusCode,
-                    [string]$_.Exception.Response.StatusDescription
+                    [int]$response.StatusCode,
+                    [string]$response.StatusDescription
+                $finalUrl = [string]$response.ResponseUri.AbsoluteUri
+                $httpResponseReceived = $true
             }
             catch {
             }
         }
 
         return [pscustomobject]@{
-            Success   = $false
-            Status    = $status
-            TimeMs    = [int]$watch.ElapsedMilliseconds
-            FinalUrl  = ''
-            Error     = $_.Exception.Message
+            Success    = $httpResponseReceived
+            StatusCode = if ($httpResponseReceived) {
+                [int]$response.StatusCode
+            }
+            else {
+                $null
+            }
+            Status     = $status
+            TimeMs     = [int]$watch.ElapsedMilliseconds
+            FinalUrl  = $finalUrl
+            Error     = if ($httpResponseReceived) {
+                ''
+            }
+            else {
+                $_.Exception.Message
+            }
         }
     }
     finally {
@@ -280,12 +330,27 @@ Write-Host 'Комплексная диагностика интернет-со�
 Write-Host 'Проверяю локальный адаптер, шлюз, внешний IP, DNS и HTTPS...' `
     -ForegroundColor DarkGray
 
-[Net.ServicePointManager]::SecurityProtocol =
-    [Net.ServicePointManager]::SecurityProtocol -bor
-    [Net.SecurityProtocolType]::Tls12
+Enable-Tls12
 
 $issues = New-Object -TypeName System.Collections.ArrayList
 $warnings = New-Object -TypeName System.Collections.ArrayList
+
+$defaultRoutes = @(
+    Get-WmiObject `
+        -Class Win32_IP4RouteTable `
+        -Filter "Destination='0.0.0.0' AND Mask='0.0.0.0'" `
+        -ErrorAction SilentlyContinue |
+    Sort-Object -Property Metric1
+)
+
+$primaryInterfaceIndex = $null
+
+if ($defaultRoutes.Count -gt 0) {
+    $primaryInterfaceIndex = Get-SafePropertyValue `
+        -InputObject $defaultRoutes[0] `
+        -Name 'InterfaceIndex' `
+        -DefaultValue $null
+}
 
 $configurations = @(
     Get-WmiObject `
@@ -295,6 +360,31 @@ $configurations = @(
     Where-Object {
         $null -ne $_.DefaultIPGateway -and
         @($_.DefaultIPGateway).Count -gt 0
+    } |
+    Sort-Object -Property @{
+        Expression = {
+            $interfaceIndex = Get-SafePropertyValue `
+                -InputObject $_ `
+                -Name 'InterfaceIndex' `
+                -DefaultValue -1
+
+            if ($null -ne $primaryInterfaceIndex -and
+                [int]$interfaceIndex -eq [int]$primaryInterfaceIndex) {
+                0
+            }
+            else {
+                1
+            }
+        }
+    }, @{
+        Expression = {
+            [int](
+                Get-SafePropertyValue `
+                    -InputObject $_ `
+                    -Name 'IPConnectionMetric' `
+                    -DefaultValue 9999
+            )
+        }
     }
 )
 
@@ -317,7 +407,12 @@ if ($configurations.Count -eq 0) {
 foreach ($configuration in $configurations) {
     $adapter = Get-WmiObject `
         -Class Win32_NetworkAdapter `
-        -Filter ("Index={0}" -f [int]$configuration.Index) `
+        -Filter ("Index={0}" -f [int](
+            Get-SafePropertyValue `
+                -InputObject $configuration `
+                -Name 'Index' `
+                -DefaultValue -1
+        )) `
         -ErrorAction SilentlyContinue |
     Select-Object -First 1
 
@@ -343,9 +438,27 @@ foreach ($configuration in $configurations) {
     Write-Value -Label 'Шлюз' -Value ($gateways -join ', ')
     Write-Value -Label 'DNS' -Value ($dnsServers -join ', ')
 
-    if ($null -ne $adapter -and [double]$adapter.Speed -gt 0) {
-        $speedMbps = [Math]::Round(([double]$adapter.Speed / 1MB), 0)
+    $adapterSpeed = [double](
+        Get-SafePropertyValue `
+            -InputObject $adapter `
+            -Name 'Speed' `
+            -DefaultValue 0
+    )
+
+    if ($adapterSpeed -gt 0) {
+        $speedMbps = [Math]::Round(($adapterSpeed / 1000000), 0)
         Write-Value -Label 'Скорость линка' -Value "$speedMbps Мбит/с"
+    }
+
+    $interfaceIndex = Get-SafePropertyValue `
+        -InputObject $configuration `
+        -Name 'InterfaceIndex' `
+        -DefaultValue $null
+
+    if ($null -ne $primaryInterfaceIndex -and
+        $null -ne $interfaceIndex -and
+        [int]$interfaceIndex -eq [int]$primaryInterfaceIndex) {
+        Write-Value -Label 'Основной маршрут' -Value 'да' -Color Green
     }
 
     Write-Host ''
@@ -378,72 +491,86 @@ Show-PingResult `
     -WarningLatency 100 `
     -CriticalLatency 200
 
-if ($gatewayResult.Received -eq 0) {
-    Add-Issue -List $issues -Text 'Нет связи со шлюзом. Проблема находится в локальной сети, Wi-Fi, кабеле или роутере.'
-}
-elseif ($gatewayResult.LossPercent -gt 0 -or
-    [double]$gatewayResult.AverageMs -ge 20) {
+$gatewayPingFailed = ($gatewayResult.Received -eq 0)
+
+if (-not $gatewayPingFailed -and
+    ($gatewayResult.LossPercent -gt 0 -or
+        [double]$gatewayResult.AverageMs -ge 20)) {
     [void]$warnings.Add('До локального шлюза есть потери или высокая задержка.')
 }
 
-if ($cloudflareResult.Received -eq 0 -and $googleResult.Received -eq 0) {
-    Add-Issue -List $issues -Text 'Шлюз доступен, но внешние IP-адреса не отвечают. Возможна проблема провайдера, маршрута или фильтрации.'
-}
-else {
-    $externalLoss = [Math]::Max(
-        [double]$cloudflareResult.LossPercent,
-        [double]$googleResult.LossPercent
-    )
+$successfulExternalPings = @(
+    @(
+        $cloudflareResult,
+        $googleResult
+    ) |
+    Where-Object { $_.Received -gt 0 }
+)
 
-    $externalLatency = 0
+$externalPingAllFailed = ($successfulExternalPings.Count -eq 0)
 
-    if ($null -ne $cloudflareResult.AverageMs) {
-        $externalLatency = [Math]::Max(
-            $externalLatency,
-            [double]$cloudflareResult.AverageMs
-        )
-    }
+if (-not $externalPingAllFailed) {
+    $bestLoss = (
+        $successfulExternalPings |
+        Measure-Object -Property LossPercent -Minimum
+    ).Minimum
 
-    if ($null -ne $googleResult.AverageMs) {
-        $externalLatency = [Math]::Max(
-            $externalLatency,
-            [double]$googleResult.AverageMs
-        )
-    }
+    $bestLatency = (
+        $successfulExternalPings |
+        Where-Object { $null -ne $_.AverageMs } |
+        Measure-Object -Property AverageMs -Minimum
+    ).Minimum
 
-    if ($externalLoss -ge 25) {
+    if ([double]$bestLoss -ge 25) {
         Add-Issue -List $issues -Text 'На внешнем соединении высокая потеря пакетов.'
     }
-    elseif ($externalLoss -gt 0) {
+    elseif ([double]$bestLoss -gt 0) {
         [void]$warnings.Add('На внешнем соединении обнаружены потери пакетов.')
     }
 
-    if ($externalLatency -ge 200) {
+    if ($null -ne $bestLatency -and [double]$bestLatency -ge 200) {
         Add-Issue -List $issues -Text 'Задержка до внешних узлов очень высокая.'
     }
-    elseif ($externalLatency -ge 100) {
+    elseif ($null -ne $bestLatency -and [double]$bestLatency -ge 100) {
         [void]$warnings.Add('Задержка до внешних узлов повышена.')
     }
 }
 
 Write-Section -Title 'DNS'
 
-$dnsHost = 'www.microsoft.com'
-$dnsWatch = New-Object -TypeName System.Diagnostics.Stopwatch
-$dnsAddresses = @()
-$dnsError = ''
+$dnsHosts = @(
+    'www.microsoft.com',
+    'www.cloudflare.com'
+)
 
-try {
-    $dnsWatch.Start()
-    $dnsAddresses = @(
-        [System.Net.Dns]::GetHostAddresses($dnsHost) |
-        ForEach-Object { $_.IPAddressToString }
-    )
-    $dnsWatch.Stop()
-}
-catch {
-    $dnsWatch.Stop()
-    $dnsError = $_.Exception.Message
+$dnsHost = ''
+$dnsWatch = $null
+$dnsAddresses = @()
+$dnsErrors = @()
+
+foreach ($candidateHost in $dnsHosts) {
+    $candidateWatch = New-Object -TypeName System.Diagnostics.Stopwatch
+    $candidateAddresses = @()
+
+    try {
+        $candidateWatch.Start()
+        $candidateAddresses = @(
+            [System.Net.Dns]::GetHostAddresses($candidateHost) |
+            ForEach-Object { $_.IPAddressToString }
+        )
+        $candidateWatch.Stop()
+    }
+    catch {
+        $candidateWatch.Stop()
+        $dnsErrors += "$candidateHost`: $($_.Exception.Message)"
+    }
+
+    if ($candidateAddresses.Count -gt 0) {
+        $dnsHost = $candidateHost
+        $dnsWatch = $candidateWatch
+        $dnsAddresses = $candidateAddresses
+        break
+    }
 }
 
 if ($dnsAddresses.Count -gt 0) {
@@ -472,11 +599,11 @@ if ($dnsAddresses.Count -gt 0) {
 else {
     Write-Value `
         -Label 'Разрешение имени' `
-        -Value "ошибка: $dnsError" `
+        -Value "ошибка: $($dnsErrors -join ' | ')" `
         -Color Red
 
     if ($cloudflareResult.Received -gt 0 -or $googleResult.Received -gt 0) {
-        Add-Issue -List $issues -Text 'Внешние IP доступны, но DNS не разрешает имена.'
+        Add-Issue -List $issues -Text 'Внешние IP доступны, но DNS не разрешает проверочные имена.'
     }
     else {
         Add-Issue -List $issues -Text 'Не работает разрешение DNS-имён.'
@@ -485,32 +612,78 @@ else {
 
 Write-Section -Title 'HTTPS'
 
-$tcpResult = Test-TcpPort `
-    -HostName 'www.microsoft.com' `
-    -Port 443
+$tcpTargets = @(
+    'www.microsoft.com',
+    'www.cloudflare.com'
+)
+
+$tcpResult = $null
+$tcpTargetUsed = ''
+
+foreach ($tcpTarget in $tcpTargets) {
+    $candidateResult = Test-TcpPort `
+        -HostName $tcpTarget `
+        -Port 443
+
+    if ($null -eq $tcpResult) {
+        $tcpResult = $candidateResult
+        $tcpTargetUsed = $tcpTarget
+    }
+
+    if ($candidateResult.Success) {
+        $tcpResult = $candidateResult
+        $tcpTargetUsed = $tcpTarget
+        break
+    }
+}
 
 if ($tcpResult.Success) {
     Write-Value `
         -Label 'TCP 443' `
-        -Value "доступен, $($tcpResult.TimeMs) мс" `
+        -Value "$tcpTargetUsed доступен, $($tcpResult.TimeMs) мс" `
         -Color Green
 }
 else {
     Write-Value `
         -Label 'TCP 443' `
-        -Value "недоступен: $($tcpResult.Error)" `
+        -Value "оба проверочных узла недоступны; последняя ошибка: $($tcpResult.Error)" `
         -Color Red
 
-    Add-Issue -List $issues -Text 'Не удаётся установить TCP-соединение на порт 443.'
+    Add-Issue `
+        -List $issues `
+        -Text 'Не удаётся установить TCP-соединение на порт 443 ни с одним проверочным узлом.'
 }
 
-$httpsResult = Test-HttpsRequest -Url 'https://www.microsoft.com/'
+$httpsTargets = @(
+    'https://www.microsoft.com/',
+    'https://www.cloudflare.com/'
+)
+
+$httpsResult = $null
+$httpsTargetUsed = ''
+
+foreach ($httpsTarget in $httpsTargets) {
+    $candidateResult = Test-HttpsRequest -Url $httpsTarget
+
+    if ($null -eq $httpsResult) {
+        $httpsResult = $candidateResult
+        $httpsTargetUsed = $httpsTarget
+    }
+
+    if ($candidateResult.Success) {
+        $httpsResult = $candidateResult
+        $httpsTargetUsed = $httpsTarget
+        break
+    }
+}
 
 if ($httpsResult.Success) {
     $httpsColor = if ($httpsResult.TimeMs -ge 5000) {
         [ConsoleColor]::Red
     }
-    elseif ($httpsResult.TimeMs -ge 2000) {
+    elseif ($httpsResult.TimeMs -ge 2000 -or
+        ($null -ne $httpsResult.StatusCode -and
+            [int]$httpsResult.StatusCode -ge 400)) {
         [ConsoleColor]::Yellow
     }
     else {
@@ -522,6 +695,7 @@ if ($httpsResult.Success) {
         -Value "$($httpsResult.Status), $($httpsResult.TimeMs) мс" `
         -Color $httpsColor
 
+    Write-Value -Label 'Проверочный адрес' -Value $httpsTargetUsed
     Write-Value -Label 'Конечный адрес' -Value $httpsResult.FinalUrl
 
     if ($httpsResult.TimeMs -ge 5000) {
@@ -529,6 +703,13 @@ if ($httpsResult.Success) {
     }
     elseif ($httpsResult.TimeMs -ge 2000) {
         [void]$warnings.Add('HTTPS-страница отвечает медленно.')
+    }
+
+    if ($null -ne $httpsResult.StatusCode -and
+        [int]$httpsResult.StatusCode -ge 400) {
+        [void]$warnings.Add(
+            "Проверочный HTTPS-узел отвечает кодом $($httpsResult.StatusCode), но соединение установлено."
+        )
     }
 }
 else {
@@ -539,13 +720,40 @@ else {
     }
 
     Write-Value -Label 'HTTP-ответ' -Value $failure -Color Red
-    Add-Issue -List $issues -Text 'HTTPS-запрос не выполняется.'
+    Add-Issue -List $issues -Text 'HTTPS-запрос не выполняется ни к одному проверочному узлу.'
+}
+
+if ($externalPingAllFailed) {
+    if ($tcpResult.Success -or $httpsResult.Success) {
+        [void]$warnings.Add(
+            'Внешние узлы не отвечают на ICMP, но TCP/HTTPS работают. Вероятно, ping фильтруется.'
+        )
+    }
+    else {
+        Add-Issue `
+            -List $issues `
+            -Text 'Не подтверждена связь с интернетом ни по ICMP, ни по TCP/HTTPS.'
+    }
+}
+
+if ($gatewayPingFailed) {
+    if ($tcpResult.Success -or $httpsResult.Success) {
+        [void]$warnings.Add(
+            'Шлюз не отвечает на ping, но интернет-доступ работает. Возможно, ICMP на роутере запрещён.'
+        )
+    }
+    else {
+        Add-Issue `
+            -List $issues `
+            -Text 'Шлюз не отвечает, а внешний TCP/HTTPS также недоступен. Проверь локальную сеть, Wi-Fi, кабель и роутер.'
+    }
 }
 
 Write-Section -Title 'ПРОКСИ'
 
 $proxyEnable = 0
 $proxyServer = ''
+$autoConfigUrl = ''
 $internetSettingsPath = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Internet Settings'
 
 try {
@@ -553,8 +761,26 @@ try {
         -LiteralPath $internetSettingsPath `
         -ErrorAction Stop
 
-    $proxyEnable = [int]$internetSettings.ProxyEnable
-    $proxyServer = [string]$internetSettings.ProxyServer
+    $proxyEnable = [int](
+        Get-SafePropertyValue `
+            -InputObject $internetSettings `
+            -Name 'ProxyEnable' `
+            -DefaultValue 0
+    )
+
+    $proxyServer = [string](
+        Get-SafePropertyValue `
+            -InputObject $internetSettings `
+            -Name 'ProxyServer' `
+            -DefaultValue ''
+    )
+
+    $autoConfigUrl = [string](
+        Get-SafePropertyValue `
+            -InputObject $internetSettings `
+            -Name 'AutoConfigURL' `
+            -DefaultValue ''
+    )
 }
 catch {
 }
@@ -566,6 +792,28 @@ if ($proxyEnable -eq 1) {
 else {
     Write-Value -Label 'Прокси пользователя' -Value 'не включён' -Color Green
 }
+
+if (-not [string]::IsNullOrWhiteSpace($autoConfigUrl)) {
+    Write-Value -Label 'PAC-сценарий' -Value $autoConfigUrl -Color Yellow
+    [void]$warnings.Add('Для пользователя настроен автоматический сценарий прокси (PAC).')
+}
+else {
+    Write-Value -Label 'PAC-сценарий' -Value 'не настроен' -Color Green
+}
+
+$winHttpProxyLines = @(
+    & netsh winhttp show proxy 2>&1 |
+    ForEach-Object { ([string]$_).Trim() } |
+    Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+)
+
+$winHttpSummary = $winHttpProxyLines -join ' | '
+
+if ($winHttpSummary.Length -gt 180) {
+    $winHttpSummary = $winHttpSummary.Substring(0, 177) + '...'
+}
+
+Write-Value -Label 'WinHTTP proxy' -Value $winHttpSummary
 
 Write-Section -Title 'ИТОГ'
 

@@ -74,6 +74,46 @@ function Get-PercentColor {
     return [ConsoleColor]::Green
 }
 
+function Get-DeviceStateInfo {
+    param(
+        [int]$Code
+    )
+
+    switch ($Code) {
+        22 {
+            return [pscustomobject]@{
+                Severity = 'Info'
+                Color    = [ConsoleColor]::DarkGray
+                Text     = 'устройство отключено'
+            }
+        }
+
+        45 {
+            return [pscustomobject]@{
+                Severity = 'Info'
+                Color    = [ConsoleColor]::DarkGray
+                Text     = 'устройство сейчас не подключено'
+            }
+        }
+
+        { $_ -in @(14, 18, 21, 24) } {
+            return [pscustomobject]@{
+                Severity = 'Warning'
+                Color    = [ConsoleColor]::Yellow
+                Text     = 'состояние требует проверки'
+            }
+        }
+
+        default {
+            return [pscustomobject]@{
+                Severity = 'Failure'
+                Color    = [ConsoleColor]::Red
+                Text     = 'ошибка устройства или драйвера'
+            }
+        }
+    }
+}
+
 function Get-TopCpuProcesses {
     param(
         [int]$SampleSeconds = 2,
@@ -211,7 +251,7 @@ Write-Value `
 
 Write-Value `
     -Label 'Оперативная память' `
-    -Value ("использовано {0}% ({1} из {2} ГБ свободно)" -f `
+    -Value ("использовано {0}%; свободно {1} ГБ из {2} ГБ" -f `
         $usedMemoryPercent,
         $freeMemoryGB,
         $totalMemoryGB) `
@@ -310,6 +350,50 @@ if ($pageFiles.Count -gt 0) {
     }
 }
 
+Write-Section -Title 'АКТИВНОСТЬ ДИСКОВ'
+
+$diskPerformance = @(
+    Get-WmiObject `
+        -Class Win32_PerfFormattedData_PerfDisk_PhysicalDisk `
+        -ErrorAction SilentlyContinue |
+    Where-Object { $_.Name -ne '_Total' } |
+    Sort-Object -Property Name
+)
+
+if ($diskPerformance.Count -eq 0) {
+    Write-Host '[INFO] Счётчики активности дисков недоступны.' `
+        -ForegroundColor DarkGray
+}
+else {
+    foreach ($diskCounter in $diskPerformance) {
+        $activePercent = [double]$diskCounter.PercentDiskTime
+        $queueLength = [double]$diskCounter.CurrentDiskQueueLength
+
+        $color = if ($activePercent -ge 95 -or $queueLength -ge 4) {
+            [ConsoleColor]::Red
+        }
+        elseif ($activePercent -ge 80 -or $queueLength -ge 2) {
+            [ConsoleColor]::Yellow
+        }
+        else {
+            [ConsoleColor]::Green
+        }
+
+        Write-Value `
+            -Label ("Диск {0}" -f $diskCounter.Name) `
+            -Value ("активность {0}%; очередь {1}" -f `
+                [Math]::Round($activePercent, 1),
+                [Math]::Round($queueLength, 1)) `
+            -Color $color
+
+        if ($activePercent -ge 95 -or $queueLength -ge 4) {
+            [void]$warnings.Add(
+                "Диск $($diskCounter.Name) сейчас сильно загружен."
+            )
+        }
+    }
+}
+
 Write-Section -Title 'ПРОЦЕССЫ: ТЕКУЩАЯ НАГРУЗКА CPU'
 
 $topCpu = @(Get-TopCpuProcesses `
@@ -362,27 +446,33 @@ $topMemory = @(
     Select-Object -First 10
 )
 
-Write-Host ('  {0,-28} {1,7} {2,12}' -f `
-    'Процесс',
-    'PID',
-    'RAM МБ') `
-    -ForegroundColor DarkGray
+if ($topMemory.Count -eq 0) {
+    Write-Host '[INFO] Не удалось получить список процессов.' `
+        -ForegroundColor DarkGray
+}
+else {
+    Write-Host ('  {0,-28} {1,7} {2,12}' -f `
+        'Процесс',
+        'PID',
+        'RAM МБ') `
+        -ForegroundColor DarkGray
 
-foreach ($process in $topMemory) {
-    try {
-        $memoryMB = [Math]::Round(([double]$process.WorkingSet64 / 1MB), 1)
-        $name = [string]$process.ProcessName
+    foreach ($process in $topMemory) {
+        try {
+            $memoryMB = [Math]::Round(([double]$process.WorkingSet64 / 1MB), 1)
+            $name = [string]$process.ProcessName
 
-        if ($name.Length -gt 28) {
-            $name = $name.Substring(0, 28)
+            if ($name.Length -gt 28) {
+                $name = $name.Substring(0, 28)
+            }
+
+            Write-Host ('  {0,-28} {1,7} {2,12}' -f `
+                $name,
+                $process.Id,
+                $memoryMB)
         }
-
-        Write-Host ('  {0,-28} {1,7} {2,12}' -f `
-            $name,
-            $process.Id,
-            $memoryMB)
-    }
-    catch {
+        catch {
+        }
     }
 }
 
@@ -397,30 +487,81 @@ $deviceErrors = @(
 )
 
 if ($deviceErrors.Count -eq 0) {
-    Write-Host '[OK] Windows не сообщает об ошибках устройств.' `
+    Write-Host '[OK] Windows не сообщает о проблемных устройствах.' `
         -ForegroundColor Green
 }
 else {
-    foreach ($device in $deviceErrors | Select-Object -First 10) {
-        Write-Host ("[FAIL] {0}, код {1}" -f `
-            $device.Name,
-            $device.ConfigManagerErrorCode) `
-            -ForegroundColor Red
+    $classifiedDevices = @(
+        foreach ($device in $deviceErrors) {
+            $code = [int]$device.ConfigManagerErrorCode
+            $state = Get-DeviceStateInfo -Code $code
+
+            [pscustomobject]@{
+                Device = $device
+                Code   = $code
+                State  = $state
+            }
+        }
+    )
+
+    $deviceFailureCount = @(
+        $classifiedDevices |
+        Where-Object { $_.State.Severity -eq 'Failure' }
+    ).Count
+
+    $deviceWarningCount = @(
+        $classifiedDevices |
+        Where-Object { $_.State.Severity -eq 'Warning' }
+    ).Count
+
+    $deviceInfoCount = @(
+        $classifiedDevices |
+        Where-Object { $_.State.Severity -eq 'Info' }
+    ).Count
+
+    foreach ($item in $classifiedDevices | Select-Object -First 15) {
+        $prefix = switch ($item.State.Severity) {
+            'Failure' { '[FAIL]' }
+            'Warning' { '[WARN]' }
+            default   { '[INFO]' }
+        }
+
+        Write-Host ("{0} {1}, код {2}: {3}" -f `
+            $prefix,
+            $item.Device.Name,
+            $item.Code,
+            $item.State.Text) `
+            -ForegroundColor $item.State.Color
     }
 
-    if ($deviceErrors.Count -gt 10) {
-        Write-Host "Показаны первые 10 из $($deviceErrors.Count) устройств." `
+    if ($deviceErrors.Count -gt 15) {
+        Write-Host "Показаны первые 15 из $($deviceErrors.Count) устройств." `
             -ForegroundColor DarkGray
     }
 
-    Add-Issue `
-        -List $issues `
-        -Text "Диспетчер устройств сообщает об ошибках: $($deviceErrors.Count)."
+    if ($deviceFailureCount -gt 0) {
+        Add-Issue `
+            -List $issues `
+            -Text "Диспетчер устройств сообщает серьёзных ошибок: $deviceFailureCount."
+    }
+
+    if ($deviceWarningCount -gt 0) {
+        [void]$warnings.Add(
+            "Устройств, состояние которых требует проверки: $deviceWarningCount."
+        )
+    }
+
+    if ($deviceInfoCount -gt 0) {
+        Write-Host ''
+        Write-Host 'Коды 22 и 45 обычно означают отключённое или отсоединённое устройство, а не поломку.' `
+            -ForegroundColor DarkGray
+    }
 }
 
-Write-Section -Title 'НЕДАВНИЕ СИСТЕМНЫЕ СОБЫТИЯ'
+Write-Section -Title 'СИСТЕМНЫЕ И АППАРАТНЫЕ СОБЫТИЯ'
 
-$events = @()
+$systemEvents = @()
+$applicationEvents = @()
 $since = (Get-Date).AddHours(-24)
 
 if (Get-Command -Name Get-WinEvent -ErrorAction SilentlyContinue) {
@@ -432,15 +573,14 @@ if (Get-Command -Name Get-WinEvent -ErrorAction SilentlyContinue) {
                     StartTime = $since
                     Level     = @(1, 2, 3)
                 } `
-                -MaxEvents 300 `
+                -MaxEvents 400 `
                 -ErrorAction Stop |
             Where-Object {
                 $_.Id -in @(7, 11, 41, 51, 55, 129, 153, 157, 2004, 4101) -or
                 $_.ProviderName -match '(?i)WHEA|Disk|Ntfs|storahci|stornvme|Display|Resource-Exhaustion'
-            }
+            } |
+            Sort-Object -Property TimeCreated -Descending
         )
-
-        $events += $systemEvents
     }
     catch {
     }
@@ -453,37 +593,34 @@ if (Get-Command -Name Get-WinEvent -ErrorAction SilentlyContinue) {
                     StartTime = $since
                     Level     = @(1, 2, 3)
                 } `
-                -MaxEvents 200 `
+                -MaxEvents 300 `
                 -ErrorAction Stop |
             Where-Object {
-                $_.Id -in @(1000, 1001, 1002) -or
                 $_.ProviderName -match '(?i)Application Hang|Application Error|Windows Error Reporting'
-            }
+            } |
+            Sort-Object -Property TimeCreated -Descending
         )
-
-        $events += $applicationEvents
     }
     catch {
     }
 }
 
-$events = @(
-    $events |
-    Sort-Object -Property TimeCreated -Descending |
-    Select-Object -First 12
-)
-
-if ($events.Count -eq 0) {
-    Write-Host '[OK] За 24 часа не найдено явных событий зависания, диска или аппаратных ошибок.' `
+if ($systemEvents.Count -eq 0) {
+    Write-Host '[OK] За 24 часа не найдено событий диска, WHEA, нехватки ресурсов или аварийного питания.' `
         -ForegroundColor Green
 }
 else {
-    foreach ($event in $events) {
-        $color = if ($event.LevelDisplayName -match '(?i)critical|error|крит|ошиб') {
-            [ConsoleColor]::Red
+    foreach ($event in $systemEvents | Select-Object -First 8) {
+        $isDisplayRecovery = (
+            $event.Id -eq 4101 -or
+            $event.ProviderName -match '(?i)^Display$'
+        )
+
+        $color = if ($isDisplayRecovery) {
+            [ConsoleColor]::Yellow
         }
         else {
-            [ConsoleColor]::Yellow
+            [ConsoleColor]::Red
         }
 
         Write-Host ("[{0}] {1}, ID {2}: {3}" -f `
@@ -494,8 +631,44 @@ else {
             -ForegroundColor $color
     }
 
+    $seriousSystemEvents = @(
+        $systemEvents |
+        Where-Object {
+            $_.Id -ne 4101 -and
+            $_.ProviderName -notmatch '(?i)^Display$'
+        }
+    )
+
+    if ($seriousSystemEvents.Count -gt 0) {
+        Add-Issue `
+            -List $issues `
+            -Text "За 24 часа найдено серьёзных системных или аппаратных событий: $($seriousSystemEvents.Count)."
+    }
+    else {
+        [void]$warnings.Add(
+            "За 24 часа были перезапуски графического драйвера: $($systemEvents.Count)."
+        )
+    }
+}
+
+Write-Section -Title 'СБОИ И ЗАВИСАНИЯ ПРИЛОЖЕНИЙ'
+
+if ($applicationEvents.Count -eq 0) {
+    Write-Host '[OK] За 24 часа явных сбоев и зависаний приложений не найдено.' `
+        -ForegroundColor Green
+}
+else {
+    foreach ($event in $applicationEvents | Select-Object -First 8) {
+        Write-Host ("[{0}] {1}, ID {2}: {3}" -f `
+            $event.TimeCreated.ToString('dd.MM HH:mm'),
+            $event.ProviderName,
+            $event.Id,
+            (Get-ShortText -Text ([string]$event.Message))) `
+            -ForegroundColor Yellow
+    }
+
     [void]$warnings.Add(
-        "За последние 24 часа найдено подозрительных событий: $($events.Count)."
+        "За 24 часа найдено сбоев или зависаний приложений: $($applicationEvents.Count)."
     )
 }
 

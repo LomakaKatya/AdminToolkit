@@ -30,11 +30,44 @@ function Write-Value {
 
 function Add-Issue {
     param(
-        [Parameter(Mandatory)][System.Collections.ArrayList]$List,
+        [Parameter(Mandatory)][AllowEmptyCollection()][System.Collections.ArrayList]$List,
         [Parameter(Mandatory)][string]$Text
     )
 
     [void]$List.Add($Text)
+}
+
+function Enable-Tls12 {
+    try {
+        [Net.ServicePointManager]::SecurityProtocol =
+            [Net.ServicePointManager]::SecurityProtocol -bor
+            [Net.SecurityProtocolType]::Tls12
+    }
+    catch {
+        [Net.ServicePointManager]::SecurityProtocol =
+            [Net.ServicePointManager]::SecurityProtocol -bor 3072
+    }
+}
+
+function Get-NormalizedUriText {
+    param(
+        [AllowNull()][object]$Value
+    )
+
+    if ($null -eq $Value) {
+        return ''
+    }
+
+    try {
+        $normalized = New-Object `
+            -TypeName System.Uri `
+            -ArgumentList ([string]$Value)
+
+        return $normalized.AbsoluteUri.TrimEnd('/')
+    }
+    catch {
+        return ([string]$Value).TrimEnd('/')
+    }
 }
 
 function Test-PingHost {
@@ -304,9 +337,11 @@ if ([string]::IsNullOrWhiteSpace($uri.Host)) {
     throw "В адресе не найдено имя узла: $inputUrl"
 }
 
-[Net.ServicePointManager]::SecurityProtocol =
-    [Net.ServicePointManager]::SecurityProtocol -bor
-    [Net.SecurityProtocolType]::Tls12
+if ($uri.Scheme -notin @('http', 'https')) {
+    throw 'Поддерживаются только адреса HTTP и HTTPS.'
+}
+
+Enable-Tls12
 
 $issues = New-Object -TypeName System.Collections.ArrayList
 $warnings = New-Object -TypeName System.Collections.ArrayList
@@ -384,6 +419,35 @@ else {
     Write-Value -Label 'Файл hosts' -Value 'записей нет' -Color Green
 }
 
+$proxyUri = $null
+$usesProxy = $false
+
+try {
+    $proxy = [System.Net.WebRequest]::DefaultWebProxy
+
+    if ($null -ne $proxy) {
+        $isBypassed = $proxy.IsBypassed($uri)
+        $proxyUri = $proxy.GetProxy($uri)
+
+        $usesProxy = (
+            -not $isBypassed -and
+            $null -ne $proxyUri -and
+            $proxyUri.Host -ne $uri.Host
+        )
+    }
+}
+catch {
+    $proxyUri = $null
+    $usesProxy = $false
+}
+
+if ($usesProxy -and $addresses.Count -eq 0) {
+    [void]$issues.Remove('DNS не может разрешить имя сайта.')
+    [void]$warnings.Add(
+        'Локальный DNS не разрешил имя сайта, но прокси может выполнить разрешение самостоятельно.'
+    )
+}
+
 Write-Section -Title 'СЕТЕВАЯ ДОСТУПНОСТЬ'
 
 $pingResult = Test-PingHost -HostName $uri.Host
@@ -403,48 +467,59 @@ else {
     [void]$warnings.Add('Сайт не отвечает на ping. Это не всегда ошибка: ICMP может быть запрещён.')
 }
 
+$tcpHost = $uri.Host
+$tcpPort = $uri.Port
+$tcpLabel = "TCP $($uri.Port)"
+
+if ($usesProxy) {
+    $tcpHost = $proxyUri.Host
+    $tcpPort = $proxyUri.Port
+    $tcpLabel = "TCP до прокси $tcpPort"
+}
+
 $tcpResult = Test-TcpPort `
-    -HostName $uri.Host `
-    -Port $uri.Port
+    -HostName $tcpHost `
+    -Port $tcpPort
 
 if ($tcpResult.Success) {
     Write-Value `
-        -Label "TCP $($uri.Port)" `
+        -Label $tcpLabel `
         -Value "доступен, $($tcpResult.TimeMs) мс" `
         -Color Green
 }
 else {
     Write-Value `
-        -Label "TCP $($uri.Port)" `
+        -Label $tcpLabel `
         -Value "недоступен: $($tcpResult.Error)" `
         -Color Red
 
-    Add-Issue `
-        -List $issues `
-        -Text "Не удаётся подключиться к $($uri.Host):$($uri.Port)."
+    if ($usesProxy) {
+        Add-Issue `
+            -List $issues `
+            -Text "Не удаётся подключиться к прокси $tcpHost`:$tcpPort."
+    }
+    else {
+        Add-Issue `
+            -List $issues `
+            -Text "Не удаётся подключиться к $($uri.Host):$($uri.Port)."
+    }
 }
 
 Write-Section -Title 'ПРОКСИ'
 
-$proxyUri = $null
+if ($usesProxy) {
+    Write-Value `
+        -Label 'Используемый прокси' `
+        -Value $proxyUri.AbsoluteUri `
+        -Color Yellow
 
-try {
-    $proxy = [System.Net.WebRequest]::DefaultWebProxy
-
-    if ($null -ne $proxy) {
-        $proxyUri = $proxy.GetProxy($uri)
-    }
-}
-catch {
-}
-
-if ($null -ne $proxyUri -and
-    $proxyUri.AbsoluteUri -ne $uri.AbsoluteUri) {
-    Write-Value -Label 'Используемый прокси' -Value $proxyUri.AbsoluteUri -Color Yellow
     [void]$warnings.Add('Запрос к сайту направляется через прокси-сервер.')
 }
 else {
-    Write-Value -Label 'Используемый прокси' -Value 'прямое подключение' -Color Green
+    Write-Value `
+        -Label 'Используемый прокси' `
+        -Value 'прямое подключение' `
+        -Color Green
 }
 
 Write-Section -Title 'HTTP / HTTPS'
@@ -499,7 +574,11 @@ if ($webResult.Success) {
         [void]$warnings.Add('Сайт отвечает медленно.')
     }
 
-    if ($webResult.FinalUri -ne $uri.AbsoluteUri) {
+    $initialUriText = Get-NormalizedUriText -Value $uri
+    $finalUriText = Get-NormalizedUriText -Value $webResult.FinalUri
+
+    if (-not [string]::IsNullOrWhiteSpace($finalUriText) -and
+        $finalUriText -ne $initialUriText) {
         [void]$warnings.Add("Сайт перенаправляет запрос на $($webResult.FinalUri).")
     }
 }
@@ -538,9 +617,6 @@ if ($uri.Scheme -eq 'https') {
             -Color $(if ($daysLeft -lt 0) {
                 [ConsoleColor]::Red
             }
-            elseif ($daysLeft -lt 14) {
-                [ConsoleColor]::Red
-            }
             elseif ($daysLeft -lt 30) {
                 [ConsoleColor]::Yellow
             }
@@ -552,7 +628,7 @@ if ($uri.Scheme -eq 'https') {
             Add-Issue -List $issues -Text 'Срок действия TLS-сертификата истёк.'
         }
         elseif ($daysLeft -lt 14) {
-            Add-Issue -List $issues -Text 'TLS-сертификат истекает менее чем через 14 дней.'
+            [void]$warnings.Add('TLS-сертификат истекает менее чем через 14 дней.')
         }
         elseif ($daysLeft -lt 30) {
             [void]$warnings.Add('TLS-сертификат скоро истекает.')

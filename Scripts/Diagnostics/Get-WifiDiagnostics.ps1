@@ -70,7 +70,7 @@ function Get-SignalPercent {
         [string]$Text
     )
 
-    $value = 0
+    $value = -1
 
     if ($Text -match '(\d{1,3})\s*%') {
         $value = [int]$matches[1]
@@ -90,6 +90,16 @@ function Get-SignalInfo {
 
     $label = ''
     $color = [ConsoleColor]::DarkGray
+
+    if ($Percent -lt 0) {
+        return [pscustomobject]@{
+            Percent = $Percent
+            Label   = 'не определён'
+            Color   = [ConsoleColor]::DarkGray
+            Bar     = '----------'
+            Known   = $false
+        }
+    }
 
     if ($Percent -ge 80) {
         $label = 'отличный'
@@ -122,6 +132,7 @@ function Get-SignalInfo {
         Label   = $label
         Color   = $color
         Bar     = $bar
+        Known   = $true
     }
 }
 
@@ -356,6 +367,45 @@ function Get-ShortText {
     return $Text.Substring(0, $MaxLength - 3) + '...'
 }
 
+function Get-CompetingAccessPoints {
+    param(
+        [object[]]$AccessPoints,
+        [int]$CurrentChannel,
+        [string]$CurrentBssid
+    )
+
+    if ($CurrentChannel -lt 1) {
+        return @()
+    }
+
+    return @(
+        $AccessPoints |
+        Where-Object {
+            $isCurrent = (
+                -not [string]::IsNullOrWhiteSpace($CurrentBssid) -and
+                ([string]$_.BSSID).Equals(
+                    $CurrentBssid,
+                    [System.StringComparison]::OrdinalIgnoreCase
+                )
+            )
+
+            if ($isCurrent) {
+                $false
+            }
+            elseif ($CurrentChannel -le 14) {
+                # В диапазоне 2,4 ГГц соседние каналы перекрываются.
+                (
+                    [int]$_.Channel -ge [Math]::Max(1, $CurrentChannel - 4) -and
+                    [int]$_.Channel -le [Math]::Min(14, $CurrentChannel + 4)
+                )
+            }
+            else {
+                [int]$_.Channel -eq $CurrentChannel
+            }
+        }
+    )
+}
+
 function Get-ChannelColor {
     param (
         [int]$Count
@@ -396,6 +446,18 @@ $networkLines = @(
 $interfaces = @(Get-WlanInterfaceBlocks -Lines $interfaceLines)
 $driverProperties = Get-DriverProperties -Lines $driverLines
 $accessPoints = @(Get-VisibleAccessPoints -Lines $networkLines)
+
+$netshProblemPattern = (
+    '(?i)access is denied|доступ запрещ|відмовлено в доступі|' +
+    'location.*required|требуется.*местополож|потріб.*розташув|' +
+    'wireless.*service.*not running|служба.*автонастрой.*не запущ'
+)
+
+$netshMessages = @(
+    @($interfaceLines + $driverLines + $networkLines) |
+    Where-Object { $_ -match $netshProblemPattern } |
+    Select-Object -Unique
+)
 
 Write-Section -Title 'СЛУЖБА И АДАПТЕР'
 
@@ -441,6 +503,7 @@ if ($interfaces.Count -eq 0) {
 }
 
 $currentSsid = ''
+$currentBssidAddress = ''
 $currentChannel = 0
 
 $interfaceNumber = 0
@@ -547,11 +610,19 @@ foreach ($interface in $interfaces) {
         $signal = Get-SignalInfo -Percent (Get-SignalPercent -Text $signalText)
 
         Write-Host ('{0,-24}: ' -f 'Сигнал') -NoNewline
-        Write-Host "[$($signal.Bar)] $($signal.Percent)% — $($signal.Label)" `
-            -ForegroundColor $signal.Color
+
+        if ($signal.Known) {
+            Write-Host "[$($signal.Bar)] $($signal.Percent)% — $($signal.Label)" `
+                -ForegroundColor $signal.Color
+        }
+        else {
+            Write-Host "[$($signal.Bar)] $($signal.Label)" `
+                -ForegroundColor $signal.Color
+        }
 
         if ([string]::IsNullOrWhiteSpace($currentSsid)) {
             $currentSsid = $ssid
+            $currentBssidAddress = $bssid
 
             [void][int]::TryParse($channelText, [ref]$currentChannel)
         }
@@ -619,6 +690,14 @@ if ($accessPoints.Count -eq 0) {
     Write-Host '[WARN] Точки доступа не обнаружены.' -ForegroundColor Yellow
     Write-Host 'Возможно, Wi-Fi выключен, запрещено сканирование или рядом нет сетей.' `
         -ForegroundColor DarkYellow
+
+    if ($netshMessages.Count -gt 0) {
+        Write-Host ''
+
+        foreach ($message in $netshMessages | Select-Object -First 4) {
+            Write-Host ("  $message") -ForegroundColor Yellow
+        }
+    }
 
     return
 }
@@ -727,32 +806,37 @@ foreach ($channelGroup in $channelGroups) {
 }
 
 if ($currentChannel -gt 0) {
-    $sameChannel = @(
-        $accessPoints |
-        Where-Object { $_.Channel -eq $currentChannel }
+    $competitorAccessPoints = @(
+        Get-CompetingAccessPoints `
+            -AccessPoints $accessPoints `
+            -CurrentChannel $currentChannel `
+            -CurrentBssid $currentBssidAddress
     )
 
-    $competitors = $sameChannel.Count
-
-    if ($competitors -gt 0) {
-        $competitors--
+    $competitors = $competitorAccessPoints.Count
+    $competitionLabel = if ($currentChannel -le 14) {
+        'Соседних BSSID на перекрывающихся каналах'
+    }
+    else {
+        'Соседних BSSID на том же канале'
     }
 
     Write-Host ''
-    Write-Host "На текущем канале найдено соседних BSSID: " -NoNewline
+    Write-Host "$competitionLabel`: " -NoNewline
 
     $competitionColor = Get-ChannelColor -Count ($competitors + 1)
 
     Write-Host $competitors -ForegroundColor $competitionColor
 
     if ($competitors -eq 0) {
-        Write-Host '[OK] Канал выглядит свободным.' -ForegroundColor Green
+        Write-Host '[OK] Явной конкуренции в эфире не видно.' -ForegroundColor Green
     }
     elseif ($competitors -le 3) {
-        Write-Host '[WARN] Канал умеренно загружен.' -ForegroundColor Yellow
+        Write-Host '[WARN] Эфир умеренно загружен.' -ForegroundColor Yellow
     }
     else {
-        Write-Host '[FAIL] Канал заметно перегружен.' -ForegroundColor Red
+        Write-Host '[FAIL] Эфир рядом с текущим каналом заметно перегружен.' `
+            -ForegroundColor Red
     }
 }
 
@@ -784,7 +868,11 @@ else {
 
     $signal = Get-SignalInfo -Percent (Get-SignalPercent -Text $signalText)
 
-    if ($signal.Percent -ge 65) {
+    if (-not $signal.Known) {
+        Write-Host '[WARN] Драйвер не сообщил уровень сигнала.' `
+            -ForegroundColor Yellow
+    }
+    elseif ($signal.Percent -ge 65) {
         Write-Host '[OK] Уровень сигнала достаточный.' -ForegroundColor Green
     }
     elseif ($signal.Percent -ge 50) {
@@ -797,21 +885,23 @@ else {
     }
 
     if ($currentChannel -gt 0) {
-        $sameChannelCount = @(
-            $accessPoints |
-            Where-Object { $_.Channel -eq $currentChannel }
+        $competitorCount = @(
+            Get-CompetingAccessPoints `
+                -AccessPoints $accessPoints `
+                -CurrentChannel $currentChannel `
+                -CurrentBssid $currentBssidAddress
         ).Count
 
-        if ($sameChannelCount -ge 5) {
-            Write-Host '[FAIL] Текущий радиоканал перегружен соседними точками.' `
+        if ($competitorCount -ge 4) {
+            Write-Host '[FAIL] Радиоэфир рядом с текущим каналом перегружен.' `
                 -ForegroundColor Red
         }
-        elseif ($sameChannelCount -ge 3) {
-            Write-Host '[WARN] На текущем канале есть заметная конкуренция.' `
+        elseif ($competitorCount -ge 2) {
+            Write-Host '[WARN] В радиоэфире есть заметная конкуренция.' `
                 -ForegroundColor Yellow
         }
         else {
-            Write-Host '[OK] Критичной перегрузки текущего канала не видно.' `
+            Write-Host '[OK] Критичной конкуренции в радиоэфире не видно.' `
                 -ForegroundColor Green
         }
     }

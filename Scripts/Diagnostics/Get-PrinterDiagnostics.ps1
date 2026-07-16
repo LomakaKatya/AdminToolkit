@@ -38,6 +38,7 @@ function Write-Value {
 function Add-Issue {
     param(
         [Parameter(Mandatory)]
+        [AllowEmptyCollection()]
         [System.Collections.ArrayList]$List,
 
         [Parameter(Mandatory)]
@@ -256,22 +257,30 @@ $spooler = Get-Service `
     -Name 'Spooler' `
     -ErrorAction SilentlyContinue
 
-$printers = @(
-    Get-WmiObject `
-        -Class Win32_Printer `
-        -ErrorAction Stop |
-    Sort-Object `
-        -Property @{
-            Expression = {
-                -not [bool](
-                    Get-SafePropertyValue `
-                        -InputObject $_ `
-                        -Name 'Default' `
-                        -DefaultValue $false
-                )
-            }
-        }, Name
-)
+$printers = @()
+$printerQueryError = ''
+
+try {
+    $printers = @(
+        Get-WmiObject `
+            -Class Win32_Printer `
+            -ErrorAction Stop |
+        Sort-Object `
+            -Property @{
+                Expression = {
+                    -not [bool](
+                        Get-SafePropertyValue `
+                            -InputObject $_ `
+                            -Name 'Default' `
+                            -DefaultValue $false
+                    )
+                }
+            }, Name
+    )
+}
+catch {
+    $printerQueryError = $_.Exception.Message
+}
 
 Write-Section -Title 'СЛУЖБА ПЕЧАТИ'
 
@@ -304,8 +313,21 @@ else {
 
 if ($printers.Count -eq 0) {
     Write-Section -Title 'ПРИНТЕРЫ'
-    Write-Host '[FAIL] В системе не найдено ни одного принтера.' `
-        -ForegroundColor Red
+
+    if (-not [string]::IsNullOrWhiteSpace($printerQueryError)) {
+        Write-Host '[FAIL] Не удалось получить список принтеров.' `
+            -ForegroundColor Red
+        Write-Host $printerQueryError -ForegroundColor Yellow
+    }
+    else {
+        Write-Host '[FAIL] В системе не найдено ни одного принтера.' `
+            -ForegroundColor Red
+    }
+
+    if ($null -ne $spooler -and $spooler.Status -ne 'Running') {
+        Write-Host 'Сначала запусти службу Print Spooler и повтори проверку.' `
+            -ForegroundColor Yellow
+    }
 
     return
 }
@@ -777,9 +799,17 @@ if ($null -ne $tcpPort) {
     )
 
     $portType = if ($protocol -eq 2) {
+        if ($networkPort -le 0) {
+            $networkPort = 515
+        }
+
         'Standard TCP/IP, LPR'
     }
     else {
+        if ($networkPort -le 0) {
+            $networkPort = 9100
+        }
+
         'Standard TCP/IP, RAW'
     }
 }
@@ -863,6 +893,7 @@ else {
 Write-Section -Title 'ПОСЛЕДНИЕ ОШИБКИ ПЕЧАТИ'
 
 $printEvents = @()
+$checkedPrintLogs = 0
 
 if (Get-Command -Name Get-WinEvent -ErrorAction SilentlyContinue) {
     $since = (Get-Date).AddDays(-1)
@@ -883,6 +914,7 @@ if (Get-Command -Name Get-WinEvent -ErrorAction SilentlyContinue) {
                     -ErrorAction Stop
             )
 
+            $checkedPrintLogs++
             $printEvents += $events
         }
         catch {
@@ -896,7 +928,11 @@ $printEvents = @(
     Select-Object -First 5
 )
 
-if ($printEvents.Count -eq 0) {
+if ($checkedPrintLogs -eq 0) {
+    Write-Host '[INFO] Журналы PrintService недоступны или отключены.' `
+        -ForegroundColor DarkGray
+}
+elseif ($printEvents.Count -eq 0) {
     Write-Host '[OK] За последние 24 часа явных ошибок PrintService не найдено.' `
         -ForegroundColor Green
 }

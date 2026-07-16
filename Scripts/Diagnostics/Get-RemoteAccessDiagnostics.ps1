@@ -252,7 +252,11 @@ function Show-LocalRemoteAccessCheck {
     $ipv4 = @(
         $configs |
         ForEach-Object { @($_.IPAddress) } |
-        Where-Object { $_ -match '^\d{1,3}(?:\.\d{1,3}){3}$' } |
+        Where-Object {
+            $_ -match '^\d{1,3}(?:\.\d{1,3}){3}$' -and
+            $_ -notmatch '^127\.' -and
+            $_ -notmatch '^169\.254\.'
+        } |
         Sort-Object -Unique
     )
 
@@ -299,6 +303,32 @@ function Show-LocalRemoteAccessCheck {
         Add-Issue -List $issues -Text 'Подключения RDP запрещены в настройках Windows.'
     }
 
+    $rdpConfigured = ($denyConnections -eq 0)
+
+    $nlaRequired = $null
+
+    try {
+        $nlaRequired = [int]$rdpTcp.UserAuthentication
+    }
+    catch {
+    }
+
+    if ($null -eq $nlaRequired) {
+        Write-Value -Label 'Проверка подлинности NLA' -Value 'не удалось определить' -Color DarkGray
+    }
+    elseif ($nlaRequired -eq 1) {
+        Write-Value -Label 'Проверка подлинности NLA' -Value 'требуется' -Color Green
+    }
+    else {
+        Write-Value -Label 'Проверка подлинности NLA' -Value 'не требуется' -Color Yellow
+
+        if ($rdpConfigured) {
+            [void]$warnings.Add(
+                'Для разрешённого RDP не требуется NLA. Это менее безопасная конфигурация.'
+            )
+        }
+    }
+
     $termService = Get-Service `
         -Name 'TermService' `
         -ErrorAction SilentlyContinue
@@ -325,11 +355,18 @@ function Show-LocalRemoteAccessCheck {
             -Value 'служба не найдена' `
             -Color Red
 
-        Add-Issue `
-            -List $issues `
-            -Text 'Служба удалённых рабочих столов не найдена.'
+        if ($rdpConfigured) {
+            Add-Issue `
+                -List $issues `
+                -Text 'Служба удалённых рабочих столов не найдена.'
+        }
+        else {
+            [void]$warnings.Add(
+                'TermService не найдена, но входящие RDP-подключения также запрещены.'
+            )
+        }
     }
-    elseif ($termServiceState -match '^(?i)running$') {
+    elseif ($termServiceState -ieq 'Running') {
         Write-Value `
             -Label 'TermService' `
             -Value 'работает' `
@@ -341,9 +378,16 @@ function Show-LocalRemoteAccessCheck {
             -Value "не запущена ($termServiceState)" `
             -Color Red
 
-        Add-Issue `
-            -List $issues `
-            -Text 'Служба удалённых рабочих столов не запущена.'
+        if ($rdpConfigured) {
+            Add-Issue `
+                -List $issues `
+                -Text 'Служба удалённых рабочих столов не запущена.'
+        }
+        else {
+            [void]$warnings.Add(
+                'TermService не запущена. При запрещённом RDP это может быть нормальным состоянием.'
+            )
+        }
     }
 
     Write-Value -Label 'Порт RDP' -Value ([string]$rdpPort)
@@ -353,9 +397,15 @@ function Show-LocalRemoteAccessCheck {
     if ($listeningPorts -contains $rdpPort) {
         Write-Value -Label 'Прослушивание порта' -Value "порт $rdpPort слушается" -Color Green
     }
-    else {
+    elseif ($rdpConfigured) {
         Write-Value -Label 'Прослушивание порта' -Value "порт $rdpPort не слушается" -Color Red
         Add-Issue -List $issues -Text "Локальный порт RDP $rdpPort не находится в состоянии LISTEN."
+    }
+    else {
+        Write-Value `
+            -Label 'Прослушивание порта' `
+            -Value "порт $rdpPort не слушается, RDP запрещён" `
+            -Color DarkGray
     }
 
     $firewallRules = @()
@@ -365,9 +415,9 @@ function Show-LocalRemoteAccessCheck {
             $firewallRules = @(
                 Get-NetFirewallRule -ErrorAction Stop |
                 Where-Object {
-                    $_.Enabled -eq 'True' -and
-                    $_.Direction -eq 'Inbound' -and
-                    $_.Action -eq 'Allow' -and
+                    [string]$_.Enabled -match '^(?i:true|1)$' -and
+                    [string]$_.Direction -match '^(?i:inbound)$' -and
+                    [string]$_.Action -match '^(?i:allow)$' -and
                     (
                         $_.Name -match '(?i)RemoteDesktop|RDP' -or
                         $_.DisplayName -match '(?i)Remote Desktop|RDP|Удаленн|Віддален'
@@ -391,7 +441,11 @@ function Show-LocalRemoteAccessCheck {
             -Value 'разрешающие правила RDP не найдены или недоступны' `
             -Color Yellow
 
-        [void]$warnings.Add('Не удалось подтвердить наличие разрешающего правила брандмауэра для RDP.')
+        if ($rdpConfigured) {
+            [void]$warnings.Add(
+                'Не удалось подтвердить наличие разрешающего правила брандмауэра для RDP.'
+            )
+        }
     }
 
     Write-Section -Title 'ПРОГРАММЫ УДАЛЁННОГО ДОСТУПА'
