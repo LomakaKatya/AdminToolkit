@@ -14,6 +14,106 @@
 
         $baseUrl = 'https://raw.githubusercontent.com/LomakaKatya/AdminToolkit/main'
 
+        function Clear-RaccoonLaunchHistory {
+            $historyPath = $null
+            $historyLines = @()
+            $filteredHistory = @()
+
+            try {
+                if (Get-Module -Name PSReadLine -ErrorAction SilentlyContinue) {
+                    try {
+                        $historyPath = (Get-PSReadLineOption).HistorySavePath
+                    }
+                    catch {
+                    }
+
+                    # The launch command is still running at this moment.
+                    # SaveNothing prevents PSReadLine from writing it after completion.
+                    try {
+                        Set-PSReadLineOption `
+                            -HistorySaveStyle SaveNothing `
+                            -ErrorAction SilentlyContinue
+                    }
+                    catch {
+                    }
+
+                    # Skip toolkit commands if this PSReadLine version supports
+                    # AddToHistoryHandler.
+                    try {
+                        Set-PSReadLineOption `
+                            -AddToHistoryHandler {
+                                param([string]$Line)
+
+                                if ($Line -match '(?i)admintoolkit\.itraccoonverse\.space' -or
+                                    $Line -match '(?i)raw\.githubusercontent\.com[/\\]LomakaKatya[/\\]AdminToolkit') {
+                                    return $false
+                                }
+
+                                return $true
+                            } `
+                            -ErrorAction SilentlyContinue
+                    }
+                    catch {
+                    }
+
+                    try {
+                        [Microsoft.PowerShell.PSConsoleReadLine]::ClearHistory()
+                    }
+                    catch {
+                    }
+                }
+
+                try {
+                    Clear-History -ErrorAction SilentlyContinue
+                }
+                catch {
+                }
+
+                if ($historyPath -and
+                    (Test-Path -LiteralPath $historyPath -PathType Leaf)) {
+
+                    $historyLines = @(
+                        Get-Content `
+                            -LiteralPath $historyPath `
+                            -ErrorAction SilentlyContinue
+                    )
+
+                    $filteredHistory = @(
+                        $historyLines |
+                        Where-Object {
+                            $_ -notmatch '(?i)admintoolkit\.itraccoonverse\.space' -and
+                            $_ -notmatch '(?i)raw\.githubusercontent\.com[/\\]LomakaKatya[/\\]AdminToolkit'
+                        }
+                    )
+
+                    if ($filteredHistory.Count -eq 0) {
+                        Remove-Item `
+                            -LiteralPath $historyPath `
+                            -Force `
+                            -ErrorAction SilentlyContinue
+                    }
+                    else {
+                        $filteredHistory |
+                            Set-Content `
+                                -LiteralPath $historyPath `
+                                -Encoding UTF8 `
+                                -Force `
+                                -ErrorAction SilentlyContinue
+                    }
+                }
+            }
+            catch {
+            }
+            finally {
+                $historyLines = $null
+                $filteredHistory = $null
+            }
+        }
+
+        # Clean immediately. The final cleanup still runs during a normal exit.
+        Clear-RaccoonLaunchHistory
+
+
         function Test-IsAdministrator {
             $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
 
@@ -110,7 +210,23 @@
                     throw "GitHub вернул пустой файл: $Path"
                 }
 
-                $scriptBlock = [ScriptBlock]::Create([string]$content)
+                # Invoke-RestMethod может оставить UTF-8 BOM в начале строки.
+                # Старый Windows PowerShell воспринимает его как часть имени
+                # первой команды, например "﻿Set-StrictMode".
+                $bomMarkers = [char[]]@(
+                    [char]0xFEFF,
+                    [char]0x00EF,
+                    [char]0x00BB,
+                    [char]0x00BF
+                )
+
+                $scriptText = ([string]$content).TrimStart($bomMarkers)
+
+                if ([string]::IsNullOrWhiteSpace($scriptText)) {
+                    throw "После нормализации получен пустой скрипт: $Path"
+                }
+
+                $scriptBlock = [ScriptBlock]::Create($scriptText)
 
                 Write-Host 'Запускаю.' -ForegroundColor DarkGray
                 Write-Host ''
@@ -125,6 +241,8 @@
             finally {
                 # Удаляем загруженный текст и ScriptBlock сразу после выполнения модуля.
                 $content = $null
+                $scriptText = $null
+                $bomMarkers = $null
                 $scriptBlock = $null
                 $uri = $null
                 $cacheToken = $null
