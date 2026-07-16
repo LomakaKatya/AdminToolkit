@@ -6,11 +6,17 @@
         [Net.ServicePointManager]::SecurityProtocol -bor
         [Net.SecurityProtocolType]::Tls12
 
+    $cacheToken = [DateTime]::UtcNow.Ticks
+
     $launcherUrl =
-        'https://raw.githubusercontent.com/LomakaKatya/AdminToolkit/main/Start-AdminToolkit.ps1'
+        "https://raw.githubusercontent.com/LomakaKatya/AdminToolkit/main/Start-AdminToolkit.ps1?nocache=$cacheToken"
 
     $launcherCode = Invoke-RestMethod `
         -Uri $launcherUrl `
+        -Headers @{
+            'Cache-Control' = 'no-cache'
+            'Pragma'        = 'no-cache'
+        } `
         -ErrorAction Stop
 
     if ([string]::IsNullOrWhiteSpace([string]$launcherCode)) {
