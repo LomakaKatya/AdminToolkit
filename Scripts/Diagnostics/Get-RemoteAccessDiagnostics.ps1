@@ -30,7 +30,7 @@ function Write-Value {
 
 function Add-Issue {
     param(
-        [Parameter(Mandatory)][System.Collections.ArrayList]$List,
+        [Parameter(Mandatory)][AllowEmptyCollection()][System.Collections.ArrayList]$List,
         [Parameter(Mandatory)][string]$Text
     )
 
@@ -299,22 +299,51 @@ function Show-LocalRemoteAccessCheck {
         Add-Issue -List $issues -Text 'Подключения RDP запрещены в настройках Windows.'
     }
 
-    $termService = Get-Service -Name 'TermService' -ErrorAction SilentlyContinue
+    $termService = Get-Service `
+        -Name 'TermService' `
+        -ErrorAction SilentlyContinue
 
-    if ($null -eq $termService) {
-        Write-Value -Label 'TermService' -Value 'служба не найдена' -Color Red
-        Add-Issue -List $issues -Text 'Служба удалённых рабочих столов не найдена.'
+    $termServiceState = ''
+
+    if ($null -ne $termService) {
+        $termServiceState = [string]$termService.Status
     }
-    elseif ($termService.Status -eq 'Running') {
-        Write-Value -Label 'TermService' -Value 'работает' -Color Green
+    else {
+        $termServiceWmi = Get-WmiObject `
+            -Class Win32_Service `
+            -Filter "Name='TermService'" `
+            -ErrorAction SilentlyContinue
+
+        if ($null -ne $termServiceWmi) {
+            $termServiceState = [string]$termServiceWmi.State
+        }
+    }
+
+    if ([string]::IsNullOrWhiteSpace($termServiceState)) {
+        Write-Value `
+            -Label 'TermService' `
+            -Value 'служба не найдена' `
+            -Color Red
+
+        Add-Issue `
+            -List $issues `
+            -Text 'Служба удалённых рабочих столов не найдена.'
+    }
+    elseif ($termServiceState -match '^(?i)running$') {
+        Write-Value `
+            -Label 'TermService' `
+            -Value 'работает' `
+            -Color Green
     }
     else {
         Write-Value `
             -Label 'TermService' `
-            -Value "не запущена ($($termService.Status))" `
+            -Value "не запущена ($termServiceState)" `
             -Color Red
 
-        Add-Issue -List $issues -Text 'Служба удалённых рабочих столов не запущена.'
+        Add-Issue `
+            -List $issues `
+            -Text 'Служба удалённых рабочих столов не запущена.'
     }
 
     Write-Value -Label 'Порт RDP' -Value ([string]$rdpPort)
