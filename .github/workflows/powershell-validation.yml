@@ -1,0 +1,50 @@
+name: PowerShell validation
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "**/*.ps1"
+      - ".github/workflows/powershell-validation.yml"
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "**/*.ps1"
+      - ".github/workflows/powershell-validation.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-windows-powershell:
+    name: Windows PowerShell 5.1
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Parse and inspect PowerShell files
+        shell: powershell
+        run: |
+          .\Tools\Test-Repository.ps1 `
+            -RepositoryRoot $env:GITHUB_WORKSPACE `
+            -Parser WindowsPowerShell
+
+  validate-powershell-core:
+    name: PowerShell 7
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Parse and inspect PowerShell files
+        shell: pwsh
+        run: |
+          ./Tools/Test-Repository.ps1 `
+            -RepositoryRoot $env:GITHUB_WORKSPACE `
+            -Parser PowerShellCore
