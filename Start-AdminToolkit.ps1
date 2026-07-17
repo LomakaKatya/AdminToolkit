@@ -50,8 +50,8 @@
                     catch {
                     }
 
-                    # The launch command is still running at this moment.
-                    # SaveNothing prevents PSReadLine from writing it after completion.
+                    # Команда запуску в цей момент ще виконується.
+                    # SaveNothing не дозволяє PSReadLine записати її після завершення.
                     try {
                         Set-PSReadLineOption `
                             -HistorySaveStyle SaveNothing `
@@ -60,7 +60,7 @@
                     catch {
                     }
 
-                    # Skip toolkit commands if this PSReadLine version supports
+                    # Пропускаємо команди toolkit, якщо ця версія PSReadLine підтримує
                     # AddToHistoryHandler.
                     try {
                         Set-PSReadLineOption `
@@ -130,7 +130,7 @@
             }
         }
 
-        # Clean immediately. The final cleanup still runs during a normal exit.
+        # Очищуємо одразу. Фінальне очищення також виконується під час штатного виходу.
         Clear-RaccoonLaunchHistory
 
 
@@ -234,9 +234,9 @@
                     throw "GitHub повернув порожній файл: $Path"
                 }
 
-                # Invoke-RestMethod може оставить UTF-8 BOM в начале рядка.
-                # Старый Windows PowerShell воспринимает его как часть имени
-                # першої команди, например "﻿Set-StrictMode".
+                # Invoke-RestMethod може залишити UTF-8 BOM на початку рядка.
+                # Старий Windows PowerShell сприймає його як частину імені
+                # першої команди, наприклад "﻿Set-StrictMode".
                 $bomMarkers = [char[]]@(
                     [char]0xFEFF,
                     [char]0x00EF,
@@ -259,11 +259,11 @@
             }
             catch {
                 Write-Host ''
-                Write-Host 'Не втаклося виконати скрипт.' -ForegroundColor Red
+                Write-Host 'Не вдалося виконати скрипт.' -ForegroundColor Red
                 Write-Host $_.Exception.Message -ForegroundColor Yellow
             }
             finally {
-                # Витакляємо завантажений текст и ScriptBlock одразу після виконання модуля.
+                # Видаляємо завантажений текст і ScriptBlock одразу після виконання модуля.
                 $content = $null
                 $scriptText = $null
                 $bomMarkers = $null
@@ -290,10 +290,10 @@
                 Write-Host 'У цьому розділі поки немає скриптів.' `
                     -ForegroundColor DarkYellow
                 Write-Host ''
-                Write-Host '  0. Повернутися в головного меню'
+                Write-Host '  0. Повернутися до головного меню'
                 Write-Host ''
 
-                $choice = Read-Host 'Оберіть действие'
+                $choice = Read-Host 'Оберіть дію'
 
                 switch ($choice) {
                     '0' {
@@ -314,19 +314,19 @@
                 Write-RaccoonHeader -SectionName 'ДІАГНОСТИКА'
 
                 Write-Host '  МЕРЕЖА ТА ДОСТУП' -ForegroundColor DarkCyan
-                Write-Host '  1. Перевірити TCP-подключение к адресу и порту'
+                Write-Host '  1. Перевірити TCP-підключення до адреси й порту'
                 Write-Host '     [SAFE] [MEMORY ONLY]'
                 Write-Host ''
                 Write-Host '  2. Комплексна діагностика Wi-Fi'
                 Write-Host '     [SAFE] [MEMORY ONLY]'
                 Write-Host ''
-                Write-Host '  3. Комплексна діагностика інтерніу'
+                Write-Host '  3. Комплексна діагностика інтернету'
                 Write-Host '     [SAFE] [MEMORY ONLY]'
                 Write-Host ''
                 Write-Host '  4. Діагностика доступу до сайту'
                 Write-Host '     [SAFE] [MEMORY ONLY]'
                 Write-Host ''
-                Write-Host '  5. Діагностика відтакленого доступу'
+                Write-Host '  5. Діагностика віддаленого доступу'
                 Write-Host '     [SAFE] [MEMORY ONLY]'
                 Write-Host ''
 
@@ -338,10 +338,10 @@
                 Write-Host '     [SAFE] [MEMORY ONLY]'
                 Write-Host ''
 
-                Write-Host '  0. Повернутися в головного меню'
+                Write-Host '  0. Повернутися до головного меню'
                 Write-Host ''
 
-                $choice = Read-Host 'Оберіть действие'
+                $choice = Read-Host 'Оберіть дію'
 
                 switch ($choice) {
                     '1' {
@@ -359,7 +359,7 @@
                     '3' {
                         Invoke-RaccoonScript `
                             -Path 'Scripts/Diagnostics/Get-InternetDiagnostics.ps1' `
-                            -Name 'Комплексна діагностика інтерніу'
+                            -Name 'Комплексна діагностика інтернету'
                     }
 
                     '4' {
@@ -371,7 +371,7 @@
                     '5' {
                         Invoke-RaccoonScript `
                             -Path 'Scripts/Diagnostics/Get-RemoteAccessDiagnostics.ps1' `
-                            -Name 'Діагностика відтакленого доступу'
+                            -Name 'Діагностика віддаленого доступу'
                     }
 
                     '6' {
@@ -434,10 +434,10 @@
             Write-Host ''
 
             Write-Host '  РОЗДІЛИ' -ForegroundColor DarkCyan
-            Write-Host '  1. Диагностика'
-            Write-Host '  2. Мониторинг'
-            Write-Host '  3. Фикс'
-            Write-Host '  4. Установка софта'
+            Write-Host '  1. Діагностика'
+            Write-Host '  2. Моніторинг'
+            Write-Host '  3. Виправлення'
+            Write-Host '  4. Встановлення ПЗ'
             Write-Host ''
 
             Write-Host '  ЧАСТО ВИКОРИСТОВУВАНІ СКРИПТИ' -ForegroundColor DarkCyan
@@ -448,7 +448,7 @@
             Write-Host '  0. Вихід і закриття PowerShell'
             Write-Host ''
 
-            $choice = Read-Host 'Оберіть действие'
+            $choice = Read-Host 'Оберіть дію'
 
             switch ($choice) {
                 '1' {
@@ -491,7 +491,7 @@
         }
     }
     finally {
-        # Отключаем такльнейшую запись истории в текущей сессии.
+        # Вимикаємо подальший запис історії в поточному сеансі.
         $historyPath = $null
 
         try {
@@ -512,7 +512,7 @@
         catch {
         }
 
-        # Витакляємо з постоянной истории лише команды, связанные с toolkit.
+        # Видаляємо з постійної історії лише команди, пов’язані з toolkit.
         try {
             if ($historyPath -and
                 (Test-Path -LiteralPath $historyPath -PathType Leaf)) {
@@ -547,14 +547,14 @@
         catch {
         }
 
-        # Чистим обычную историю текущего PowerShell-процесса.
+        # Очищуємо звичайну історію поточного процесу PowerShell.
         try {
             Clear-History -ErrorAction SilentlyContinue
         }
         catch {
         }
 
-        # Убираем известные переменные и просим .NET освободить мусор.
+        # Очищуємо відомі змінні та просимо .NET звільнити непотрібні об’єкти.
         $baseUrl = $null
         $adminText = $null
         $choice = $null
@@ -570,7 +570,7 @@
 
         Start-Sleep -Milliseconds 500
 
-        # Закрываем именно текущий процесс PowerShell.
+        # Закриваємо саме поточний процес PowerShell.
         exit 0
     }
 }
