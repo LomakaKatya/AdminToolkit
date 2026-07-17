@@ -517,7 +517,7 @@ $errorText = Get-ErrorStateText -Code $errorState
 
 Write-Section -Title 'СТАН ПРИНТЕРА'
 
-Write-Value -Label 'Ім’я' -Value $printerName -Color Cyan
+Write-Value -Label 'Ім''я' -Value $printerName -Color Cyan
 Write-Value -Label 'Драйвер' -Value $driverName
 Write-Value -Label 'Порт' -Value $portName
 
@@ -830,7 +830,7 @@ elseif ($portName -match '^(\d{1,3}(?:\.\d{1,3}){3})') {
 }
 
 Write-Value -Label 'Тип порту' -Value $portType
-Write-Value -Label 'Ім’я порту' -Value $portName
+Write-Value -Label 'Ім''я порту' -Value $portName
 
 if (-not [string]::IsNullOrWhiteSpace($networkHost)) {
     Write-Value `

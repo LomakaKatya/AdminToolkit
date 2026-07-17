@@ -325,7 +325,7 @@ function Test-HttpsRequest {
 }
 
 Write-Host ''
-Write-Host 'Комплексна діагностика інтернет-з’єднання' `
+Write-Host 'Комплексна діагностика інтернет-з''єднання' `
     -ForegroundColor Cyan
 Write-Host 'Перевіряю локальний адаптер, шлюз, зовнішній IP, DNS і HTTPS...' `
     -ForegroundColor DarkGray
@@ -522,10 +522,10 @@ if (-not $externalPingAllFailed) {
     ).Minimum
 
     if ([double]$bestLoss -ge 25) {
-        Add-Issue -List $issues -Text 'На зовнішньому з’єднанні високі втрати пакетів.'
+        Add-Issue -List $issues -Text 'На зовнішньому з''єднанні високі втрати пакетів.'
     }
     elseif ([double]$bestLoss -gt 0) {
-        [void]$warnings.Add('На зовнішньому з’єднанні виявлено втрати пакетів.')
+        [void]$warnings.Add('На зовнішньому з''єднанні виявлено втрати пакетів.')
     }
 
     if ($null -ne $bestLatency -and [double]$bestLatency -ge 200) {
@@ -651,7 +651,7 @@ else {
 
     Add-Issue `
         -List $issues `
-        -Text 'Не вдається встановити TCP-з’єднання з портом 443 жодного перевірочного вузла.'
+        -Text 'Не вдається встановити TCP-з''єднання з портом 443 жодного перевірочного вузла.'
 }
 
 $httpsTargets = @(

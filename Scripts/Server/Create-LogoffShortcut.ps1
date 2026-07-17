@@ -74,7 +74,7 @@ finally {
 }
 
 if (-not (Test-Path -LiteralPath $shortcutPath -PathType Leaf)) {
-    throw "Ярлик не з’явився після збереження: $shortcutPath"
+    throw "Ярлик не з'явився після збереження: $shortcutPath"
 }
 
 $action = if ($shortcutAlreadyExisted) {

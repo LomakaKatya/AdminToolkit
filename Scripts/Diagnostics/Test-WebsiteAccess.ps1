@@ -334,7 +334,7 @@ catch {
 }
 
 if ([string]::IsNullOrWhiteSpace($uri.Host)) {
-    throw "В адресі не знайдено ім’я вузла: $inputUrl"
+    throw "В адресі не знайдено ім'я вузла: $inputUrl"
 }
 
 if ($uri.Scheme -notin @('http', 'https')) {
@@ -394,15 +394,15 @@ if ($addresses.Count -gt 0) {
         -Color $dnsColor
 
     if ($dnsWatch.ElapsedMilliseconds -ge 2000) {
-        Add-Issue -List $issues -Text 'DNS розпізнає ім’я дуже повільно.'
+        Add-Issue -List $issues -Text 'DNS розпізнає ім''я дуже повільно.'
     }
     elseif ($dnsWatch.ElapsedMilliseconds -ge 700) {
-        [void]$warnings.Add('DNS розпізнає ім’я повільніше, ніж зазвичай.')
+        [void]$warnings.Add('DNS розпізнає ім''я повільніше, ніж зазвичай.')
     }
 }
 else {
     Write-Value -Label 'DNS' -Value "помилка: $dnsError" -Color Red
-    Add-Issue -List $issues -Text 'DNS не може розпізнати ім’я сайту.'
+    Add-Issue -List $issues -Text 'DNS не може розпізнати ім''я сайту.'
 }
 
 $hostsEntries = @(Get-HostsEntries -HostName $uri.Host)
@@ -442,9 +442,9 @@ catch {
 }
 
 if ($usesProxy -and $addresses.Count -eq 0) {
-    [void]$issues.Remove('DNS не може розпізнати ім’я сайту.')
+    [void]$issues.Remove('DNS не може розпізнати ім''я сайту.')
     [void]$warnings.Add(
-        'Локальний DNS не розпізнав ім’я сайту, але проксі може виконати розпізнавання самостійно.'
+        'Локальний DNS не розпізнав ім''я сайту, але проксі може виконати розпізнавання самостійно.'
     )
 }
 

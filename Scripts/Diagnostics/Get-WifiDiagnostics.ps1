@@ -187,7 +187,7 @@ function Get-WlanInterfaceBlocks {
             -Patterns @(
                 '^(?i)name$',
                 '^(?i)имя$',
-                "^(?i)ім['’]?я$"
+                "^(?i)ім['']?я$"
             )
 
         if ($isName) {
@@ -514,7 +514,7 @@ foreach ($interface in $interfaces) {
     $name = Get-PropertyValue -Properties $interface -Patterns @(
         '^(?i)name$',
         '^(?i)имя$',
-        "^(?i)ім['’]?я$"
+        "^(?i)ім['']?я$"
     )
 
     $description = Get-PropertyValue -Properties $interface -Patterns @(
@@ -587,7 +587,7 @@ foreach ($interface in $interfaces) {
     $connected = Test-ConnectedState -State $state
 
     Write-Host "Інтерфейс $interfaceNumber" -ForegroundColor Cyan
-    Write-Value -Label 'Ім’я' -Value $name
+    Write-Value -Label 'Ім''я' -Value $name
     Write-Value -Label 'Адаптер' -Value $description
 
     if ($connected) {
@@ -778,7 +778,7 @@ if ($networkSummary.Count -gt 20) {
 }
 
 Write-Host ''
-Write-Host '* — мережа, до якої зараз підключений комп’ютер' `
+Write-Host '* — мережа, до якої зараз підключений комп''ютер' `
     -ForegroundColor DarkGray
 
 Write-Section -Title 'ЗАВАНТАЖЕНІСТЬ КАНАЛІВ'
@@ -858,7 +858,7 @@ foreach ($interface in $interfaces) {
 }
 
 if ($null -eq $connectedInterface) {
-    Write-Host '[FAIL] Комп’ютер не підключено до Wi-Fi.' -ForegroundColor Red
+    Write-Host '[FAIL] Комп''ютер не підключено до Wi-Fi.' -ForegroundColor Red
 }
 else {
     $signalText = Get-PropertyValue -Properties $connectedInterface -Patterns @(

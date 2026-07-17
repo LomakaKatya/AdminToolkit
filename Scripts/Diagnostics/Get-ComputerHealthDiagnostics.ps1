@@ -178,7 +178,7 @@ function Get-TopCpuProcesses {
 Write-Host ''
 Write-Host 'Діагностика зависань і продуктивності ПК' `
     -ForegroundColor Cyan
-Write-Host 'Знімок займає кілька секунд: вимірюю CPU, пам’ять, диски та процеси...' `
+Write-Host 'Знімок займає кілька секунд: вимірюю CPU, пам''ять, диски та процеси...' `
     -ForegroundColor DarkGray
 
 $issues = New-Object -TypeName System.Collections.ArrayList
@@ -233,7 +233,7 @@ if ($cpuLoads.Count -gt 0) {
 
 Write-Section -Title 'ЗАГАЛЬНИЙ СТАН'
 
-Write-Value -Label 'Комп’ютер' -Value ([string]$computer.Name) -Color Cyan
+Write-Value -Label 'Комп''ютер' -Value ([string]$computer.Name) -Color Cyan
 Write-Value -Label 'ОС' -Value ("{0} {1}" -f $os.Caption, $os.OSArchitecture)
 Write-Value -Label 'Останнє завантаження' -Value $lastBoot.ToString('dd.MM.yyyy HH:mm')
 Write-Value `
@@ -250,7 +250,7 @@ Write-Value `
     -Color (Get-PercentColor -Value $cpuLoad -Warning 60 -Critical 85)
 
 Write-Value `
-    -Label 'Оперативна пам’ять' `
+    -Label 'Оперативна пам''ять' `
     -Value ("використано {0}%; вільно {1} ГБ з {2} ГБ" -f `
         $usedMemoryPercent,
         $freeMemoryGB,
@@ -265,14 +265,14 @@ elseif ($cpuLoad -ge 60) {
 }
 
 if ($usedMemoryPercent -ge 92) {
-    Add-Issue -List $issues -Text 'Оперативна пам’ять майже повністю зайнята.'
+    Add-Issue -List $issues -Text 'Оперативна пам''ять майже повністю зайнята.'
 }
 elseif ($usedMemoryPercent -ge 80) {
-    [void]$warnings.Add('Оперативна пам’ять помітно завантажена.')
+    [void]$warnings.Add('Оперативна пам''ять помітно завантажена.')
 }
 
 if ($uptime.TotalDays -ge 30) {
-    [void]$warnings.Add("Комп’ютер не перезавантажувався $([int]$uptime.TotalDays) днів.")
+    [void]$warnings.Add("Комп'ютер не перезавантажувався $([int]$uptime.TotalDays) днів.")
 }
 
 Write-Section -Title 'ДИСКИ'
@@ -438,7 +438,7 @@ else {
     }
 }
 
-Write-Section -Title 'ПРОЦЕСИ: СПОЖИВАННЯ ПАМ’ЯТІ'
+Write-Section -Title 'ПРОЦЕСИ: СПОЖИВАННЯ ПАМ''ЯТІ'
 
 $topMemory = @(
     Get-Process -ErrorAction SilentlyContinue |
@@ -553,7 +553,7 @@ else {
 
     if ($deviceInfoCount -gt 0) {
         Write-Host ''
-        Write-Host 'Коди 22 і 45 зазвичай означають вимкнений або від’єднаний пристрій, а не поломку.' `
+        Write-Host 'Коди 22 і 45 зазвичай означають вимкнений або від''єднаний пристрій, а не поломку.' `
             -ForegroundColor DarkGray
     }
 }

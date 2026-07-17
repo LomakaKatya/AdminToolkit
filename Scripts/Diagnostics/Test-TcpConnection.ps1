@@ -107,7 +107,7 @@ Write-Host ''
 $target = ''
 
 while ([string]::IsNullOrWhiteSpace($target)) {
-    $target = (Read-Host 'Введіть IP-адресу або ім’я вузла').Trim()
+    $target = (Read-Host 'Введіть IP-адресу або ім''я вузла').Trim()
 
     if ([string]::IsNullOrWhiteSpace($target)) {
         Write-Host 'Адреса не може бути порожньою.' -ForegroundColor Yellow
@@ -151,7 +151,7 @@ if ($resolvedAddresses.Count -gt 0) {
 else {
     Write-Value -Label 'DNS' -Value "помилка: $dnsError" -Color Red
     Write-Host ''
-    Write-Host '[FAIL] Не вдалося розпізнати ім’я вузла.' -ForegroundColor Red
+    Write-Host '[FAIL] Не вдалося розпізнати ім''я вузла.' -ForegroundColor Red
     return
 }
 

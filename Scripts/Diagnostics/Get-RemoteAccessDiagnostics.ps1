@@ -173,7 +173,7 @@ function Show-OutboundCheck {
     }
     else {
         Write-Value -Label 'DNS' -Value "помилка: $dnsError" -Color Red
-        Add-Issue -List $issues -Text 'Не вдалося розпізнати ім’я віддаленого комп’ютера.'
+        Add-Issue -List $issues -Text 'Не вдалося розпізнати ім''я віддаленого комп''ютера.'
     }
 
     Write-Section -Title 'СЕТЕВАЯ ДОСТУПНОСТЬ'
@@ -211,7 +211,7 @@ function Show-OutboundCheck {
 
         Add-Issue `
             -List $issues `
-            -Text "TCP-порт $Port на віддаленому комп’ютері недоступний."
+            -Text "TCP-порт $Port на віддаленому комп'ютері недоступний."
     }
 
     Write-Section -Title 'ПІДСУМОК'
@@ -240,7 +240,7 @@ function Show-LocalRemoteAccessCheck {
     $issues = New-Object -TypeName System.Collections.ArrayList
     $warnings = New-Object -TypeName System.Collections.ArrayList
 
-    Write-Section -Title 'АДРЕСИ ЦЬОГО КОМП’ЮТЕРА'
+    Write-Section -Title 'АДРЕСИ ЦЬОГО КОМП''ЮТЕРА'
 
     $configs = @(
         Get-WmiObject `
@@ -260,10 +260,10 @@ function Show-LocalRemoteAccessCheck {
         Sort-Object -Unique
     )
 
-    Write-Value -Label 'Ім’я комп’ютера' -Value $env:COMPUTERNAME -Color Cyan
+    Write-Value -Label 'Ім''я комп''ютера' -Value $env:COMPUTERNAME -Color Cyan
     Write-Value -Label 'IPv4' -Value ($ipv4 -join ', ')
 
-    Write-Section -Title 'RDP НА ЦЬОМУ КОМП’ЮТЕРІ'
+    Write-Section -Title 'RDP НА ЦЬОМУ КОМП''ЮТЕРІ'
 
     $terminalServerPath = 'HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server'
     $rdpTcpPath = 'HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp'
@@ -632,18 +632,18 @@ function Show-LocalRemoteAccessCheck {
 Write-Host ''
 Write-Host 'Діагностика віддаленого доступу' -ForegroundColor Cyan
 Write-Host ''
-Write-Host '  1. Перевірити підключення до іншого комп’ютера'
-Write-Host '  2. Перевірити віддалений доступ на цьому комп’ютері'
+Write-Host '  1. Перевірити підключення до іншого комп''ютера'
+Write-Host '  2. Перевірити віддалений доступ на цьому комп''ютері'
 Write-Host ''
 
 $mode = Read-Host 'Оберіть режим'
 
 switch ($mode) {
     '1' {
-        $hostName = (Read-Host 'Введіть IP-адресу або ім’я комп’ютера').Trim()
+        $hostName = (Read-Host 'Введіть IP-адресу або ім''я комп''ютера').Trim()
 
         if ([string]::IsNullOrWhiteSpace($hostName)) {
-            throw 'Адреса комп’ютера не може бути порожньою.'
+            throw 'Адреса комп''ютера не може бути порожньою.'
         }
 
         $port = 3389
