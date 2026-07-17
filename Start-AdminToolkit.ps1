@@ -330,7 +330,7 @@
                 Write-Host '     [SAFE] [MEMORY ONLY]'
                 Write-Host ''
 
-                Write-Host '  КОМП’ЮТЕР І ПРИСТРОЇ' -ForegroundColor DarkCyan
+                Write-Host "  КОМП'ЮТЕР І ПРИСТРОЇ" -ForegroundColor DarkCyan
                 Write-Host '  6. Діагностика друку'
                 Write-Host '     [SAFE] [MEMORY ONLY]'
                 Write-Host ''
@@ -427,10 +427,10 @@
                 'Ні'
             }
 
-            Write-Host "Комп’ютер:     $env:COMPUTERNAME"
-            Write-Host "Користувач:  $env:USERDOMAIN\$env:USERNAME"
-            Write-Host "PowerShell:    $($PSVersionTable.PSVersion)"
-            Write-Host "Адміністратор: $adminText"
+            Write-Host ('Комп\'ютер:     {0}' -f $env:COMPUTERNAME)
+            Write-Host ('Користувач:    {0}\\{1}' -f $env:USERDOMAIN, $env:USERNAME)
+            Write-Host ('PowerShell:    {0}' -f $PSVersionTable.PSVersion)
+            Write-Host ('Адміністратор: {0}' -f $adminText)
             Write-Host ''
 
             Write-Host '  РОЗДІЛИ' -ForegroundColor DarkCyan
@@ -512,7 +512,7 @@
         catch {
         }
 
-        # Видаляємо з постійної історії лише команди, пов’язані з toolkit.
+        # Видаляємо з постійної історії лише команди, пов'язані з toolkit.
         try {
             if ($historyPath -and
                 (Test-Path -LiteralPath $historyPath -PathType Leaf)) {
@@ -554,7 +554,7 @@
         catch {
         }
 
-        # Очищуємо відомі змінні та просимо .NET звільнити непотрібні об’єкти.
+        # Очищуємо відомі змінні та просимо .NET звільнити непотрібні об'єкти.
         $baseUrl = $null
         $adminText = $null
         $choice = $null
