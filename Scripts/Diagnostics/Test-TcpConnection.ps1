@@ -107,7 +107,7 @@ Write-Host ''
 $target = ''
 
 while ([string]::IsNullOrWhiteSpace($target)) {
-    $target = (Read-Host 'Введіть IP-адрес или имя узла').Trim()
+    $target = (Read-Host 'Введіть IP-адресу або ім’я вузла').Trim()
 
     if ([string]::IsNullOrWhiteSpace($target)) {
         Write-Host 'Адреса не може бути порожньою.' -ForegroundColor Yellow
@@ -125,7 +125,7 @@ while ($true) {
         break
     }
 
-    Write-Host 'Порт має бути числом от 1 до 65535.' -ForegroundColor Yellow
+    Write-Host 'Порт має бути числом від 1 до 65535.' -ForegroundColor Yellow
 }
 
 Write-Host ''
@@ -146,12 +146,12 @@ catch {
 }
 
 if ($resolvedAddresses.Count -gt 0) {
-    Write-Value -Label 'Разрешённые адреса' -Value ($resolvedAddresses -join ', ')
+    Write-Value -Label 'Розпізнані адреси' -Value ($resolvedAddresses -join ', ')
 }
 else {
     Write-Value -Label 'DNS' -Value "помилка: $dnsError" -Color Red
     Write-Host ''
-    Write-Host '[FAIL] Ім’я узла не втаклося разрешить.' -ForegroundColor Red
+    Write-Host '[FAIL] Не вдалося розпізнати ім’я вузла.' -ForegroundColor Red
     return
 }
 
@@ -196,8 +196,8 @@ if ($null -ne $testNetConnection) {
                 -DefaultValue ''
         )
 
-        Write-Value -Label 'Відтаклений адрес' -Value $remoteAddress
-        Write-Value -Label 'Локальний адрес' -Value $sourceAddress
+        Write-Value -Label 'Віддалена адреса' -Value $remoteAddress
+        Write-Value -Label 'Локальна адреса' -Value $sourceAddress
         Write-Value -Label 'Інтерфейс' -Value $interfaceAlias
         Write-Host ''
 
@@ -213,7 +213,7 @@ if ($null -ne $testNetConnection) {
         return
     }
     catch {
-        Write-Host 'Test-NetConnection завершился ошибкой. Используется совместимая проверка.' `
+        Write-Host 'Test-NetConnection завершився помилкою. Використовується сумісна перевірка.' `
             -ForegroundColor DarkYellow
         Write-Host $_.Exception.Message -ForegroundColor DarkGray
         Write-Host ''
