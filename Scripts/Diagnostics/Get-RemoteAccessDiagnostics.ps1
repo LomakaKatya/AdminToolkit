@@ -173,7 +173,7 @@ function Show-OutboundCheck {
     }
     else {
         Write-Value -Label 'DNS' -Value "помилка: $dnsError" -Color Red
-        Add-Issue -List $issues -Text 'Не втаклося разрешить имя відтакленого комп’ютера.'
+        Add-Issue -List $issues -Text 'Не вдалося розпізнати ім’я віддаленого комп’ютера.'
     }
 
     Write-Section -Title 'СЕТЕВАЯ ДОСТУПНОСТЬ'
@@ -192,7 +192,7 @@ function Show-OutboundCheck {
             -Value "немає відповіді ($($pingResult.Status))" `
             -Color Yellow
 
-        [void]$warnings.Add('Відтаклений узел не отвечает на ping. ICMP може быть заборонений.')
+        [void]$warnings.Add('Віддалений вузол не відповідає на ping. ICMP може бути заборонено.')
     }
 
     $tcpResult = Test-TcpPort -HostName $HostName -Port $Port
@@ -211,13 +211,13 @@ function Show-OutboundCheck {
 
         Add-Issue `
             -List $issues `
-            -Text "TCP-порт $Port на утаклённом комп’ютері недоступний."
+            -Text "TCP-порт $Port на віддаленому комп’ютері недоступний."
     }
 
     Write-Section -Title 'ПІДСУМОК'
 
     if ($issues.Count -eq 0 -and $warnings.Count -eq 0) {
-        Write-Host '[OK] Відтаклений узел и выбранный порт доступны.' `
+        Write-Host '[OK] Віддалений вузол і вибраний порт доступні.' `
             -ForegroundColor Green
     }
     else {
@@ -230,7 +230,7 @@ function Show-OutboundCheck {
         }
 
         if ($tcpResult.Success -and -not $pingResult.Success) {
-            Write-Host '[OK] Несмотря на отсутствие ping, нужный сервис доступний по TCP.' `
+            Write-Host '[OK] Попри відсутність ping, потрібна служба доступна через TCP.' `
                 -ForegroundColor Green
         }
     }
@@ -292,15 +292,15 @@ function Show-LocalRemoteAccessCheck {
     }
 
     if ($null -eq $denyConnections) {
-        Write-Value -Label 'RDP дозволений' -Value 'не втаклося определить' -Color Yellow
-        [void]$warnings.Add('Не втаклося прочитать настройку fDenyTSConnections.')
+        Write-Value -Label 'RDP дозволений' -Value 'не вдалося визначити' -Color Yellow
+        [void]$warnings.Add('Не вдалося прочитати параметр fDenyTSConnections.')
     }
     elseif ($denyConnections -eq 0) {
         Write-Value -Label 'RDP дозволений' -Value 'так' -Color Green
     }
     else {
         Write-Value -Label 'RDP дозволений' -Value 'ні' -Color Red
-        Add-Issue -List $issues -Text 'Подключения RDP заборонені в настройках Windows.'
+        Add-Issue -List $issues -Text 'RDP-підключення заборонені в налаштуваннях Windows.'
     }
 
     $rdpConfigured = ($denyConnections -eq 0)
@@ -314,7 +314,7 @@ function Show-LocalRemoteAccessCheck {
     }
 
     if ($null -eq $nlaRequired) {
-        Write-Value -Label 'Перевірка автентичності NLA' -Value 'не втаклося определить' -Color DarkGray
+        Write-Value -Label 'Перевірка автентичності NLA' -Value 'не вдалося визначити' -Color DarkGray
     }
     elseif ($nlaRequired -eq 1) {
         Write-Value -Label 'Перевірка автентичності NLA' -Value 'потрібна' -Color Green
@@ -362,7 +362,7 @@ function Show-LocalRemoteAccessCheck {
         }
         else {
             [void]$warnings.Add(
-                'TermService не знайдена, но вхідні RDP-підключення также заборонені.'
+                'TermService не знайдено, але вхідні RDP-підключення також заборонені.'
             )
         }
     }
@@ -385,7 +385,7 @@ function Show-LocalRemoteAccessCheck {
         }
         else {
             [void]$warnings.Add(
-                'TermService не запущена. При забороненийном RDP це може быть нормальным состоянием.'
+                'TermService не запущено. Якщо RDP заборонено, це може бути нормальним станом.'
             )
         }
     }
@@ -438,12 +438,12 @@ function Show-LocalRemoteAccessCheck {
     else {
         Write-Value `
             -Label 'Правила брандмауера' `
-            -Value 'дозвільні правила RDP не знайденоы или недоступны' `
+            -Value 'дозвільні правила RDP не знайдено або вони недоступні' `
             -Color Yellow
 
         if ($rdpConfigured) {
             [void]$warnings.Add(
-                'Не втаклося підтвердити наявність дозвільного правила брандмауера для RDP.'
+                'Не вдалося підтвердити наявність дозвільного правила брандмауера для RDP.'
             )
         }
     }
@@ -547,12 +547,12 @@ function Show-LocalRemoteAccessCheck {
             -Color $color
 
         if (-not $runningService -and $processes.Count -eq 0) {
-            [void]$warnings.Add("$($pattern.Name) встановлено, но службу та процес не запущено.")
+            [void]$warnings.Add("$($pattern.Name) встановлено, але службу та процес не запущено.")
         }
     }
 
     if ($foundTools -eq 0) {
-        Write-Host '[INFO] Серед поширених засобів відтакленого доступа нічого не виявлено.' `
+        Write-Host '[INFO] Серед поширених засобів віддаленого доступу нічого не виявлено.' `
             -ForegroundColor DarkGray
     }
 
@@ -591,7 +591,7 @@ function Show-LocalRemoteAccessCheck {
     )
 
     if ($rdpEvents.Count -eq 0) {
-        Write-Host '[OK] За 24 години явних помилок RDP в операционных журналах не знайденоо.' `
+        Write-Host '[OK] За 24 години явних помилок RDP в операційних журналах не знайдено.' `
             -ForegroundColor Green
     }
     else {
@@ -609,13 +609,13 @@ function Show-LocalRemoteAccessCheck {
                 -ForegroundColor Yellow
         }
 
-        [void]$warnings.Add('У журналах RDP є нещотаквні попередження або помилки.')
+        [void]$warnings.Add('У журналах RDP є нещодавні попередження або помилки.')
     }
 
     Write-Section -Title 'ПІДСУМОК'
 
     if ($issues.Count -eq 0 -and $warnings.Count -eq 0) {
-        Write-Host '[OK] Локальні компоненти відтакленого доступа виглятакють справними.' `
+        Write-Host '[OK] Локальні компоненти віддаленого доступу виглядають справними.' `
             -ForegroundColor Green
     }
     else {
@@ -630,20 +630,20 @@ function Show-LocalRemoteAccessCheck {
 }
 
 Write-Host ''
-Write-Host 'Діагностика відтакленого доступу' -ForegroundColor Cyan
+Write-Host 'Діагностика віддаленого доступу' -ForegroundColor Cyan
 Write-Host ''
-Write-Host '  1. Перевірити подключение к другому комп’ютеру'
-Write-Host '  2. Перевірити відтаклений доступ на цем комп’ютері'
+Write-Host '  1. Перевірити підключення до іншого комп’ютера'
+Write-Host '  2. Перевірити віддалений доступ на цьому комп’ютері'
 Write-Host ''
 
 $mode = Read-Host 'Оберіть режим'
 
 switch ($mode) {
     '1' {
-        $hostName = (Read-Host 'Введіть IP-адрес или имя комп’ютера').Trim()
+        $hostName = (Read-Host 'Введіть IP-адресу або ім’я комп’ютера').Trim()
 
         if ([string]::IsNullOrWhiteSpace($hostName)) {
-            throw 'Адрес комп’ютера не може быть порожнім.'
+            throw 'Адреса комп’ютера не може бути порожньою.'
         }
 
         $port = 3389
@@ -653,7 +653,7 @@ switch ($mode) {
             if (-not [int]::TryParse($portText, [ref]$port) -or
                 $port -lt 1 -or
                 $port -gt 65535) {
-                throw 'Порт має бути числом от 1 до 65535.'
+                throw 'Порт має бути числом від 1 до 65535.'
             }
         }
 
@@ -665,6 +665,6 @@ switch ($mode) {
     }
 
     default {
-        throw 'Нужно выбрать 1 или 2.'
+        throw 'Потрібно вибрати 1 або 2.'
     }
 }
