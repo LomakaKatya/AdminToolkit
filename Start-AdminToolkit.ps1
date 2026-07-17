@@ -426,9 +426,8 @@
             else {
                 'Ні'
             }
-
-            Write-Host ('Комп\'ютер:     {0}' -f $env:COMPUTERNAME)
-            Write-Host ('Користувач:    {0}\\{1}' -f $env:USERDOMAIN, $env:USERNAME)
+            Write-Host ('Комп''ютер:     {0}' -f $env:COMPUTERNAME)
+            Write-Host ('Користувач:    {0}\{1}' -f $env:USERDOMAIN, $env:USERNAME)
             Write-Host ('PowerShell:    {0}' -f $PSVersionTable.PSVersion)
             Write-Host ('Адміністратор: {0}' -f $adminText)
             Write-Host ''
@@ -441,7 +440,7 @@
             Write-Host ''
 
             Write-Host '  ЧАСТО ВИКОРИСТОВУВАНІ СКРИПТИ' -ForegroundColor DarkCyan
-            Write-Host '  5. Створити або відновити кнопку "Завершення сеансу"'
+            Write-Host '  5. Створити або відновити кнопку «Завершення сеансу»'
             Write-Host '     [ADMIN] [CHANGES SYSTEM]'
             Write-Host ''
 
@@ -512,7 +511,7 @@
         catch {
         }
 
-        # Видаляємо з постійної історії лише команди, пов''язані з toolkit.
+        # Видаляємо з постійної історії лише команди, пов'язані з toolkit.
         try {
             if ($historyPath -and
                 (Test-Path -LiteralPath $historyPath -PathType Leaf)) {
@@ -554,7 +553,7 @@
         catch {
         }
 
-        # Очищуємо відомі змінні та просимо .NET звільнити непотрібні об''єкти.
+        # Очищуємо відомі змінні та просимо .NET звільнити непотрібні об'єкти.
         $baseUrl = $null
         $adminText = $null
         $choice = $null

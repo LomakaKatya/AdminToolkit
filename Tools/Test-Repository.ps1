@@ -97,15 +97,37 @@ Write-Host "PowerShell parser: $Parser"
 Write-Host ('=' * 72)
 Write-Host "Files found: $($powerShellFiles.Count)"
 
+$strictUtf8 = New-Object `
+    -TypeName System.Text.UTF8Encoding `
+    -ArgumentList $false, $true
+
 foreach ($file in $powerShellFiles) {
     $relativePath = Get-RelativePath `
         -BasePath $resolvedRoot `
         -FullPath $file.FullName
 
+    try {
+        $sourceText = [System.IO.File]::ReadAllText(
+            $file.FullName,
+            $strictUtf8
+        )
+    }
+    catch {
+        Add-ValidationError `
+            -Errors $errors `
+            -File $relativePath `
+            -Message 'The file is not valid UTF-8.'
+
+        continue
+    }
+
     $tokens = $null
     $parseErrors = $null
 
-    [void][System.Management.Automation.Language.Parser]::ParseFile(
+    # ParseInput is intentional. Windows PowerShell 5.1 treats a UTF-8 file
+    # without BOM as an ANSI file when ParseFile is used.
+    [void][System.Management.Automation.Language.Parser]::ParseInput(
+        $sourceText,
         $file.FullName,
         [ref]$tokens,
         [ref]$parseErrors
@@ -154,10 +176,6 @@ $forbiddenCharacters = @(
     }
 )
 
-$strictUtf8 = New-Object `
-    -TypeName System.Text.UTF8Encoding `
-    -ArgumentList $false, $true
-
 foreach ($file in $powerShellFiles) {
     $relativePath = Get-RelativePath `
         -BasePath $resolvedRoot `
@@ -185,11 +203,6 @@ foreach ($file in $powerShellFiles) {
         )
     }
     catch {
-        Add-ValidationError `
-            -Errors $errors `
-            -File $relativePath `
-            -Message 'The file is not valid UTF-8.'
-
         continue
     }
 
