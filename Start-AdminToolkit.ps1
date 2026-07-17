@@ -337,6 +337,13 @@
                 Write-Host '  7. Діагностика зависань і продуктивності ПК'
                 Write-Host '     [SAFE] [MEMORY ONLY]'
                 Write-Host ''
+                Write-Host '  ОБЛІКОВІ ЗАПИСИ ТА ЖУРНАЛИ' -ForegroundColor DarkCyan
+                Write-Host '  8. Локальні користувачі та час останнього входу'
+                Write-Host '     [SAFE] [MEMORY ONLY]'
+                Write-Host ''
+                Write-Host '  9. Невдалі спроби входу, подія 4625'
+                Write-Host '     [SAFE] [MEMORY ONLY] [ADMIN]'
+                Write-Host ''
 
                 Write-Host '  0. Повернутися до головного меню'
                 Write-Host ''
@@ -386,6 +393,19 @@
                             -Name 'Діагностика зависань і продуктивності ПК'
                     }
 
+                    '8' {
+                        Invoke-RaccoonScript `
+                            -Path 'Scripts/Diagnostics/Get-LocalUserLogonInfo.ps1' `
+                            -Name 'Локальні користувачі та час останнього входу'
+                    }
+
+                    '9' {
+                        Invoke-RaccoonScript `
+                            -Path 'Scripts/Diagnostics/Get-FailedLogons.ps1' `
+                            -Name 'Невдалі спроби входу, подія 4625' `
+                            -RequiresAdministrator
+                    }
+
                     '0' {
                         return
                     }
@@ -404,7 +424,80 @@
         }
 
         function Show-FixMenu {
-            Show-EmptySection -SectionName 'ВИПРАВЛЕННЯ'
+            while ($true) {
+                Write-RaccoonHeader -SectionName 'ВИПРАВЛЕННЯ'
+
+                Write-Host '  КОРИСТУВАЦЬКІ ПРОГРАМИ' -ForegroundColor DarkCyan
+                Write-Host '  1. Очистити кеш 1С'
+                Write-Host '     [CHANGES USER DATA]'
+                Write-Host ''
+                Write-Host '  2. Перезапустити буфер обміну RDP'
+                Write-Host '     [CHANGES SYSTEM]'
+                Write-Host ''
+
+                Write-Host '  СИСТЕМНІ СЛУЖБИ' -ForegroundColor DarkCyan
+                Write-Host '  3. Очистити чергу та перезапустити службу друку'
+                Write-Host '     [ADMIN] [CHANGES SYSTEM]'
+                Write-Host ''
+                Write-Host '  4. Виправити синхронізацію часу Windows'
+                Write-Host '     [ADMIN] [CHANGES SYSTEM]'
+                Write-Host ''
+
+                Write-Host '  РОЗШИРЕНІ НАЛАШТУВАННЯ' -ForegroundColor DarkCyan
+                Write-Host '  5. Сумісність RPC-автентифікації мережевого друку'
+                Write-Host '     [ADMIN] [SECURITY SENSITIVE] [CHANGES SYSTEM]'
+                Write-Host ''
+
+                Write-Host '  0. Повернутися до головного меню'
+                Write-Host ''
+
+                $choice = Read-Host 'Оберіть дію'
+
+                switch ($choice) {
+                    '1' {
+                        Invoke-RaccoonScript `
+                            -Path 'Scripts/Fix/Clear-1CCache.ps1' `
+                            -Name 'Очищення кешу 1С'
+                    }
+
+                    '2' {
+                        Invoke-RaccoonScript `
+                            -Path 'Scripts/Fix/Restart-RdpClipboard.ps1' `
+                            -Name 'Перезапуск буфера обміну RDP'
+                    }
+
+                    '3' {
+                        Invoke-RaccoonScript `
+                            -Path 'Scripts/Fix/Restart-PrintSpoolerAndClearQueue.ps1' `
+                            -Name 'Очищення черги та перезапуск служби друку' `
+                            -RequiresAdministrator
+                    }
+
+                    '4' {
+                        Invoke-RaccoonScript `
+                            -Path 'Scripts/Fix/Repair-WindowsTime.ps1' `
+                            -Name 'Виправлення синхронізації часу Windows' `
+                            -RequiresAdministrator
+                    }
+
+                    '5' {
+                        Invoke-RaccoonScript `
+                            -Path 'Scripts/Fix/Configure-PrintRpcPrivacy.ps1' `
+                            -Name 'Сумісність RPC-автентифікації мережевого друку' `
+                            -RequiresAdministrator
+                    }
+
+                    '0' {
+                        return
+                    }
+
+                    default {
+                        Write-Host ''
+                        Write-Host 'Такого пункту поки немає.' -ForegroundColor Yellow
+                        Start-Sleep -Seconds 1
+                    }
+                }
+            }
         }
 
         function Show-SoftwareMenu {
