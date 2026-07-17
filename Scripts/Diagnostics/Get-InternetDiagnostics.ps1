@@ -325,9 +325,9 @@ function Test-HttpsRequest {
 }
 
 Write-Host ''
-Write-Host 'Комплексна діагностика інтерні-з’єднання' `
+Write-Host 'Комплексна діагностика інтернет-з’єднання' `
     -ForegroundColor Cyan
-Write-Host 'Перевіряю локальний атакптер, шлюз, зовнішній IP, DNS і HTTPS...' `
+Write-Host 'Перевіряю локальний адаптер, шлюз, зовнішній IP, DNS і HTTPS...' `
     -ForegroundColor DarkGray
 
 Enable-Tls12
@@ -425,7 +425,7 @@ foreach ($configuration in $configurations) {
     $dnsServers = @($configuration.DNSServerSearchOrder)
 
     Write-Value `
-        -Label 'Атакптер' `
+        -Label 'Адаптер' `
         -Value $(if ($null -ne $adapter) {
             [string]$adapter.Name
         }
@@ -467,7 +467,7 @@ foreach ($configuration in $configurations) {
 $primaryConfiguration = $configurations[0]
 $gateway = [string]@($primaryConfiguration.DefaultIPGateway)[0]
 
-Write-Section -Title 'ЗАДЕРЖКА И ПОТЕРИ'
+Write-Section -Title 'ЗАТРИМКА ТА ВТРАТИ'
 
 $gatewayResult = Invoke-PingSummary -Target $gateway -Count 4
 $cloudflareResult = Invoke-PingSummary -Target '1.1.1.1' -Count 4
@@ -480,13 +480,13 @@ Show-PingResult `
     -CriticalLatency 50
 
 Show-PingResult `
-    -Label 'Інтерні 1.1.1.1' `
+    -Label 'Інтернет 1.1.1.1' `
     -Result $cloudflareResult `
     -WarningLatency 100 `
     -CriticalLatency 200
 
 Show-PingResult `
-    -Label 'Інтерні 8.8.8.8' `
+    -Label 'Інтернет 8.8.8.8' `
     -Result $googleResult `
     -WarningLatency 100 `
     -CriticalLatency 200
@@ -496,7 +496,7 @@ $gatewayPingFailed = ($gatewayResult.Received -eq 0)
 if (-not $gatewayPingFailed -and
     ($gatewayResult.LossPercent -gt 0 -or
         [double]$gatewayResult.AverageMs -ge 20)) {
-    [void]$warnings.Add('До локального шлюза есть втрати или высокая задержка.')
+    [void]$warnings.Add('До локального шлюзу є втрати або висока затримка.')
 }
 
 $successfulExternalPings = @(
@@ -522,17 +522,17 @@ if (-not $externalPingAllFailed) {
     ).Minimum
 
     if ([double]$bestLoss -ge 25) {
-        Add-Issue -List $issues -Text 'На внешнем соединении высокая потеря пакетов.'
+        Add-Issue -List $issues -Text 'На зовнішньому з’єднанні високі втрати пакетів.'
     }
     elseif ([double]$bestLoss -gt 0) {
-        [void]$warnings.Add('На внешнем соединении обнаружены втрати пакетов.')
+        [void]$warnings.Add('На зовнішньому з’єднанні виявлено втрати пакетів.')
     }
 
     if ($null -ne $bestLatency -and [double]$bestLatency -ge 200) {
-        Add-Issue -List $issues -Text 'Задержка до внешних узлов очень высокая.'
+        Add-Issue -List $issues -Text 'Затримка до зовнішніх вузлів дуже висока.'
     }
     elseif ($null -ne $bestLatency -and [double]$bestLatency -ge 100) {
-        [void]$warnings.Add('Задержка до внешних узлов повышена.')
+        [void]$warnings.Add('Затримка до зовнішніх вузлів підвищена.')
     }
 }
 
@@ -585,28 +585,28 @@ if ($dnsAddresses.Count -gt 0) {
     }
 
     Write-Value `
-        -Label 'Разрешение имени' `
+        -Label 'Розпізнавання імені' `
         -Value "$dnsHost -> $($dnsAddresses -join ', ') за $($dnsWatch.ElapsedMilliseconds) мс" `
         -Color $dnsColor
 
     if ($dnsWatch.ElapsedMilliseconds -ge 2000) {
-        Add-Issue -List $issues -Text 'DNS отвечает очень медленно.'
+        Add-Issue -List $issues -Text 'DNS відповідає дуже повільно.'
     }
     elseif ($dnsWatch.ElapsedMilliseconds -ge 700) {
-        [void]$warnings.Add('DNS отвечает медленнее обычного.')
+        [void]$warnings.Add('DNS відповідає повільніше, ніж зазвичай.')
     }
 }
 else {
     Write-Value `
-        -Label 'Разрешение имени' `
+        -Label 'Розпізнавання імені' `
         -Value "помилка: $($dnsErrors -join ' | ')" `
         -Color Red
 
     if ($cloudflareResult.Received -gt 0 -or $googleResult.Received -gt 0) {
-        Add-Issue -List $issues -Text 'Внешние IP доступны, но DNS не разрешает проверочные имена.'
+        Add-Issue -List $issues -Text 'Зовнішні IP доступні, але DNS не розпізнає перевірочні імена.'
     }
     else {
-        Add-Issue -List $issues -Text 'Не працює разрешение DNS-имён.'
+        Add-Issue -List $issues -Text 'Не працює розпізнавання DNS-імен.'
     }
 }
 
@@ -646,12 +646,12 @@ if ($tcpResult.Success) {
 else {
     Write-Value `
         -Label 'TCP 443' `
-        -Value "оба проверочных узла недоступны; післядняя помилка: $($tcpResult.Error)" `
+        -Value "обидва перевірочні вузли недоступні; остання помилка: $($tcpResult.Error)" `
         -Color Red
 
     Add-Issue `
         -List $issues `
-        -Text 'Не утакётся установить TCP-соединение на порт 443 ни с одним проверочным узлом.'
+        -Text 'Не вдається встановити TCP-з’єднання з портом 443 жодного перевірочного вузла.'
 }
 
 $httpsTargets = @(
@@ -695,20 +695,20 @@ if ($httpsResult.Success) {
         -Value "$($httpsResult.Status), $($httpsResult.TimeMs) мс" `
         -Color $httpsColor
 
-    Write-Value -Label 'Проверочный адрес' -Value $httpsTargetUsed
-    Write-Value -Label 'Конечный адрес' -Value $httpsResult.FinalUrl
+    Write-Value -Label 'Перевірочна адреса' -Value $httpsTargetUsed
+    Write-Value -Label 'Кінцева адреса' -Value $httpsResult.FinalUrl
 
     if ($httpsResult.TimeMs -ge 5000) {
-        Add-Issue -List $issues -Text 'HTTPS-страница отвечает очень медленно.'
+        Add-Issue -List $issues -Text 'HTTPS-сторінка відповідає дуже повільно.'
     }
     elseif ($httpsResult.TimeMs -ge 2000) {
-        [void]$warnings.Add('HTTPS-страница отвечает медленно.')
+        [void]$warnings.Add('HTTPS-сторінка відповідає повільно.')
     }
 
     if ($null -ne $httpsResult.StatusCode -and
         [int]$httpsResult.StatusCode -ge 400) {
         [void]$warnings.Add(
-            "Проверочный HTTPS-узел отвечает кодом $($httpsResult.StatusCode), но соединение встановленоо."
+            "Перевірочний HTTPS-вузол відповідає кодом $($httpsResult.StatusCode), но соединение встановлено."
         )
     }
 }
@@ -720,13 +720,13 @@ else {
     }
 
     Write-Value -Label 'HTTP-відповідь' -Value $failure -Color Red
-    Add-Issue -List $issues -Text 'HTTPS-запрос не выполняется ни к одному проверочному узлу.'
+    Add-Issue -List $issues -Text 'HTTPS-запит не виконується до жодного перевірочного вузла.'
 }
 
 if ($externalPingAllFailed) {
     if ($tcpResult.Success -or $httpsResult.Success) {
         [void]$warnings.Add(
-            'Внешние узлы не отвечают на ICMP, но TCP/HTTPS работают. Вероятно, ping фильтруется.'
+            'Зовнішні вузли не відповідають на ICMP, але TCP/HTTPS працюють. Імовірно, ping фільтрується.'
         )
     }
     else {
@@ -739,13 +739,13 @@ if ($externalPingAllFailed) {
 if ($gatewayPingFailed) {
     if ($tcpResult.Success -or $httpsResult.Success) {
         [void]$warnings.Add(
-            'Шлюз не отвечает на ping, но интерні-доступ працює. Возможно, ICMP на роутере заборонений.'
+            'Шлюз не відповідає на ping, але доступ до інтернету працює. Можливо, ICMP на маршрутизаторі заборонено.'
         )
     }
     else {
         Add-Issue `
             -List $issues `
-            -Text 'Шлюз не отвечает, а внешний TCP/HTTPS также недоступний. Проверь локальную мережа, Wi-Fi, кабель и роутер.'
+            -Text 'Шлюз не відповідає, а зовнішній TCP/HTTPS також недоступний. Перевір локальну мережу, Wi-Fi, кабель і маршрутизатор.'
     }
 }
 
@@ -786,19 +786,19 @@ catch {
 }
 
 if ($proxyEnable -eq 1) {
-    Write-Value -Label 'Проксі пользователя' -Value $proxyServer -Color Yellow
-    [void]$warnings.Add('В профиле пользователя включён прокси-сервер.')
+    Write-Value -Label 'Проксі користувача' -Value $proxyServer -Color Yellow
+    [void]$warnings.Add('У профілі користувача ввімкнено проксі-сервер.')
 }
 else {
-    Write-Value -Label 'Проксі пользователя' -Value 'не включён' -Color Green
+    Write-Value -Label 'Проксі користувача' -Value 'не ввімкнено' -Color Green
 }
 
 if (-not [string]::IsNullOrWhiteSpace($autoConfigUrl)) {
-    Write-Value -Label 'PAC-сценарий' -Value $autoConfigUrl -Color Yellow
-    [void]$warnings.Add('Для пользователя настроен автоматический сценарий прокси (PAC).')
+    Write-Value -Label 'PAC-сценарій' -Value $autoConfigUrl -Color Yellow
+    [void]$warnings.Add('Для користувача налаштовано автоматичний сценарій проксі (PAC).')
 }
 else {
-    Write-Value -Label 'PAC-сценарий' -Value 'не настроен' -Color Green
+    Write-Value -Label 'PAC-сценарій' -Value 'не налаштовано' -Color Green
 }
 
 $winHttpProxyLines = @(
@@ -818,9 +818,9 @@ Write-Value -Label 'WinHTTP proxy' -Value $winHttpSummary
 Write-Section -Title 'ПІДСУМОК'
 
 if ($issues.Count -eq 0 -and $warnings.Count -eq 0) {
-    Write-Host '[OK] Локальная мережа, DNS и HTTPS работают без явных проблем.' `
+    Write-Host '[OK] Локальна мережа, DNS і HTTPS працюють без явних проблем.' `
         -ForegroundColor Green
-    Write-Host 'Цей тест оценивает задержку, втрати и время відповідьа, но не заменяет полноценный замер пропускной способности.' `
+    Write-Host 'Цей тест оцінює затримку, втрати та час відповіді, але не замінює повноцінного вимірювання пропускної здатності.' `
         -ForegroundColor DarkGray
 }
 else {
