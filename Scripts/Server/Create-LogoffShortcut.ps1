@@ -87,5 +87,5 @@ else {
 Write-Host ''
 Write-Host "[OK] Кнопка $action." -ForegroundColor Green
 Write-Host "[OK] Ярлик: $shortcutPath" -ForegroundColor Green
-Write-Host "[OK] Комантак: $targetPath" -ForegroundColor Green
+Write-Host "[OK] Команда: $targetPath" -ForegroundColor Green
 Write-Host ''
