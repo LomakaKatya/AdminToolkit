@@ -448,6 +448,11 @@
                 Write-Host '     [ADMIN] [SECURITY SENSITIVE] [CHANGES SYSTEM]'
                 Write-Host ''
 
+                Write-Host '  ОБСЛУГОВУВАННЯ ПРОФІЛІВ' -ForegroundColor DarkCyan
+                Write-Host '  6. Очистити стандартні кеші в профілях користувачів'
+                Write-Host '     [ADMIN] [CHANGES USER DATA]'
+                Write-Host ''
+
                 Write-Host '  0. Повернутися до головного меню'
                 Write-Host ''
 
@@ -484,6 +489,13 @@
                         Invoke-RaccoonScript `
                             -Path 'Scripts/Fix/Configure-PrintRpcPrivacy.ps1' `
                             -Name 'Сумісність RPC-автентифікації мережевого друку' `
+                            -RequiresAdministrator
+                    }
+
+                    '6' {
+                        Invoke-RaccoonScript `
+                            -Path 'Scripts/Fix/Clear-UserProfileCaches.ps1' `
+                            -Name 'Очищення кешів у профілях користувачів' `
                             -RequiresAdministrator
                     }
 
