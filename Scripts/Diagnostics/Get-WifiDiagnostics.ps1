@@ -27,7 +27,7 @@ function Write-Value {
     )
 
     if ([string]::IsNullOrWhiteSpace($Value)) {
-        $Value = 'не определено'
+        $Value = 'не визначено'
         $Color = [ConsoleColor]::DarkGray
     }
 
@@ -102,7 +102,7 @@ function Get-SignalInfo {
     }
 
     if ($Percent -ge 80) {
-        $label = 'отличный'
+        $label = 'відмінний'
         $color = [ConsoleColor]::Green
     }
     elseif ($Percent -ge 65) {
@@ -110,15 +110,15 @@ function Get-SignalInfo {
         $color = [ConsoleColor]::Green
     }
     elseif ($Percent -ge 50) {
-        $label = 'приемлемый'
+        $label = 'прийнятний'
         $color = [ConsoleColor]::Yellow
     }
     elseif ($Percent -ge 35) {
-        $label = 'слабый'
+        $label = 'слабкий'
         $color = [ConsoleColor]::DarkYellow
     }
     else {
-        $label = 'плохой'
+        $label = 'поганий'
         $color = [ConsoleColor]::Red
     }
 
@@ -285,7 +285,7 @@ function Get-VisibleAccessPoints {
 
         if (Test-Label -Label $pair.Label -Patterns @(
                 '(?i)network\s*type',
-                '(?i)тип\s+сети',
+                '(?i)тип\s+мережі',
                 '(?i)тип\s+мереж'
             )) {
             $currentNetwork.NetworkType = $pair.Value
@@ -294,7 +294,7 @@ function Get-VisibleAccessPoints {
 
         if (Test-Label -Label $pair.Label -Patterns @(
                 '(?i)authentication',
-                '(?i)проверка\s+подлинности',
+                '(?i)проверка\s+автентичності',
                 '(?i)автентифікац',
                 '(?i)аутентифікац'
             )) {
@@ -357,7 +357,7 @@ function Get-ShortText {
     )
 
     if ([string]::IsNullOrWhiteSpace($Text)) {
-        return '[скрытая сеть]'
+        return '[прихована мережа]'
     }
 
     if ($Text.Length -le $MaxLength) {
@@ -393,7 +393,7 @@ function Get-CompetingAccessPoints {
                 $false
             }
             elseif ($CurrentChannel -le 14) {
-                # В диапазоне 2,4 ГГц соседние каналы перекрываются.
+                # В диапазоне 2,4 ГГц соседние канали перекрываются.
                 (
                     [int]$_.Channel -ge [Math]::Max(1, $CurrentChannel - 4) -and
                     [int]$_.Channel -le [Math]::Min(14, $CurrentChannel + 4)
@@ -423,8 +423,8 @@ function Get-ChannelColor {
 }
 
 Write-Host ''
-Write-Host 'Комплексная диагностика Wi-Fi' -ForegroundColor Cyan
-Write-Host 'Сбор данных через netsh wlan...' -ForegroundColor DarkGray
+Write-Host 'Комплексна діагностика Wi-Fi' -ForegroundColor Cyan
+Write-Host 'Збирання такних через netsh wlan...' -ForegroundColor DarkGray
 
 $wlanService = Get-Service -Name 'WlanSvc' -ErrorAction SilentlyContinue
 
@@ -449,7 +449,7 @@ $accessPoints = @(Get-VisibleAccessPoints -Lines $networkLines)
 
 $netshProblemPattern = (
     '(?i)access is denied|доступ запрещ|відмовлено в доступі|' +
-    'location.*required|требуется.*местополож|потріб.*розташув|' +
+    'location.*required|потрібна.*местополож|потріб.*розташув|' +
     'wireless.*service.*not running|служба.*автонастрой.*не запущ'
 )
 
@@ -459,13 +459,13 @@ $netshMessages = @(
     Select-Object -Unique
 )
 
-Write-Section -Title 'СЛУЖБА И АДАПТЕР'
+Write-Section -Title 'СЛУЖБА ТА АДАПТЕР'
 
 if ($null -eq $wlanService) {
-    Write-Value -Label 'Служба WLAN' -Value 'не найдена' -Color Red
+    Write-Value -Label 'Служба WLAN' -Value 'не знайдена' -Color Red
 }
 elseif ($wlanService.Status -eq 'Running') {
-    Write-Value -Label 'Служба WLAN' -Value 'работает' -Color Green
+    Write-Value -Label 'Служба WLAN' -Value 'працює' -Color Green
 }
 else {
     Write-Value `
@@ -476,10 +476,10 @@ else {
 
 if ($interfaces.Count -eq 0) {
     Write-Host ''
-    Write-Host '[FAIL] Беспроводной интерфейс не найден или отключён.' `
+    Write-Host '[FAIL] Бездротовий інтерфейс не знайдено або вимкнено.' `
         -ForegroundColor Red
     Write-Host ''
-    Write-Host 'Проверь наличие Wi-Fi адаптера, драйвера и состояние службы WlanSvc.' `
+    Write-Host 'Перевір наявність Wi-Fi атакптера, драйвера та стан служби WlanSvc.' `
         -ForegroundColor Yellow
 
     Write-Section -Title 'ДРАЙВЕР'
@@ -492,7 +492,7 @@ if ($interfaces.Count -eq 0) {
         ))
 
     Write-Value `
-        -Label 'Версия' `
+        -Label 'Версія' `
         -Value (Get-PropertyValue -Properties $driverProperties -Patterns @(
             '(?i)version',
             '(?i)версия',
@@ -545,7 +545,7 @@ foreach ($interface in $interfaces) {
 
     $auth = Get-PropertyValue -Properties $interface -Patterns @(
         '(?i)authentication',
-        '(?i)проверка\s+подлинности',
+        '(?i)проверка\s+автентичності',
         '(?i)автентифікац',
         '(?i)аутентифікац'
     )
@@ -574,7 +574,7 @@ foreach ($interface in $interfaces) {
 
     $transmitRate = Get-PropertyValue -Properties $interface -Patterns @(
         '(?i)transmit\s*rate',
-        '(?i)скорость\s+передачи',
+        '(?i)скорость\s+перетакчи',
         '(?i)швидкість\s+перед'
     )
 
@@ -586,26 +586,26 @@ foreach ($interface in $interfaces) {
 
     $connected = Test-ConnectedState -State $state
 
-    Write-Host "Интерфейс $interfaceNumber" -ForegroundColor Cyan
-    Write-Value -Label 'Имя' -Value $name
-    Write-Value -Label 'Адаптер' -Value $description
+    Write-Host "Інтерфейс $interfaceNumber" -ForegroundColor Cyan
+    Write-Value -Label 'Ім’я' -Value $name
+    Write-Value -Label 'Атакптер' -Value $description
 
     if ($connected) {
-        Write-Value -Label 'Состояние' -Value $state -Color Green
+        Write-Value -Label 'Стан' -Value $state -Color Green
     }
     else {
-        Write-Value -Label 'Состояние' -Value $state -Color Red
+        Write-Value -Label 'Стан' -Value $state -Color Red
     }
 
     if ($connected) {
         Write-Value -Label 'SSID' -Value $ssid -Color Cyan
         Write-Value -Label 'BSSID точки' -Value $bssid
-        Write-Value -Label 'Стандарт Wi-Fi' -Value $radioType
-        Write-Value -Label 'Защита' -Value "$auth / $cipher"
+        Write-Value -Label 'Стантакрт Wi-Fi' -Value $radioType
+        Write-Value -Label 'Захист' -Value "$auth / $cipher"
         Write-Value -Label 'Канал' -Value $channelText
-        Write-Value -Label 'Приём, Мбит/с' -Value $receiveRate
-        Write-Value -Label 'Передача, Мбит/с' -Value $transmitRate
-        Write-Value -Label 'Профиль' -Value $profile
+        Write-Value -Label 'Приймання, Мбіт/с' -Value $receiveRate
+        Write-Value -Label 'Перетаквання, Мбіт/с' -Value $transmitRate
+        Write-Value -Label 'Профіль' -Value $profile
 
         $signal = Get-SignalInfo -Percent (Get-SignalPercent -Text $signalText)
 
@@ -629,14 +629,14 @@ foreach ($interface in $interfaces) {
     }
     else {
         Write-Host ''
-        Write-Host 'Адаптер сейчас не подключён к беспроводной сети.' `
+        Write-Host 'Атакптер зараз не підключений до бездротової мережі.' `
             -ForegroundColor Yellow
     }
 
     Write-Host ''
 }
 
-Write-Section -Title 'ДРАЙВЕР И ВОЗМОЖНОСТИ'
+Write-Section -Title 'ДРАЙВЕР І МОЖЛИВОСТІ'
 
 Write-Value `
     -Label 'Драйвер' `
@@ -646,7 +646,7 @@ Write-Value `
     ))
 
 Write-Value `
-    -Label 'Производитель' `
+    -Label 'Виробник' `
     -Value (Get-PropertyValue -Properties $driverProperties -Patterns @(
         '(?i)vendor',
         '(?i)производитель',
@@ -654,7 +654,7 @@ Write-Value `
     ))
 
 Write-Value `
-    -Label 'Поставщик' `
+    -Label 'Постачальник' `
     -Value (Get-PropertyValue -Properties $driverProperties -Patterns @(
         '(?i)provider',
         '(?i)поставщик',
@@ -662,14 +662,14 @@ Write-Value `
     ))
 
 Write-Value `
-    -Label 'Дата' `
+    -Label 'Такта' `
     -Value (Get-PropertyValue -Properties $driverProperties -Patterns @(
         '^(?i)date$',
-        '^(?i)дата$'
+        '^(?i)такта$'
     ))
 
 Write-Value `
-    -Label 'Версия' `
+    -Label 'Версія' `
     -Value (Get-PropertyValue -Properties $driverProperties -Patterns @(
         '(?i)version',
         '(?i)версия',
@@ -677,7 +677,7 @@ Write-Value `
     ))
 
 Write-Value `
-    -Label 'Поддерживаемые режимы' `
+    -Label 'Підтримувані режими' `
     -Value (Get-PropertyValue -Properties $driverProperties -Patterns @(
         '(?i)radio\s*types\s*supported',
         '(?i)поддерживаемые\s+типы\s+радио',
@@ -685,10 +685,10 @@ Write-Value `
     ))
 
 if ($accessPoints.Count -eq 0) {
-    Write-Section -Title 'ЭФИР'
+    Write-Section -Title 'ЕФІР'
 
-    Write-Host '[WARN] Точки доступа не обнаружены.' -ForegroundColor Yellow
-    Write-Host 'Возможно, Wi-Fi выключен, запрещено сканирование или рядом нет сетей.' `
+    Write-Host '[WARN] Точки доступу не виявлено.' -ForegroundColor Yellow
+    Write-Host 'Можливо, Wi-Fi вимкнено, сканування заборонене або поруч немає мереж.' `
         -ForegroundColor DarkYellow
 
     if ($netshMessages.Count -gt 0) {
@@ -702,7 +702,7 @@ if ($accessPoints.Count -eq 0) {
     return
 }
 
-Write-Section -Title 'БЛИЖАЙШИЕ СЕТИ'
+Write-Section -Title 'НАЙБЛИЖЧІ МЕРЕЖІ'
 
 $networkSummary = @()
 
@@ -773,15 +773,15 @@ foreach ($network in $networkSummary) {
 
 if ($networkSummary.Count -gt 20) {
     Write-Host ''
-    Write-Host "Показаны 20 из $($networkSummary.Count) сетей." `
+    Write-Host "Показано 20 з $($networkSummary.Count) мереж." `
         -ForegroundColor DarkGray
 }
 
 Write-Host ''
-Write-Host '* — сеть, к которой сейчас подключён компьютер' `
+Write-Host '* — мережа, до якої зараз підключений комп’ютер' `
     -ForegroundColor DarkGray
 
-Write-Section -Title 'ЗАГРУЖЕННОСТЬ КАНАЛОВ'
+Write-Section -Title 'ЗАВАНТАЖЕНІСТЬ КАНАЛІВ'
 
 $channelGroups = @(
     $accessPoints |
@@ -797,11 +797,11 @@ foreach ($channelGroup in $channelGroups) {
     $currentMarker = ''
 
     if ($currentChannel -eq $channelNumber) {
-        $currentMarker = '  <-- текущий канал'
+        $currentMarker = '  <-- поточний канал'
     }
 
     Write-Host ("Канал {0,-4}: " -f $channelNumber) -NoNewline
-    Write-Host ("{0} точек доступа{1}" -f $count, $currentMarker) `
+    Write-Host ("{0} точок доступу{1}" -f $count, $currentMarker) `
         -ForegroundColor $color
 }
 
@@ -815,10 +815,10 @@ if ($currentChannel -gt 0) {
 
     $competitors = $competitorAccessPoints.Count
     $competitionLabel = if ($currentChannel -le 14) {
-        'Соседних BSSID на перекрывающихся каналах'
+        'Сусідніх BSSID на каналах, що перекриваються'
     }
     else {
-        'Соседних BSSID на том же канале'
+        'Сусідніх BSSID на тому самому каналі'
     }
 
     Write-Host ''
@@ -829,18 +829,18 @@ if ($currentChannel -gt 0) {
     Write-Host $competitors -ForegroundColor $competitionColor
 
     if ($competitors -eq 0) {
-        Write-Host '[OK] Явной конкуренции в эфире не видно.' -ForegroundColor Green
+        Write-Host '[OK] Явної конкуренції в ефірі не видно.' -ForegroundColor Green
     }
     elseif ($competitors -le 3) {
-        Write-Host '[WARN] Эфир умеренно загружен.' -ForegroundColor Yellow
+        Write-Host '[WARN] Эфир помірно завантажений.' -ForegroundColor Yellow
     }
     else {
-        Write-Host '[FAIL] Эфир рядом с текущим каналом заметно перегружен.' `
+        Write-Host '[FAIL] Эфир поруч с текущим каналом помітно перевантажений.' `
             -ForegroundColor Red
     }
 }
 
-Write-Section -Title 'ИТОГ'
+Write-Section -Title 'ПІДСУМОК'
 
 $connectedInterface = $null
 
@@ -858,7 +858,7 @@ foreach ($interface in $interfaces) {
 }
 
 if ($null -eq $connectedInterface) {
-    Write-Host '[FAIL] Компьютер не подключён к Wi-Fi.' -ForegroundColor Red
+    Write-Host '[FAIL] Комп’ютер не подключён к Wi-Fi.' -ForegroundColor Red
 }
 else {
     $signalText = Get-PropertyValue -Properties $connectedInterface -Patterns @(
@@ -873,14 +873,14 @@ else {
             -ForegroundColor Yellow
     }
     elseif ($signal.Percent -ge 65) {
-        Write-Host '[OK] Уровень сигнала достаточный.' -ForegroundColor Green
+        Write-Host '[OK] Рівень сигналу достатній.' -ForegroundColor Green
     }
     elseif ($signal.Percent -ge 50) {
-        Write-Host '[WARN] Сигнал приемлемый, но возможны просадки скорости.' `
+        Write-Host '[WARN] Сигнал прийнятний, но возможны просадки скорости.' `
             -ForegroundColor Yellow
     }
     else {
-        Write-Host '[FAIL] Слабый сигнал может быть причиной нестабильной работы.' `
+        Write-Host '[FAIL] Слабкий сигнал може бути причиною нестабільної роботи.' `
             -ForegroundColor Red
     }
 
@@ -893,7 +893,7 @@ else {
         ).Count
 
         if ($competitorCount -ge 4) {
-            Write-Host '[FAIL] Радиоэфир рядом с текущим каналом перегружен.' `
+            Write-Host '[FAIL] Радиоэфир поруч с текущим каналом перегружен.' `
                 -ForegroundColor Red
         }
         elseif ($competitorCount -ge 2) {
@@ -908,5 +908,5 @@ else {
 }
 
 Write-Host ''
-Write-Host 'Примечание: процент сигнала сообщает драйвер Wi-Fi; это оценка, а не dBm.' `
+Write-Host 'Примітка: відсоток сигналу повідомляє драйвер Wi-Fi; це оцінка, а не dBm.' `
     -ForegroundColor DarkGray

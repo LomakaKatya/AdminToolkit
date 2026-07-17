@@ -10,7 +10,7 @@ function Write-Value {
     )
 
     if ([string]::IsNullOrWhiteSpace($Value)) {
-        $Value = 'не определено'
+        $Value = 'не визначено'
         $Color = [ConsoleColor]::DarkGray
     }
 
@@ -100,24 +100,24 @@ function Test-TcpPortCompatible {
 }
 
 Write-Host ''
-Write-Host 'Проверка TCP-подключения' -ForegroundColor Cyan
+Write-Host 'Перевірка TCP-підключення' -ForegroundColor Cyan
 Write-Host ('=' * 48) -ForegroundColor DarkGray
 Write-Host ''
 
 $target = ''
 
 while ([string]::IsNullOrWhiteSpace($target)) {
-    $target = (Read-Host 'Введите IP-адрес или имя узла').Trim()
+    $target = (Read-Host 'Введіть IP-адрес или имя узла').Trim()
 
     if ([string]::IsNullOrWhiteSpace($target)) {
-        Write-Host 'Адрес не может быть пустым.' -ForegroundColor Yellow
+        Write-Host 'Адреса не може бути порожньою.' -ForegroundColor Yellow
     }
 }
 
 $port = 0
 
 while ($true) {
-    $portText = (Read-Host 'Введите TCP-порт (1-65535)').Trim()
+    $portText = (Read-Host 'Введіть TCP-порт (1-65535)').Trim()
 
     if ([int]::TryParse($portText, [ref]$port) -and
         $port -ge 1 -and
@@ -125,11 +125,11 @@ while ($true) {
         break
     }
 
-    Write-Host 'Порт должен быть числом от 1 до 65535.' -ForegroundColor Yellow
+    Write-Host 'Порт має бути числом от 1 до 65535.' -ForegroundColor Yellow
 }
 
 Write-Host ''
-Write-Host "Проверяем $target`:$port..." -ForegroundColor Cyan
+Write-Host "Перевіряємо $target`:$port..." -ForegroundColor Cyan
 Write-Host ''
 
 $resolvedAddresses = @()
@@ -149,9 +149,9 @@ if ($resolvedAddresses.Count -gt 0) {
     Write-Value -Label 'Разрешённые адреса' -Value ($resolvedAddresses -join ', ')
 }
 else {
-    Write-Value -Label 'DNS' -Value "ошибка: $dnsError" -Color Red
+    Write-Value -Label 'DNS' -Value "помилка: $dnsError" -Color Red
     Write-Host ''
-    Write-Host '[FAIL] Имя узла не удалось разрешить.' -ForegroundColor Red
+    Write-Host '[FAIL] Ім’я узла не втаклося разрешить.' -ForegroundColor Red
     return
 }
 
@@ -196,17 +196,17 @@ if ($null -ne $testNetConnection) {
                 -DefaultValue ''
         )
 
-        Write-Value -Label 'Удалённый адрес' -Value $remoteAddress
-        Write-Value -Label 'Локальный адрес' -Value $sourceAddress
-        Write-Value -Label 'Интерфейс' -Value $interfaceAlias
+        Write-Value -Label 'Відтаклений адрес' -Value $remoteAddress
+        Write-Value -Label 'Локальний адрес' -Value $sourceAddress
+        Write-Value -Label 'Інтерфейс' -Value $interfaceAlias
         Write-Host ''
 
         if ($succeeded) {
-            Write-Host "[OK] TCP-порт $port доступен на $target." `
+            Write-Host "[OK] TCP-порт $port доступний на $target." `
                 -ForegroundColor Green
         }
         else {
-            Write-Host "[FAIL] TCP-порт $port недоступен на $target." `
+            Write-Host "[FAIL] TCP-порт $port недоступний на $target." `
                 -ForegroundColor Red
         }
 
@@ -220,7 +220,7 @@ if ($null -ne $testNetConnection) {
     }
 }
 else {
-    Write-Host 'Test-NetConnection отсутствует. Используется совместимая TCP-проверка.' `
+    Write-Host 'Test-NetConnection відсутній. Використовується сумісна TCP-перевірка.' `
         -ForegroundColor DarkYellow
     Write-Host ''
 }
@@ -229,14 +229,14 @@ $tcpResult = Test-TcpPortCompatible `
     -HostName $target `
     -Port $port
 
-Write-Value -Label 'Время проверки' -Value "$($tcpResult.TimeMs) мс"
+Write-Value -Label 'Час перевірки' -Value "$($tcpResult.TimeMs) мс"
 Write-Host ''
 
 if ($tcpResult.Success) {
-    Write-Host "[OK] TCP-порт $port доступен на $target." -ForegroundColor Green
+    Write-Host "[OK] TCP-порт $port доступний на $target." -ForegroundColor Green
 }
 else {
-    Write-Host "[FAIL] TCP-порт $port недоступен на $target." -ForegroundColor Red
+    Write-Host "[FAIL] TCP-порт $port недоступний на $target." -ForegroundColor Red
 
     if (-not [string]::IsNullOrWhiteSpace($tcpResult.Error)) {
         Write-Host "Причина: $($tcpResult.Error)" -ForegroundColor Yellow

@@ -20,7 +20,7 @@ function Write-Value {
     )
 
     if ([string]::IsNullOrWhiteSpace($Value)) {
-        $Value = 'не определено'
+        $Value = 'не визначено'
         $Color = [ConsoleColor]::DarkGray
     }
 
@@ -84,7 +84,7 @@ function Get-DeviceStateInfo {
             return [pscustomobject]@{
                 Severity = 'Info'
                 Color    = [ConsoleColor]::DarkGray
-                Text     = 'устройство отключено'
+                Text     = 'пристрій вимкнено'
             }
         }
 
@@ -92,7 +92,7 @@ function Get-DeviceStateInfo {
             return [pscustomobject]@{
                 Severity = 'Info'
                 Color    = [ConsoleColor]::DarkGray
-                Text     = 'устройство сейчас не подключено'
+                Text     = 'пристрій зараз не підключено'
             }
         }
 
@@ -100,7 +100,7 @@ function Get-DeviceStateInfo {
             return [pscustomobject]@{
                 Severity = 'Warning'
                 Color    = [ConsoleColor]::Yellow
-                Text     = 'состояние требует проверки'
+                Text     = 'стан потребує перевірки'
             }
         }
 
@@ -108,7 +108,7 @@ function Get-DeviceStateInfo {
             return [pscustomobject]@{
                 Severity = 'Failure'
                 Color    = [ConsoleColor]::Red
-                Text     = 'ошибка устройства или драйвера'
+                Text     = 'помилка пристрою або драйвера'
             }
         }
     }
@@ -176,9 +176,9 @@ function Get-TopCpuProcesses {
 }
 
 Write-Host ''
-Write-Host 'Диагностика зависаний и производительности ПК' `
+Write-Host 'Діагностика зависань і продуктивності ПК' `
     -ForegroundColor Cyan
-Write-Host 'Снимок занимает несколько секунд: измеряю CPU, память, диски и процессы...' `
+Write-Host 'Знімок займає кілька секунд: вимірюю CPU, пам’ять, диски та процеси...' `
     -ForegroundColor DarkGray
 
 $issues = New-Object -TypeName System.Collections.ArrayList
@@ -231,48 +231,48 @@ if ($cpuLoads.Count -gt 0) {
     )
 }
 
-Write-Section -Title 'ОБЩЕЕ СОСТОЯНИЕ'
+Write-Section -Title 'ЗАГАЛЬНИЙ СТАН'
 
-Write-Value -Label 'Компьютер' -Value ([string]$computer.Name) -Color Cyan
+Write-Value -Label 'Комп’ютер' -Value ([string]$computer.Name) -Color Cyan
 Write-Value -Label 'ОС' -Value ("{0} {1}" -f $os.Caption, $os.OSArchitecture)
-Write-Value -Label 'Последняя загрузка' -Value $lastBoot.ToString('dd.MM.yyyy HH:mm')
+Write-Value -Label 'Останнє завантаження' -Value $lastBoot.ToString('dd.MM.yyyy HH:mm')
 Write-Value `
-    -Label 'Время работы' `
-    -Value ("{0} дн. {1} ч. {2} мин." -f `
+    -Label 'Час роботи' `
+    -Value ("{0} дн. {1} ч. {2} хв." -f `
         [int]$uptime.TotalDays,
         $uptime.Hours,
         $uptime.Minutes)
 
-Write-Value -Label 'Логических процессоров' -Value ([string]$logicalProcessors)
+Write-Value -Label 'Логічних процесорів' -Value ([string]$logicalProcessors)
 Write-Value `
-    -Label 'Текущая загрузка CPU' `
+    -Label 'Поточне завантаження CPU' `
     -Value ("{0}%" -f $cpuLoad) `
     -Color (Get-PercentColor -Value $cpuLoad -Warning 60 -Critical 85)
 
 Write-Value `
-    -Label 'Оперативная память' `
-    -Value ("использовано {0}%; свободно {1} ГБ из {2} ГБ" -f `
+    -Label 'Оперативна пам’ять' `
+    -Value ("використано {0}%; вільно {1} ГБ з {2} ГБ" -f `
         $usedMemoryPercent,
         $freeMemoryGB,
         $totalMemoryGB) `
     -Color (Get-PercentColor -Value $usedMemoryPercent -Warning 80 -Critical 92)
 
 if ($cpuLoad -ge 85) {
-    Add-Issue -List $issues -Text 'Процессор сейчас загружен более чем на 85%.'
+    Add-Issue -List $issues -Text 'Процесор зараз завантажений більш ніж на 85%.'
 }
 elseif ($cpuLoad -ge 60) {
-    [void]$warnings.Add('Загрузка процессора повышена.')
+    [void]$warnings.Add('Завантаження процесора підвищене.')
 }
 
 if ($usedMemoryPercent -ge 92) {
-    Add-Issue -List $issues -Text 'Оперативная память почти полностью занята.'
+    Add-Issue -List $issues -Text 'Оперативна пам’ять майже повністю зайнята.'
 }
 elseif ($usedMemoryPercent -ge 80) {
-    [void]$warnings.Add('Оперативная память заметно загружена.')
+    [void]$warnings.Add('Оперативна пам’ять помітно завантажена.')
 }
 
 if ($uptime.TotalDays -ge 30) {
-    [void]$warnings.Add("Компьютер не перезагружался $([int]$uptime.TotalDays) дней.")
+    [void]$warnings.Add("Комп’ютер не перезавантажувався $([int]$uptime.TotalDays) днів.")
 }
 
 Write-Section -Title 'ДИСКИ'
@@ -286,7 +286,7 @@ $disks = @(
 )
 
 if ($disks.Count -eq 0) {
-    Write-Host '[WARN] Не удалось получить информацию о локальных дисках.' `
+    Write-Host '[WARN] Не втаклося отримати інформацію про локальні диски.' `
         -ForegroundColor Yellow
 }
 else {
@@ -314,7 +314,7 @@ else {
 
         Write-Value `
             -Label ("Диск {0}" -f $disk.DeviceID) `
-            -Value ("свободно {0} ГБ из {1} ГБ ({2}%)" -f `
+            -Value ("вільно {0} ГБ з {1} ГБ ({2}%)" -f `
                 $freeGB,
                 $sizeGB,
                 $freePercent) `
@@ -323,11 +323,11 @@ else {
         if ($freePercent -lt 8) {
             Add-Issue `
                 -List $issues `
-                -Text "На диске $($disk.DeviceID) осталось менее 8% свободного места."
+                -Text "На диску $($disk.DeviceID) залишилося менше 8% вільного місця."
         }
         elseif ($freePercent -lt 15) {
             [void]$warnings.Add(
-                "На диске $($disk.DeviceID) осталось менее 15% свободного места."
+                "На диску $($disk.DeviceID) залишилося менше 15% вільного місця."
             )
         }
     }
@@ -342,15 +342,15 @@ if ($pageFiles.Count -gt 0) {
 
     foreach ($pageFile in $pageFiles) {
         Write-Value `
-            -Label 'Файл подкачки' `
-            -Value ("{0}: используется {1} МБ из {2} МБ" -f `
+            -Label 'Файл підкачки' `
+            -Value ("{0}: використовується {1} МБ з {2} МБ" -f `
                 $pageFile.Name,
                 $pageFile.CurrentUsage,
                 $pageFile.AllocatedBaseSize)
     }
 }
 
-Write-Section -Title 'АКТИВНОСТЬ ДИСКОВ'
+Write-Section -Title 'АКТИВНІСТЬ ДИСКІВ'
 
 $diskPerformance = @(
     Get-WmiObject `
@@ -361,7 +361,7 @@ $diskPerformance = @(
 )
 
 if ($diskPerformance.Count -eq 0) {
-    Write-Host '[INFO] Счётчики активности дисков недоступны.' `
+    Write-Host '[INFO] Лічильники активності дисків недоступні.' `
         -ForegroundColor DarkGray
 }
 else {
@@ -381,32 +381,32 @@ else {
 
         Write-Value `
             -Label ("Диск {0}" -f $diskCounter.Name) `
-            -Value ("активность {0}%; очередь {1}" -f `
+            -Value ("активність {0}%; черга {1}" -f `
                 [Math]::Round($activePercent, 1),
                 [Math]::Round($queueLength, 1)) `
             -Color $color
 
         if ($activePercent -ge 95 -or $queueLength -ge 4) {
             [void]$warnings.Add(
-                "Диск $($diskCounter.Name) сейчас сильно загружен."
+                "Диск $($diskCounter.Name) зараз сильно завантажений."
             )
         }
     }
 }
 
-Write-Section -Title 'ПРОЦЕССЫ: ТЕКУЩАЯ НАГРУЗКА CPU'
+Write-Section -Title 'ПРОЦЕСИ: ПОТОЧНЕ НАВАНТАЖЕННЯ CPU'
 
 $topCpu = @(Get-TopCpuProcesses `
     -SampleSeconds 2 `
     -LogicalProcessors $logicalProcessors)
 
 if ($topCpu.Count -eq 0) {
-    Write-Host '[INFO] Не удалось измерить нагрузку процессов.' `
+    Write-Host '[INFO] Не втаклося виміряти навантаження процесів.' `
         -ForegroundColor DarkGray
 }
 else {
     Write-Host ('  {0,-28} {1,7} {2,10} {3,10}' -f `
-        'Процесс',
+        'Процес',
         'PID',
         'CPU %',
         'RAM МБ') `
@@ -429,16 +429,16 @@ else {
     if ($topCpu[0].CpuPercent -ge 50) {
         Add-Issue `
             -List $issues `
-            -Text "Процесс $($topCpu[0].Name) использует около $($topCpu[0].CpuPercent)% CPU."
+            -Text "Процес $($topCpu[0].Name) використовує близько $($topCpu[0].CpuPercent)% CPU."
     }
     elseif ($topCpu[0].CpuPercent -ge 20) {
         [void]$warnings.Add(
-            "Наиболее активный процесс: $($topCpu[0].Name), около $($topCpu[0].CpuPercent)% CPU."
+            "Найактивніший процес: $($topCpu[0].Name), близько $($topCpu[0].CpuPercent)% CPU."
         )
     }
 }
 
-Write-Section -Title 'ПРОЦЕССЫ: ПОТРЕБЛЕНИЕ ПАМЯТИ'
+Write-Section -Title 'ПРОЦЕСИ: СПОЖИВАННЯ ПАМ’ЯТІ'
 
 $topMemory = @(
     Get-Process -ErrorAction SilentlyContinue |
@@ -447,12 +447,12 @@ $topMemory = @(
 )
 
 if ($topMemory.Count -eq 0) {
-    Write-Host '[INFO] Не удалось получить список процессов.' `
+    Write-Host '[INFO] Не втаклося отримати список процесів.' `
         -ForegroundColor DarkGray
 }
 else {
     Write-Host ('  {0,-28} {1,7} {2,12}' -f `
-        'Процесс',
+        'Процес',
         'PID',
         'RAM МБ') `
         -ForegroundColor DarkGray
@@ -476,7 +476,7 @@ else {
     }
 }
 
-Write-Section -Title 'УСТРОЙСТВА С ОШИБКАМИ'
+Write-Section -Title 'ПРИСТРОЇ З ПОМИЛКАМИ'
 
 $deviceErrors = @(
     Get-WmiObject `
@@ -487,7 +487,7 @@ $deviceErrors = @(
 )
 
 if ($deviceErrors.Count -eq 0) {
-    Write-Host '[OK] Windows не сообщает о проблемных устройствах.' `
+    Write-Host '[OK] Windows не повідомляє про проблемні пристрої.' `
         -ForegroundColor Green
 }
 else {
@@ -535,30 +535,30 @@ else {
     }
 
     if ($deviceErrors.Count -gt 15) {
-        Write-Host "Показаны первые 15 из $($deviceErrors.Count) устройств." `
+        Write-Host "Показано перші 15 з $($deviceErrors.Count) пристроїв." `
             -ForegroundColor DarkGray
     }
 
     if ($deviceFailureCount -gt 0) {
         Add-Issue `
             -List $issues `
-            -Text "Диспетчер устройств сообщает серьёзных ошибок: $deviceFailureCount."
+            -Text "Диспетчер пристроїв повідомляє про серйозні помилки: $deviceFailureCount."
     }
 
     if ($deviceWarningCount -gt 0) {
         [void]$warnings.Add(
-            "Устройств, состояние которых требует проверки: $deviceWarningCount."
+            "Пристроїв, стан яких потребує перевірки: $deviceWarningCount."
         )
     }
 
     if ($deviceInfoCount -gt 0) {
         Write-Host ''
-        Write-Host 'Коды 22 и 45 обычно означают отключённое или отсоединённое устройство, а не поломку.' `
+        Write-Host 'Коди 22 і 45 зазвичай означають вимкнений або від’єднаний пристрій, а не поломку.' `
             -ForegroundColor DarkGray
     }
 }
 
-Write-Section -Title 'СИСТЕМНЫЕ И АППАРАТНЫЕ СОБЫТИЯ'
+Write-Section -Title 'СИСТЕМНІ ТА АПАРАТНІ ПОДІЇ'
 
 $systemEvents = @()
 $applicationEvents = @()
@@ -606,7 +606,7 @@ if (Get-Command -Name Get-WinEvent -ErrorAction SilentlyContinue) {
 }
 
 if ($systemEvents.Count -eq 0) {
-    Write-Host '[OK] За 24 часа не найдено событий диска, WHEA, нехватки ресурсов или аварийного питания.' `
+    Write-Host '[OK] За 24 години не знайдено подій диска, WHEA, нестачі ресурсів або аварійного живлення.' `
         -ForegroundColor Green
 }
 else {
@@ -642,19 +642,19 @@ else {
     if ($seriousSystemEvents.Count -gt 0) {
         Add-Issue `
             -List $issues `
-            -Text "За 24 часа найдено серьёзных системных или аппаратных событий: $($seriousSystemEvents.Count)."
+            -Text "За 24 години знайдено серйозних системних або апаратних подій: $($seriousSystemEvents.Count)."
     }
     else {
         [void]$warnings.Add(
-            "За 24 часа были перезапуски графического драйвера: $($systemEvents.Count)."
+            "За 24 години були перезапуски графічного драйвера: $($systemEvents.Count)."
         )
     }
 }
 
-Write-Section -Title 'СБОИ И ЗАВИСАНИЯ ПРИЛОЖЕНИЙ'
+Write-Section -Title 'ЗБОЇ ТА ЗАВИСАННЯ ЗАСТОСУНКІВ'
 
 if ($applicationEvents.Count -eq 0) {
-    Write-Host '[OK] За 24 часа явных сбоев и зависаний приложений не найдено.' `
+    Write-Host '[OK] За 24 години явних збоїв і зависань застосунків не знайдено.' `
         -ForegroundColor Green
 }
 else {
@@ -668,16 +668,16 @@ else {
     }
 
     [void]$warnings.Add(
-        "За 24 часа найдено сбоев или зависаний приложений: $($applicationEvents.Count)."
+        "За 24 години знайдено збоїв або зависань застосунків: $($applicationEvents.Count)."
     )
 }
 
-Write-Section -Title 'ИТОГ'
+Write-Section -Title 'ПІДСУМОК'
 
 if ($issues.Count -eq 0 -and $warnings.Count -eq 0) {
-    Write-Host '[OK] На момент проверки явного дефицита ресурсов или системных ошибок не видно.' `
+    Write-Host '[OK] На момент перевірки явного дефіциту ресурсів або системних помилок не видно.' `
         -ForegroundColor Green
-    Write-Host 'Если зависание повторяется, запускай диагностику во время проблемы: снимок отражает текущее состояние.' `
+    Write-Host 'Якщо зависання повторюється, запускай діагностику під час проблеми: знімок відображає поточний стан.' `
         -ForegroundColor DarkGray
 }
 else {

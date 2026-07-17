@@ -5,14 +5,37 @@
         $ProgressPreference = 'SilentlyContinue'
 
         if ($PSVersionTable.PSVersion.Major -lt 3) {
-            throw 'Raccoon Admin Toolkit требует PowerShell 3.0 или новее.'
+            throw 'Raccoon Admin Toolkit потребує PowerShell 3.0 або новішої версії.'
         }
 
-        [Net.ServicePointManager]::SecurityProtocol =
-            [Net.ServicePointManager]::SecurityProtocol -bor
-            [Net.SecurityProtocolType]::Tls12
+        try {
+            [Net.ServicePointManager]::SecurityProtocol =
+                [Net.ServicePointManager]::SecurityProtocol -bor
+                [Net.SecurityProtocolType]::Tls12
+        }
+        catch {
+            [Net.ServicePointManager]::SecurityProtocol =
+                [Net.ServicePointManager]::SecurityProtocol -bor 3072
+        }
 
         $baseUrl = 'https://raw.githubusercontent.com/LomakaKatya/AdminToolkit/main'
+
+        function Write-Utf8NoBomLines {
+            param(
+                [Parameter(Mandatory)][string]$Path,
+                [Parameter(Mandatory)][AllowEmptyCollection()][string[]]$Lines
+            )
+
+            $encoding = New-Object `
+                -TypeName System.Text.UTF8Encoding `
+                -ArgumentList $false
+
+            [System.IO.File]::WriteAllLines(
+                $Path,
+                $Lines,
+                $encoding
+            )
+        }
 
         function Clear-RaccoonLaunchHistory {
             $historyPath = $null
@@ -44,7 +67,7 @@
                             -AddToHistoryHandler {
                                 param([string]$Line)
 
-                                if ($Line -match '(?i)admintoolkit\.itraccoonverse\.space' -or
+                                if ($Line -match '(?i)[a-z0-9.-]*itraccoonverse\.space' -or
                                     $Line -match '(?i)raw\.githubusercontent\.com[/\\]LomakaKatya[/\\]AdminToolkit') {
                                     return $false
                                 }
@@ -81,7 +104,7 @@
                     $filteredHistory = @(
                         $historyLines |
                         Where-Object {
-                            $_ -notmatch '(?i)admintoolkit\.itraccoonverse\.space' -and
+                            $_ -notmatch '(?i)[a-z0-9.-]*itraccoonverse\.space' -and
                             $_ -notmatch '(?i)raw\.githubusercontent\.com[/\\]LomakaKatya[/\\]AdminToolkit'
                         }
                     )
@@ -93,12 +116,9 @@
                             -ErrorAction SilentlyContinue
                     }
                     else {
-                        $filteredHistory |
-                            Set-Content `
-                                -LiteralPath $historyPath `
-                                -Encoding UTF8 `
-                                -Force `
-                                -ErrorAction SilentlyContinue
+                        Write-Utf8NoBomLines `
+                            -Path $historyPath `
+                            -Lines $filteredHistory
                     }
                 }
             }
@@ -128,7 +148,7 @@
 
         function Pause-RaccoonToolkit {
             Write-Host ''
-            [void](Read-Host 'Нажми Enter, чтобы продолжить')
+            [void](Read-Host 'Натисни Enter, щоб продовжити')
         }
 
         function Write-RaccoonHeader {
@@ -170,9 +190,9 @@
             Write-RaccoonHeader -SectionName $Name
 
             if ($RequiresAdministrator -and -not (Test-IsAdministrator)) {
-                Write-Host 'Для этого действия нужны права администратора.' `
+                Write-Host 'Для цієї дії потрібні права адміністратора.' `
                     -ForegroundColor Red
-                Write-Host 'Закрой инструментарий и запусти PowerShell от имени администратора.' `
+                Write-Host 'Закрий інструментарій і запусти PowerShell від імені адміністратора.' `
                     -ForegroundColor Yellow
 
                 Pause-RaccoonToolkit
@@ -180,14 +200,14 @@
             }
 
             if ($ChangesSystem) {
-                Write-Host 'Внимание: этот пункт вносит изменения в систему.' `
+                Write-Host 'Увага: цей пункт вносить зміни до системи.' `
                     -ForegroundColor Yellow
 
-                $confirmation = Read-Host 'Продолжить? [Y/N]'
+                $confirmation = Read-Host 'Продовжити? [Y/N]'
 
-                if ($confirmation -notmatch '^(y|yes|д|да)$') {
+                if ($confirmation -notmatch '^(y|yes|д|так)$') {
                     Write-Host ''
-                    Write-Host 'Действие отменено.' -ForegroundColor Yellow
+                    Write-Host 'Дію скасовано.' -ForegroundColor Yellow
                     Pause-RaccoonToolkit
                     return
                 }
@@ -199,20 +219,24 @@
             $uri = "$baseUrl/$Path`?nocache=$cacheToken"
 
             try {
-                Write-Host 'Скачиваю актуальную версию скрипта...' `
+                Write-Host 'Завантажую актуальну версію скрипта...' `
                     -ForegroundColor DarkGray
 
                 $content = Invoke-RestMethod `
                     -Uri $uri `
+                    -Headers @{
+                        'Cache-Control' = 'no-cache'
+                        'Pragma'        = 'no-cache'
+                    } `
                     -ErrorAction Stop
 
                 if ([string]::IsNullOrWhiteSpace([string]$content)) {
-                    throw "GitHub вернул пустой файл: $Path"
+                    throw "GitHub повернув порожній файл: $Path"
                 }
 
-                # Invoke-RestMethod может оставить UTF-8 BOM в начале строки.
+                # Invoke-RestMethod може оставить UTF-8 BOM в начале рядка.
                 # Старый Windows PowerShell воспринимает его как часть имени
-                # первой команды, например "﻿Set-StrictMode".
+                # першої команди, например "﻿Set-StrictMode".
                 $bomMarkers = [char[]]@(
                     [char]0xFEFF,
                     [char]0x00EF,
@@ -223,7 +247,7 @@
                 $scriptText = ([string]$content).TrimStart($bomMarkers)
 
                 if ([string]::IsNullOrWhiteSpace($scriptText)) {
-                    throw "После нормализации получен пустой скрипт: $Path"
+                    throw "Після нормалізації отримано порожній скрипт: $Path"
                 }
 
                 $scriptBlock = [ScriptBlock]::Create($scriptText)
@@ -235,11 +259,11 @@
             }
             catch {
                 Write-Host ''
-                Write-Host 'Не удалось выполнить скрипт.' -ForegroundColor Red
+                Write-Host 'Не втаклося виконати скрипт.' -ForegroundColor Red
                 Write-Host $_.Exception.Message -ForegroundColor Yellow
             }
             finally {
-                # Удаляем загруженный текст и ScriptBlock сразу после выполнения модуля.
+                # Витакляємо завантажений текст и ScriptBlock одразу після виконання модуля.
                 $content = $null
                 $scriptText = $null
                 $bomMarkers = $null
@@ -263,13 +287,13 @@
             while ($true) {
                 Write-RaccoonHeader -SectionName $SectionName
 
-                Write-Host 'В этом разделе пока нет скриптов.' `
+                Write-Host 'У цьому розділі поки немає скриптів.' `
                     -ForegroundColor DarkYellow
                 Write-Host ''
-                Write-Host '  0. Вернуться в главное меню'
+                Write-Host '  0. Повернутися в головного меню'
                 Write-Host ''
 
-                $choice = Read-Host 'Выбери действие'
+                $choice = Read-Host 'Оберіть действие'
 
                 switch ($choice) {
                     '0' {
@@ -278,7 +302,7 @@
 
                     default {
                         Write-Host ''
-                        Write-Host 'Такого пункта пока нет.' -ForegroundColor Yellow
+                        Write-Host 'Такого пункту поки немає.' -ForegroundColor Yellow
                         Start-Sleep -Seconds 1
                     }
                 }
@@ -287,79 +311,79 @@
 
         function Show-DiagnosticsMenu {
             while ($true) {
-                Write-RaccoonHeader -SectionName 'ДИАГНОСТИКА'
+                Write-RaccoonHeader -SectionName 'ДІАГНОСТИКА'
 
-                Write-Host '  СЕТЬ И ДОСТУП' -ForegroundColor DarkCyan
-                Write-Host '  1. Проверить TCP-подключение к адресу и порту'
+                Write-Host '  МЕРЕЖА ТА ДОСТУП' -ForegroundColor DarkCyan
+                Write-Host '  1. Перевірити TCP-подключение к адресу и порту'
                 Write-Host '     [SAFE] [MEMORY ONLY]'
                 Write-Host ''
-                Write-Host '  2. Комплексная диагностика Wi-Fi'
+                Write-Host '  2. Комплексна діагностика Wi-Fi'
                 Write-Host '     [SAFE] [MEMORY ONLY]'
                 Write-Host ''
-                Write-Host '  3. Комплексная диагностика интернета'
+                Write-Host '  3. Комплексна діагностика інтерніу'
                 Write-Host '     [SAFE] [MEMORY ONLY]'
                 Write-Host ''
-                Write-Host '  4. Диагностика доступа к сайту'
+                Write-Host '  4. Діагностика доступу до сайту'
                 Write-Host '     [SAFE] [MEMORY ONLY]'
                 Write-Host ''
-                Write-Host '  5. Диагностика удалённого доступа'
-                Write-Host '     [SAFE] [MEMORY ONLY]'
-                Write-Host ''
-
-                Write-Host '  КОМПЬЮТЕР И УСТРОЙСТВА' -ForegroundColor DarkCyan
-                Write-Host '  6. Диагностика печати'
-                Write-Host '     [SAFE] [MEMORY ONLY]'
-                Write-Host ''
-                Write-Host '  7. Диагностика зависаний и производительности ПК'
+                Write-Host '  5. Діагностика відтакленого доступу'
                 Write-Host '     [SAFE] [MEMORY ONLY]'
                 Write-Host ''
 
-                Write-Host '  0. Вернуться в главное меню'
+                Write-Host '  КОМП’ЮТЕР І ПРИСТРОЇ' -ForegroundColor DarkCyan
+                Write-Host '  6. Діагностика друку'
+                Write-Host '     [SAFE] [MEMORY ONLY]'
+                Write-Host ''
+                Write-Host '  7. Діагностика зависань і продуктивності ПК'
+                Write-Host '     [SAFE] [MEMORY ONLY]'
                 Write-Host ''
 
-                $choice = Read-Host 'Выбери действие'
+                Write-Host '  0. Повернутися в головного меню'
+                Write-Host ''
+
+                $choice = Read-Host 'Оберіть действие'
 
                 switch ($choice) {
                     '1' {
                         Invoke-RaccoonScript `
                             -Path 'Scripts/Diagnostics/Test-TcpConnection.ps1' `
-                            -Name 'Проверка TCP-подключения'
+                            -Name 'Перевірка TCP-підключення'
                     }
 
                     '2' {
                         Invoke-RaccoonScript `
                             -Path 'Scripts/Diagnostics/Get-WifiDiagnostics.ps1' `
-                            -Name 'Комплексная диагностика Wi-Fi'
+                            -Name 'Комплексна діагностика Wi-Fi'
                     }
 
                     '3' {
                         Invoke-RaccoonScript `
                             -Path 'Scripts/Diagnostics/Get-InternetDiagnostics.ps1' `
-                            -Name 'Комплексная диагностика интернета'
+                            -Name 'Комплексна діагностика інтерніу'
                     }
 
                     '4' {
                         Invoke-RaccoonScript `
                             -Path 'Scripts/Diagnostics/Test-WebsiteAccess.ps1' `
-                            -Name 'Диагностика доступа к сайту'
+                            -Name 'Діагностика доступу до сайту'
                     }
 
                     '5' {
                         Invoke-RaccoonScript `
                             -Path 'Scripts/Diagnostics/Get-RemoteAccessDiagnostics.ps1' `
-                            -Name 'Диагностика удалённого доступа'
+                            -Name 'Діагностика відтакленого доступу'
                     }
 
                     '6' {
                         Invoke-RaccoonScript `
                             -Path 'Scripts/Diagnostics/Get-PrinterDiagnostics.ps1' `
-                            -Name 'Диагностика печати'
+                            -Name 'Діагностика друку'
                     }
 
                     '7' {
                         Invoke-RaccoonScript `
                             -Path 'Scripts/Diagnostics/Get-ComputerHealthDiagnostics.ps1' `
-                            -Name 'Диагностика зависаний и производительности ПК'
+                            -Name 'Діагностика зависань і продуктивності ПК'
                     }
 
                     '0' {
@@ -368,7 +392,7 @@
 
                     default {
                         Write-Host ''
-                        Write-Host 'Такого пункта пока нет.' -ForegroundColor Yellow
+                        Write-Host 'Такого пункту поки немає.' -ForegroundColor Yellow
                         Start-Sleep -Seconds 1
                     }
                 }
@@ -376,15 +400,15 @@
         }
 
         function Show-MonitoringMenu {
-            Show-EmptySection -SectionName 'МОНИТОРИНГ'
+            Show-EmptySection -SectionName 'МОНІТОРИНГ'
         }
 
         function Show-FixMenu {
-            Show-EmptySection -SectionName 'ФИКС'
+            Show-EmptySection -SectionName 'ВИПРАВЛЕННЯ'
         }
 
         function Show-SoftwareMenu {
-            Show-EmptySection -SectionName 'УСТАНОВКА СОФТА'
+            Show-EmptySection -SectionName 'ВСТАНОВЛЕННЯ ПЗ'
         }
 
         try {
@@ -397,34 +421,34 @@
             Write-RaccoonHeader -SectionName ''
 
             $adminText = if (Test-IsAdministrator) {
-                'Да'
+                'Так'
             }
             else {
-                'Нет'
+                'Ні'
             }
 
-            Write-Host "Компьютер:     $env:COMPUTERNAME"
-            Write-Host "Пользователь:  $env:USERDOMAIN\$env:USERNAME"
+            Write-Host "Комп’ютер:     $env:COMPUTERNAME"
+            Write-Host "Користувач:  $env:USERDOMAIN\$env:USERNAME"
             Write-Host "PowerShell:    $($PSVersionTable.PSVersion)"
-            Write-Host "Администратор: $adminText"
+            Write-Host "Адміністратор: $adminText"
             Write-Host ''
 
-            Write-Host '  РАЗДЕЛЫ' -ForegroundColor DarkCyan
+            Write-Host '  РОЗДІЛИ' -ForegroundColor DarkCyan
             Write-Host '  1. Диагностика'
             Write-Host '  2. Мониторинг'
             Write-Host '  3. Фикс'
             Write-Host '  4. Установка софта'
             Write-Host ''
 
-            Write-Host '  ЧАСТО ИСПОЛЬЗУЕМЫЕ СКРИПТЫ' -ForegroundColor DarkCyan
-            Write-Host '  5. Создать или восстановить кнопку «Завершення сеансу»'
+            Write-Host '  ЧАСТО ВИКОРИСТОВУВАНІ СКРИПТИ' -ForegroundColor DarkCyan
+            Write-Host '  5. Створити або відновити кнопку «Завершення сеансу»'
             Write-Host '     [ADMIN] [CHANGES SYSTEM]'
             Write-Host ''
 
-            Write-Host '  0. Выход и закрытие PowerShell'
+            Write-Host '  0. Вихід і закриття PowerShell'
             Write-Host ''
 
-            $choice = Read-Host 'Выбери действие'
+            $choice = Read-Host 'Оберіть действие'
 
             switch ($choice) {
                 '1' {
@@ -446,28 +470,28 @@
                 '5' {
                     Invoke-RaccoonScript `
                         -Path 'Scripts/Server/Create-LogoffShortcut.ps1' `
-                        -Name 'Кнопка корректного выхода из сеанса' `
+                        -Name 'Кнопка коректного завершення сеансу' `
                         -RequiresAdministrator `
                         -ChangesSystem
                 }
 
                 '0' {
                     Clear-Host
-                    Write-Host 'Raccoon Admin Toolkit завершил работу.' `
+                    Write-Host 'Raccoon Admin Toolkit завершив роботу.' `
                         -ForegroundColor Cyan
                     return
                 }
 
                 default {
                     Write-Host ''
-                    Write-Host 'Такого пункта пока нет.' -ForegroundColor Yellow
+                    Write-Host 'Такого пункту поки немає.' -ForegroundColor Yellow
                     Start-Sleep -Seconds 1
                 }
             }
         }
     }
     finally {
-        # Отключаем дальнейшую запись истории в текущей сессии.
+        # Отключаем такльнейшую запись истории в текущей сессии.
         $historyPath = $null
 
         try {
@@ -488,7 +512,7 @@
         catch {
         }
 
-        # Удаляем из постоянной истории только команды, связанные с toolkit.
+        # Витакляємо з постоянной истории лише команды, связанные с toolkit.
         try {
             if ($historyPath -and
                 (Test-Path -LiteralPath $historyPath -PathType Leaf)) {
@@ -502,7 +526,7 @@
                 $filteredHistory = @(
                     $historyLines |
                     Where-Object {
-                        $_ -notmatch '(?i)admintoolkit\.itraccoonverse\.space' -and
+                        $_ -notmatch '(?i)[a-z0-9.-]*itraccoonverse\.space' -and
                         $_ -notmatch '(?i)raw\.githubusercontent\.com[/\\]LomakaKatya[/\\]AdminToolkit'
                     }
                 )
@@ -514,12 +538,9 @@
                         -ErrorAction SilentlyContinue
                 }
                 else {
-                    $filteredHistory |
-                        Set-Content `
-                            -LiteralPath $historyPath `
-                            -Encoding UTF8 `
-                            -Force `
-                            -ErrorAction SilentlyContinue
+                    Write-Utf8NoBomLines `
+                        -Path $historyPath `
+                        -Lines $filteredHistory
                 }
             }
         }
@@ -544,7 +565,7 @@
         [GC]::WaitForPendingFinalizers()
 
         Write-Host ''
-        Write-Host 'История очищена. Сеанс PowerShell закрывается.' `
+        Write-Host 'Історію очищено. Сеанс PowerShell закривається.' `
             -ForegroundColor DarkGray
 
         Start-Sleep -Milliseconds 500

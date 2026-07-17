@@ -125,7 +125,7 @@
             -ErrorAction Stop
 
         if ([string]::IsNullOrWhiteSpace([string]$launcherCode)) {
-            throw 'GitHub вернул пустой загрузчик.'
+            throw 'GitHub повернув порожній завантажувач.'
         }
 
         $bomMarkers = [char[]]@(

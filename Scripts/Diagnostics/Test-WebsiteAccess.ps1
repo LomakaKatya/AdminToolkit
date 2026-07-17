@@ -20,7 +20,7 @@ function Write-Value {
     )
 
     if ([string]::IsNullOrWhiteSpace($Value)) {
-        $Value = 'не определено'
+        $Value = 'не визначено'
         $Color = [ConsoleColor]::DarkGray
     }
 
@@ -309,15 +309,15 @@ function Get-HostsEntries {
 }
 
 Write-Host ''
-Write-Host 'Диагностика доступа к сайту' -ForegroundColor Cyan
-Write-Host 'Проверяю URL, DNS, hosts, порт, прокси, HTTP и сертификат...' `
+Write-Host 'Діагностика доступу до сайту' -ForegroundColor Cyan
+Write-Host 'Перевіряю URL, DNS, hosts, порт, прокси, HTTP и сертификат...' `
     -ForegroundColor DarkGray
 Write-Host ''
 
-$inputUrl = (Read-Host 'Введите адрес сайта').Trim()
+$inputUrl = (Read-Host 'Введіть адрес сайта').Trim()
 
 if ([string]::IsNullOrWhiteSpace($inputUrl)) {
-    throw 'Адрес сайта не может быть пустым.'
+    throw 'Адреса сайту не може быть порожнім.'
 }
 
 if ($inputUrl -notmatch '^[a-zA-Z][a-zA-Z0-9+.-]*://') {
@@ -334,11 +334,11 @@ catch {
 }
 
 if ([string]::IsNullOrWhiteSpace($uri.Host)) {
-    throw "В адресе не найдено имя узла: $inputUrl"
+    throw "В адресе не знайденоо имя узла: $inputUrl"
 }
 
 if ($uri.Scheme -notin @('http', 'https')) {
-    throw 'Поддерживаются только адреса HTTP и HTTPS.'
+    throw 'Поддерживаются лише адреса HTTP и HTTPS.'
 }
 
 Enable-Tls12
@@ -350,7 +350,7 @@ Write-Section -Title 'АДРЕС'
 
 Write-Value -Label 'Исходный URL' -Value $inputUrl -Color Cyan
 Write-Value -Label 'Протокол' -Value $uri.Scheme
-Write-Value -Label 'Узел' -Value $uri.Host
+Write-Value -Label 'Вузол' -Value $uri.Host
 Write-Value -Label 'Порт' -Value ([string]$uri.Port)
 
 Write-Section -Title 'DNS И HOSTS'
@@ -401,8 +401,8 @@ if ($addresses.Count -gt 0) {
     }
 }
 else {
-    Write-Value -Label 'DNS' -Value "ошибка: $dnsError" -Color Red
-    Add-Issue -List $issues -Text 'DNS не может разрешить имя сайта.'
+    Write-Value -Label 'DNS' -Value "помилка: $dnsError" -Color Red
+    Add-Issue -List $issues -Text 'DNS не може разрешить имя сайта.'
 }
 
 $hostsEntries = @(Get-HostsEntries -HostName $uri.Host)
@@ -416,7 +416,7 @@ if ($hostsEntries.Count -gt 0) {
     [void]$warnings.Add('Для сайта есть запись в локальном файле hosts.')
 }
 else {
-    Write-Value -Label 'Файл hosts' -Value 'записей нет' -Color Green
+    Write-Value -Label 'Файл hosts' -Value 'записей ні' -Color Green
 }
 
 $proxyUri = $null
@@ -442,9 +442,9 @@ catch {
 }
 
 if ($usesProxy -and $addresses.Count -eq 0) {
-    [void]$issues.Remove('DNS не может разрешить имя сайта.')
+    [void]$issues.Remove('DNS не може разрешить имя сайта.')
     [void]$warnings.Add(
-        'Локальный DNS не разрешил имя сайта, но прокси может выполнить разрешение самостоятельно.'
+        'Локальний DNS не разрешил имя сайта, но прокси може выполнить разрешение самостоятельно.'
     )
 }
 
@@ -455,16 +455,16 @@ $pingResult = Test-PingHost -HostName $uri.Host
 if ($pingResult.Success) {
     Write-Value `
         -Label 'Ping' `
-        -Value "ответ $($pingResult.TimeMs) мс" `
+        -Value "відповідь $($pingResult.TimeMs) мс" `
         -Color Green
 }
 else {
     Write-Value `
         -Label 'Ping' `
-        -Value "нет ответа ($($pingResult.Status))" `
+        -Value "немає відповіді ($($pingResult.Status))" `
         -Color Yellow
 
-    [void]$warnings.Add('Сайт не отвечает на ping. Это не всегда ошибка: ICMP может быть запрещён.')
+    [void]$warnings.Add('Сайт не отвечает на ping. Это не всегтак помилка: ICMP може быть заборонений.')
 }
 
 $tcpHost = $uri.Host
@@ -484,24 +484,24 @@ $tcpResult = Test-TcpPort `
 if ($tcpResult.Success) {
     Write-Value `
         -Label $tcpLabel `
-        -Value "доступен, $($tcpResult.TimeMs) мс" `
+        -Value "доступний, $($tcpResult.TimeMs) мс" `
         -Color Green
 }
 else {
     Write-Value `
         -Label $tcpLabel `
-        -Value "недоступен: $($tcpResult.Error)" `
+        -Value "недоступний: $($tcpResult.Error)" `
         -Color Red
 
     if ($usesProxy) {
         Add-Issue `
             -List $issues `
-            -Text "Не удаётся подключиться к прокси $tcpHost`:$tcpPort."
+            -Text "Не утакётся подключиться к прокси $tcpHost`:$tcpPort."
     }
     else {
         Add-Issue `
             -List $issues `
-            -Text "Не удаётся подключиться к $($uri.Host):$($uri.Port)."
+            -Text "Не утакётся подключиться к $($uri.Host):$($uri.Port)."
     }
 }
 
@@ -540,12 +540,12 @@ if ($webResult.Success) {
     }
 
     Write-Value `
-        -Label 'Ответ сервера' `
+        -Label 'Відповідь сервера' `
         -Value "$($webResult.StatusCode) $($webResult.StatusText)" `
         -Color $responseColor
 
     Write-Value `
-        -Label 'Время ответа' `
+        -Label 'Время відповідьа' `
         -Value "$($webResult.TimeMs) мс" `
         -Color $(if ($webResult.TimeMs -ge 5000) {
             [ConsoleColor]::Red
@@ -557,21 +557,21 @@ if ($webResult.Success) {
             [ConsoleColor]::Green
         })
 
-    Write-Value -Label 'Конечный URL' -Value $webResult.FinalUri
+    Write-Value -Label 'Кінцева URL-адреса' -Value $webResult.FinalUri
     Write-Value -Label 'Сервер' -Value $webResult.Server
 
     if ($webResult.StatusCode -ge 500) {
-        Add-Issue -List $issues -Text "Сайт отвечает серверной ошибкой HTTP $($webResult.StatusCode)."
+        Add-Issue -List $issues -Text "Сайт відповітакє серверной ошибкой HTTP $($webResult.StatusCode)."
     }
     elseif ($webResult.StatusCode -ge 400) {
-        [void]$warnings.Add("Сайт отвечает кодом HTTP $($webResult.StatusCode).")
+        [void]$warnings.Add("Сайт відповітакє кодом HTTP $($webResult.StatusCode).")
     }
 
     if ($webResult.TimeMs -ge 5000) {
-        Add-Issue -List $issues -Text 'Сайт отвечает очень медленно.'
+        Add-Issue -List $issues -Text 'Сайт відповітакє очень медленно.'
     }
     elseif ($webResult.TimeMs -ge 2000) {
-        [void]$warnings.Add('Сайт отвечает медленно.')
+        [void]$warnings.Add('Сайт відповітакє медленно.')
     }
 
     $initialUriText = Get-NormalizedUriText -Value $uri
@@ -597,9 +597,9 @@ if ($uri.Scheme -eq 'https') {
     Write-Section -Title 'СЕРТИФИКАТ TLS'
 
     if ($null -eq $webResult.Certificate) {
-        Write-Host '[WARN] Не удалось получить сертификат сайта.' `
+        Write-Host '[WARN] Не втаклося получить сертификат сайта.' `
             -ForegroundColor Yellow
-        [void]$warnings.Add('Сертификат TLS не удалось прочитать.')
+        [void]$warnings.Add('Сертифікат TLS не втаклося прочитать.')
     }
     else {
         $certificate = $webResult.Certificate
@@ -607,12 +607,12 @@ if ($uri.Scheme -eq 'https') {
             ($certificate.NotAfter - (Get-Date)).TotalDays
         )
 
-        Write-Value -Label 'Кому выдан' -Value ([string]$certificate.Subject)
-        Write-Value -Label 'Кем выдан' -Value ([string]$certificate.Issuer)
+        Write-Value -Label 'Кому вытакн' -Value ([string]$certificate.Subject)
+        Write-Value -Label 'Кем вытакн' -Value ([string]$certificate.Issuer)
         Write-Value -Label 'Действителен с' -Value $certificate.NotBefore.ToString('dd.MM.yyyy HH:mm')
         Write-Value -Label 'Действителен до' -Value $certificate.NotAfter.ToString('dd.MM.yyyy HH:mm')
         Write-Value `
-            -Label 'Осталось дней' `
+            -Label 'Залишилося днів' `
             -Value ([string]$daysLeft) `
             -Color $(if ($daysLeft -lt 0) {
                 [ConsoleColor]::Red
@@ -625,10 +625,10 @@ if ($uri.Scheme -eq 'https') {
             })
 
         if ($daysLeft -lt 0) {
-            Add-Issue -List $issues -Text 'Срок действия TLS-сертификата истёк.'
+            Add-Issue -List $issues -Text 'Строк дії TLS-сертификата истёк.'
         }
         elseif ($daysLeft -lt 14) {
-            [void]$warnings.Add('TLS-сертификат истекает менее чем через 14 дней.')
+            [void]$warnings.Add('TLS-сертификат истекает менее чем через 14 днів.')
         }
         elseif ($daysLeft -lt 30) {
             [void]$warnings.Add('TLS-сертификат скоро истекает.')
@@ -636,10 +636,10 @@ if ($uri.Scheme -eq 'https') {
     }
 }
 
-Write-Section -Title 'ИТОГ'
+Write-Section -Title 'ПІДСУМОК'
 
 if ($issues.Count -eq 0 -and $warnings.Count -eq 0) {
-    Write-Host '[OK] DNS, порт и HTTP-доступ к сайту работают.' `
+    Write-Host '[OK] DNS, порт и HTTP-доступ до сайту работают.' `
         -ForegroundColor Green
 }
 else {

@@ -2,7 +2,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
 if ($PSVersionTable.PSVersion.Major -lt 3) {
-    throw 'Этот модуль требует PowerShell 3.0 или новее.'
+    throw 'Цей модуль потребує PowerShell 3.0 або новішої версії.'
 }
 
 function Test-RunAsAdministrator {
@@ -18,7 +18,7 @@ function Test-RunAsAdministrator {
 }
 
 if (-not (Test-RunAsAdministrator)) {
-    throw 'Для создания ярлыка на общем рабочем столе запусти PowerShell от имени администратора.'
+    throw 'Для створення ярлика на спільному робочому столі запусти PowerShell від імені адміністратора.'
 }
 
 $publicDesktop = [Environment]::GetFolderPath(
@@ -27,7 +27,7 @@ $publicDesktop = [Environment]::GetFolderPath(
 
 if ([string]::IsNullOrWhiteSpace($publicDesktop) -or
     -not (Test-Path -LiteralPath $publicDesktop -PathType Container)) {
-    throw "Не найден общий рабочий стол: $publicDesktop"
+    throw "Не знайдено спільний робочий стіл: $publicDesktop"
 }
 
 $shortcutPath = Join-Path `
@@ -39,7 +39,7 @@ $targetPath = Join-Path -Path $system32Path -ChildPath 'logoff.exe'
 $iconPath = Join-Path -Path $system32Path -ChildPath 'SHELL32.dll'
 
 if (-not (Test-Path -LiteralPath $targetPath -PathType Leaf)) {
-    throw "Не найден системный файл выхода из сеанса: $targetPath"
+    throw "Не знайдено системний файл завершення сеансу: $targetPath"
 }
 
 $shortcutAlreadyExisted = Test-Path -LiteralPath $shortcutPath -PathType Leaf
@@ -74,18 +74,18 @@ finally {
 }
 
 if (-not (Test-Path -LiteralPath $shortcutPath -PathType Leaf)) {
-    throw "Ярлык не появился после сохранения: $shortcutPath"
+    throw "Ярлик не з’явився після збереження: $shortcutPath"
 }
 
 $action = if ($shortcutAlreadyExisted) {
-    'обновлена'
+    'оновлена'
 }
 else {
-    'создана'
+    'створена'
 }
 
 Write-Host ''
 Write-Host "[OK] Кнопка $action." -ForegroundColor Green
-Write-Host "[OK] Ярлык: $shortcutPath" -ForegroundColor Green
-Write-Host "[OK] Команда: $targetPath" -ForegroundColor Green
+Write-Host "[OK] Ярлик: $shortcutPath" -ForegroundColor Green
+Write-Host "[OK] Комантак: $targetPath" -ForegroundColor Green
 Write-Host ''
