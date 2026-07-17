@@ -427,7 +427,7 @@
                 'Ні'
             }
 
-            Write-Host ('Комп\'ютер:     {0}' -f $env:COMPUTERNAME)
+            Write-Host ('Комп ютер:     {0}' -f $env:COMPUTERNAME)
             Write-Host ('Користувач:    {0}\\{1}' -f $env:USERDOMAIN, $env:USERNAME)
             Write-Host ('PowerShell:    {0}' -f $PSVersionTable.PSVersion)
             Write-Host ('Адміністратор: {0}' -f $adminText)
