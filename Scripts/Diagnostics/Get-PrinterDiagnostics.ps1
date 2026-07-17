@@ -103,16 +103,16 @@ function Get-ErrorStateText {
     $map = @{
         0  = 'неизвестно'
         1  = 'другое'
-        2  = 'ошибок ні'
+        2  = 'помилок немає'
         3  = 'мало бумаги'
         4  = 'ні бумаги'
         5  = 'мало тонера'
         6  = 'ні тонера'
-        7  = 'відкритийа крышка'
+        7  = 'відкрита кришка'
         8  = 'замятие бумаги'
         9  = 'офлайн'
         10 = 'потрібна обслуживание'
-        11 = 'выходной лоток заполнен'
+        11 = 'вихідний лоток заповнений'
     }
 
     if ($map.ContainsKey($Code)) {
@@ -247,7 +247,7 @@ function Test-TcpPort {
 
 Write-Host ''
 Write-Host 'Діагностика друку' -ForegroundColor Cyan
-Write-Host 'Собираю состояние очереди, драйвера, порта и службы печати...' `
+Write-Host 'Збираю стан черги, драйвера, порту та служби друку...' `
     -ForegroundColor DarkGray
 
 $issues = New-Object -TypeName System.Collections.ArrayList
@@ -315,17 +315,17 @@ if ($printers.Count -eq 0) {
     Write-Section -Title 'ПРИНТЕРЫ'
 
     if (-not [string]::IsNullOrWhiteSpace($printerQueryError)) {
-        Write-Host '[FAIL] Не втаклося получить список принтеров.' `
+        Write-Host '[FAIL] Не вдалося отримати список принтерів.' `
             -ForegroundColor Red
         Write-Host $printerQueryError -ForegroundColor Yellow
     }
     else {
-        Write-Host '[FAIL] В системе не знайденоо ни одного принтера.' `
+        Write-Host '[FAIL] У системі не знайдено жодного принтера.' `
             -ForegroundColor Red
     }
 
     if ($null -ne $spooler -and $spooler.Status -ne 'Running') {
-        Write-Host 'Сначала запусти службу Print Spooler и повтори проверку.' `
+        Write-Host 'Спочатку запусти службу Print Spooler і повтори перевірку.' `
             -ForegroundColor Yellow
     }
 
@@ -417,7 +417,7 @@ if (-not [string]::IsNullOrWhiteSpace($selectionText)) {
     if (-not [int]::TryParse($selectionText, [ref]$selection) -or
         $selection -lt 1 -or
         $selection -gt $printers.Count) {
-        throw "Номер принтера должен быть от 1 до $($printers.Count)."
+        throw "Номер принтера має бути від 1 до $($printers.Count)."
     }
 }
 
@@ -576,7 +576,7 @@ if ($pausedKnown) {
 else {
     Write-Value `
         -Label 'Призупинено' `
-        -Value 'не сообщается этим драйвером' `
+        -Value 'цей драйвер не повідомляє' `
         -Color DarkGray
 }
 
@@ -598,19 +598,19 @@ Write-Value `
         'ні'
     })
 
-Write-Value -Label 'Комментарий' -Value $comment
+Write-Value -Label 'Коментар' -Value $comment
 Write-Value -Label 'Розташування' -Value $location
 
 if ($workOffline) {
     Add-Issue `
         -List $issues `
-        -Text 'В Windows включён режим работы принтера офлайн.'
+        -Text 'У Windows увімкнено автономний режим роботи принтера.'
 }
 
 if ($pausedKnown -and $isPaused) {
     Add-Issue `
         -List $issues `
-        -Text 'Печать на принтере приостановлена.'
+        -Text 'Друк на принтері призупинено.'
 }
 
 if ($printerStatus -in @(6, 7)) {
@@ -622,10 +622,10 @@ if ($printerStatus -in @(6, 7)) {
 if ($errorState -ge 4 -and $errorState -ne 5) {
     Add-Issue `
         -List $issues `
-        -Text "Устройство сообщает ошибку: $errorText."
+        -Text "Пристрій повідомляє про помилку: $errorText."
 }
 elseif ($errorState -in @(3, 5)) {
-    [void]$warnings.Add("Устройство сообщает: $errorText.")
+    [void]$warnings.Add("Пристрій повідомляє: $errorText.")
 }
 
 Write-Section -Title 'ЧЕРГА ДРУКУ'
@@ -651,7 +651,7 @@ $jobs = @(
 )
 
 Write-Value `
-    -Label 'Затакний в очереди' `
+    -Label 'Завдань у черзі' `
     -Value ([string]$jobs.Count) `
     -Color $(if ($jobs.Count -eq 0) {
         [ConsoleColor]::Green
@@ -708,7 +708,7 @@ else {
 
         $badStatePattern =
             '(?i)error|paused|offline|deleting|blocked|' +
-            'ошиб|приост|утаклен|офлайн'
+            'ошиб|приост|видален|офлайн'
 
         $jobColor = if ($jobState -match $badStatePattern) {
             [ConsoleColor]::Red
@@ -748,18 +748,18 @@ else {
             )
 
             ($status + ' ' + $jobStatus) -match
-                '(?i)error|paused|offline|deleting|blocked|ошиб|приост|утаклен|офлайн'
+                '(?i)error|paused|offline|deleting|blocked|ошиб|приост|видален|офлайн'
         }
     )
 
     if ($badJobs.Count -gt 0) {
         Add-Issue `
             -List $issues `
-            -Text 'В очереди есть затакния с ошибкой или зависшим состоянием.'
+            -Text 'У черзі є завдання з помилкою або завислим станом.'
     }
     else {
         [void]$warnings.Add(
-            'В очереди есть ожитакющие затакния. Возможно, печать остановилась до отправки на устройство.'
+            'У черзі є завдання, що очікують. Можливо, друк зупинився до надсилання на пристрій.'
         )
     }
 }
@@ -768,7 +768,7 @@ Write-Section -Title 'ПОРТ И МЕРЕЖЕВЕ ПІДКЛЮЧЕННЯ'
 
 $networkHost = ''
 $networkPort = 0
-$portType = 'локальный или неизвестный'
+$portType = 'локальний або невідомий'
 
 $tcpPort = Get-WmiObject `
     -Class Win32_TCPIPPrinterPort `
@@ -830,7 +830,7 @@ elseif ($portName -match '^(\d{1,3}(?:\.\d{1,3}){3})') {
 }
 
 Write-Value -Label 'Тип порту' -Value $portType
-Write-Value -Label 'Ім’я порта' -Value $portName
+Write-Value -Label 'Ім’я порту' -Value $portName
 
 if (-not [string]::IsNullOrWhiteSpace($networkHost)) {
     Write-Value `
@@ -857,7 +857,7 @@ if (-not [string]::IsNullOrWhiteSpace($networkHost)) {
             -Color Yellow
 
         [void]$warnings.Add(
-            'Сетевой принтер не отвечает на ping. ICMP може быть заборонений, поцему проверяем порт.'
+            'Мережевий принтер не відповідає на ping. ICMP може бути заборонено, тому перевіряємо порт.'
         )
     }
 
@@ -868,13 +868,13 @@ if (-not [string]::IsNullOrWhiteSpace($networkHost)) {
 
         if ($tcpResult.Success) {
             Write-Value `
-                -Label 'TCP-подключение' `
+                -Label 'TCP-підключення' `
                 -Value "порт $networkPort відкритий, $($tcpResult.TimeMs) мс" `
                 -Color Green
         }
         else {
             Write-Value `
-                -Label 'TCP-подключение' `
+                -Label 'TCP-підключення' `
                 -Value "порт $networkPort недоступний ($($tcpResult.Error))" `
                 -Color Red
 
@@ -886,7 +886,7 @@ if (-not [string]::IsNullOrWhiteSpace($networkHost)) {
 }
 else {
     Write-Host ''
-    Write-Host '[INFO] Це USB, віртуальний або нестантакртний локальний порт.' `
+    Write-Host '[INFO] Це USB, віртуальний або нестандартний локальний порт.' `
         -ForegroundColor DarkGray
 }
 
@@ -933,7 +933,7 @@ if ($checkedPrintLogs -eq 0) {
         -ForegroundColor DarkGray
 }
 elseif ($printEvents.Count -eq 0) {
-    Write-Host '[OK] За останні 24 години явних помилок PrintService не знайденоо.' `
+    Write-Host '[OK] За останні 24 години явних помилок PrintService не знайдено.' `
         -ForegroundColor Green
 }
 else {
@@ -971,7 +971,7 @@ else {
     }
 
     [void]$warnings.Add(
-        'У журналах PrintService є нещодавні попередження або помилки.'
+        'У журналах PrintService є нещотаквні попередження або помилки.'
     )
 }
 
@@ -983,7 +983,7 @@ if ($issues.Count -eq 0 -and $warnings.Count -eq 0) {
 
     Write-Host (
         'Якщо друку все одно немає, перевір папір, тонер, екран ' +
-        'самого принтера и тестову сторінку пристрою.'
+        'самого принтера та тестову сторінку пристрою.'
     ) -ForegroundColor DarkGray
 }
 else {
