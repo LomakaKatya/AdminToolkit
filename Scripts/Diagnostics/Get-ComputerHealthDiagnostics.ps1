@@ -286,7 +286,7 @@ $disks = @(
 )
 
 if ($disks.Count -eq 0) {
-    Write-Host '[WARN] Не втаклося отримати інформацію про локальні диски.' `
+    Write-Host '[WARN] Не вдалося отримати інформацію про локальні диски.' `
         -ForegroundColor Yellow
 }
 else {
@@ -401,7 +401,7 @@ $topCpu = @(Get-TopCpuProcesses `
     -LogicalProcessors $logicalProcessors)
 
 if ($topCpu.Count -eq 0) {
-    Write-Host '[INFO] Не втаклося виміряти навантаження процесів.' `
+    Write-Host '[INFO] Не вдалося виміряти навантаження процесів.' `
         -ForegroundColor DarkGray
 }
 else {
@@ -447,7 +447,7 @@ $topMemory = @(
 )
 
 if ($topMemory.Count -eq 0) {
-    Write-Host '[INFO] Не втаклося отримати список процесів.' `
+    Write-Host '[INFO] Не вдалося отримати список процесів.' `
         -ForegroundColor DarkGray
 }
 else {
