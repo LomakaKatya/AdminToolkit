@@ -541,9 +541,11 @@ try {
     Write-Host "Час показу: $timeoutSeconds секунд."
     Write-Host ''
 
-    $confirmation = Read-Host 'Для надсилання введи MESSAGE'
+    $confirmation = (
+        Read-Host 'Надіслати повідомлення? [Y/N | Д/Н]'
+    ).Trim()
 
-    if ($confirmation -cne 'MESSAGE') {
+    if ($confirmation -notmatch '^(?i:y|yes|д|да|так)$') {
         Write-Host 'Надсилання скасовано.' -ForegroundColor Yellow
         return
     }
