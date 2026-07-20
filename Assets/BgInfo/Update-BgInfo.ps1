@@ -105,13 +105,13 @@ $installRoot =
 
 $binPath = Join-Path $installRoot 'Bin'
 $configPath = Join-Path $installRoot 'Config\Raccoon-Standard.bgi'
-$logPath = Join-Path $installRoot 'Logs\BgInfo.log'
 
 $userRoot = Join-Path `
     $env:LOCALAPPDATA `
     'RaccoonAdminToolkit\BgInfo'
 
 $textPath = Join-Path $userRoot 'SystemInfo.txt'
+$logPath = Join-Path $userRoot 'BgInfo.log'
 
 try {
     if (-not (Test-Path -LiteralPath $userRoot -PathType Container)) {

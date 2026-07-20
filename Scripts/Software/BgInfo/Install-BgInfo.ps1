@@ -166,29 +166,117 @@ function Copy-BgInfoBinaries {
     return @($copied)
 }
 
+function Invoke-NativeCommand {
+    param(
+        [Parameter(Mandatory)]
+        [string]$FilePath,
+
+        [Parameter(Mandatory)]
+        [string[]]$Arguments,
+
+        [Parameter(Mandatory)]
+        [string]$Operation
+    )
+
+    $output = @(
+        & $FilePath @Arguments 2>&1 |
+        ForEach-Object {
+            ([string]$_).Trim()
+        } |
+        Where-Object {
+            -not [string]::IsNullOrWhiteSpace($_)
+        }
+    )
+
+    $exitCode = [int]$LASTEXITCODE
+
+    if ($exitCode -ne 0) {
+        $details = (
+            @(
+                $output |
+                Select-Object -First 6
+            ) -join ' | '
+        )
+
+        throw (
+            '{0} завершилася з кодом {1}. {2}' -f
+            $Operation,
+            $exitCode,
+            $details
+        )
+    }
+}
+
 function Set-BgInfoAcl {
     param(
         [Parameter(Mandatory)]
         [string]$Path
     )
 
+    if (-not (Test-Path -LiteralPath $Path -PathType Container)) {
+        return
+    }
+
+    $takeownPath = Join-Path $env:SystemRoot 'System32\takeown.exe'
     $icaclsPath = Join-Path $env:SystemRoot 'System32\icacls.exe'
 
-    $arguments = @(
-        $Path
-        '/inheritance:r'
-        '/grant:r'
-        '*S-1-5-18:(OI)(CI)(F)'
-        '*S-1-5-32-544:(OI)(CI)(F)'
+    Invoke-NativeCommand `
+        -FilePath $takeownPath `
+        -Arguments @(
+            '/F'
+            $Path
+            '/A'
+            '/R'
+            '/D'
+            'Y'
+        ) `
+        -Operation 'takeown'
+
+    Invoke-NativeCommand `
+        -FilePath $icaclsPath `
+        -Arguments @(
+            $Path
+            '/inheritance:r'
+            '/C'
+            '/Q'
+        ) `
+        -Operation 'icacls /inheritance:r'
+
+    foreach ($grant in @(
+        '*S-1-5-18:(OI)(CI)(F)',
+        '*S-1-5-32-544:(OI)(CI)(F)',
         '*S-1-5-32-545:(OI)(CI)(RX)'
-        '/T'
-        '/C'
+    )) {
+        Invoke-NativeCommand `
+            -FilePath $icaclsPath `
+            -Arguments @(
+                $Path
+                '/grant:r'
+                $grant
+                '/C'
+                '/Q'
+            ) `
+            -Operation "icacls /grant:r $grant"
+    }
+
+    $children = @(
+        Get-ChildItem `
+            -LiteralPath $Path `
+            -Force `
+            -ErrorAction SilentlyContinue
     )
 
-    & $icaclsPath @arguments | Out-Null
-
-    if ($LASTEXITCODE -ne 0) {
-        throw "icacls завершився з кодом $LASTEXITCODE."
+    if ($children.Count -gt 0) {
+        Invoke-NativeCommand `
+            -FilePath $icaclsPath `
+            -Arguments @(
+                (Join-Path $Path '*')
+                '/reset'
+                '/T'
+                '/C'
+                '/Q'
+            ) `
+            -Operation 'icacls /reset'
     }
 }
 
@@ -221,10 +309,25 @@ function New-CommonStartupShortcut {
         $shell = New-Object -ComObject WScript.Shell
         $shortcut = $shell.CreateShortcut($shortcutPath)
         $shortcut.TargetPath = $powerShellPath
+        $escapedHelperPath = $HelperPath.Replace(
+            "'",
+            "''"
+        )
+
+        $launcherCode = (
+            "& ([ScriptBlock]::Create((Get-Content -LiteralPath '{0}' " +
+            "-Raw -Encoding UTF8)))" -f
+            $escapedHelperPath
+        )
+
+        $encodedCommand = [Convert]::ToBase64String(
+            [Text.Encoding]::Unicode.GetBytes($launcherCode)
+        )
+
         $shortcut.Arguments = (
             '-NoLogo -NoProfile -NonInteractive -WindowStyle Hidden ' +
-            '-ExecutionPolicy Bypass -File "{0}"' -f
-            $HelperPath
+            '-ExecutionPolicy Bypass -EncodedCommand {0}' -f
+            $encodedCommand
         )
         $shortcut.WorkingDirectory = Split-Path -Parent $HelperPath
         $shortcut.Description =
@@ -308,6 +411,13 @@ try {
     $configPath = Join-Path $installRoot 'Config'
     $logsPath = Join-Path $installRoot 'Logs'
     $helperPath = Join-Path $installRoot 'Update-BgInfo.ps1'
+
+    if (Test-Path -LiteralPath $installRoot -PathType Container) {
+        Write-Host 'Відновлюю права на наявну установку BgInfo...' `
+            -ForegroundColor DarkGray
+
+        Set-BgInfoAcl -Path $installRoot
+    }
 
     foreach ($directory in @(
         $installRoot,

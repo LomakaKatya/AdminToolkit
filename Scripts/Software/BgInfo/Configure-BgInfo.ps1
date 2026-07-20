@@ -14,6 +14,33 @@ function Test-IsAdministrator {
     )
 }
 
+function Invoke-Utf8ScriptFile {
+    param(
+        [Parameter(Mandatory)]
+        [string]$Path
+    )
+
+    $scriptText = Get-Content `
+        -LiteralPath $Path `
+        -Raw `
+        -Encoding UTF8 `
+        -ErrorAction Stop
+
+    if ([string]::IsNullOrWhiteSpace($scriptText)) {
+        throw "Отримано порожній скрипт: $Path"
+    }
+
+    $scriptBlock = [ScriptBlock]::Create($scriptText)
+
+    try {
+        & $scriptBlock
+    }
+    finally {
+        $scriptText = $null
+        $scriptBlock = $null
+    }
+}
+
 try {
     Write-Host ''
     Write-Host 'Налаштування стандартного шаблону BgInfo' `
@@ -51,7 +78,7 @@ try {
         throw "Не знайдено допоміжний скрипт: $helperPath"
     }
 
-    & $helperPath
+    Invoke-Utf8ScriptFile -Path $helperPath
 
     $textPath = Join-Path `
         $env:LOCALAPPDATA `
@@ -114,7 +141,7 @@ try {
         return
     }
 
-    & $helperPath
+    Invoke-Utf8ScriptFile -Path $helperPath
 
     Write-Host '[OK] Шаблон Raccoon-Standard.bgi знайдено.' `
         -ForegroundColor Green

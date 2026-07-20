@@ -139,15 +139,203 @@ function Test-IsAdministrator {
     )
 }
 
+function Invoke-NativeCommand {
+    param(
+        [Parameter(Mandatory)]
+        [string]$FilePath,
+
+        [Parameter(Mandatory)]
+        [string[]]$Arguments,
+
+        [Parameter(Mandatory)]
+        [string]$Operation
+    )
+
+    $output = @(
+        & $FilePath @Arguments 2>&1 |
+        ForEach-Object {
+            ([string]$_).Trim()
+        } |
+        Where-Object {
+            -not [string]::IsNullOrWhiteSpace($_)
+        }
+    )
+
+    $exitCode = [int]$LASTEXITCODE
+
+    if ($exitCode -ne 0) {
+        $details = (
+            @(
+                $output |
+                Select-Object -First 6
+            ) -join ' | '
+        )
+
+        throw (
+            '{0} failed with exit code {1}. {2}' -f
+            $Operation,
+            $exitCode,
+            $details
+        )
+    }
+}
+
+function Set-BgInfoAcl {
+    param(
+        [Parameter(Mandatory)]
+        [string]$Path
+    )
+
+    if (-not (Test-Path -LiteralPath $Path -PathType Container)) {
+        return
+    }
+
+    $takeownPath = Join-Path $env:SystemRoot 'System32\takeown.exe'
+    $icaclsPath = Join-Path $env:SystemRoot 'System32\icacls.exe'
+
+    Invoke-NativeCommand `
+        -FilePath $takeownPath `
+        -Arguments @(
+            '/F'
+            $Path
+            '/A'
+            '/R'
+            '/D'
+            'Y'
+        ) `
+        -Operation 'takeown'
+
+    Invoke-NativeCommand `
+        -FilePath $icaclsPath `
+        -Arguments @(
+            $Path
+            '/inheritance:r'
+            '/C'
+            '/Q'
+        ) `
+        -Operation 'icacls inheritance'
+
+    foreach ($grant in @(
+        '*S-1-5-18:(OI)(CI)(F)',
+        '*S-1-5-32-544:(OI)(CI)(F)',
+        '*S-1-5-32-545:(OI)(CI)(RX)'
+    )) {
+        Invoke-NativeCommand `
+            -FilePath $icaclsPath `
+            -Arguments @(
+                $Path
+                '/grant:r'
+                $grant
+                '/C'
+                '/Q'
+            ) `
+            -Operation "icacls grant $grant"
+    }
+
+    $children = @(
+        Get-ChildItem `
+            -LiteralPath $Path `
+            -Force `
+            -ErrorAction SilentlyContinue
+    )
+
+    if ($children.Count -gt 0) {
+        Invoke-NativeCommand `
+            -FilePath $icaclsPath `
+            -Arguments @(
+                (Join-Path $Path '*')
+                '/reset'
+                '/T'
+                '/C'
+                '/Q'
+            ) `
+            -Operation 'icacls reset'
+    }
+}
+
+function New-CommonStartupShortcut {
+    param(
+        [Parameter(Mandatory)]
+        [string]$HelperPath
+    )
+
+    $startupPath = Join-Path `
+        $env:ProgramData `
+        'Microsoft\Windows\Start Menu\Programs\StartUp'
+
+    if (-not (Test-Path -LiteralPath $startupPath -PathType Container)) {
+        New-Item `
+            -Path $startupPath `
+            -ItemType Directory `
+            -Force `
+            -ErrorAction Stop |
+        Out-Null
+    }
+
+    $shortcutPath = Join-Path $startupPath 'Raccoon BgInfo.lnk'
+    $powerShellPath = Join-Path `
+        $env:SystemRoot `
+        'System32\WindowsPowerShell\v1.0\powershell.exe'
+
+    $escapedHelperPath = $HelperPath.Replace(
+        "'",
+        "''"
+    )
+
+    $launcherCode = (
+        "& ([ScriptBlock]::Create((Get-Content -LiteralPath '{0}' " +
+        "-Raw -Encoding UTF8)))" -f
+        $escapedHelperPath
+    )
+
+    $encodedCommand = [Convert]::ToBase64String(
+        [Text.Encoding]::Unicode.GetBytes($launcherCode)
+    )
+
+    $shell = $null
+    $shortcut = $null
+
+    try {
+        $shell = New-Object -ComObject WScript.Shell
+        $shortcut = $shell.CreateShortcut($shortcutPath)
+        $shortcut.TargetPath = $powerShellPath
+        $shortcut.Arguments = (
+            '-NoLogo -NoProfile -NonInteractive -WindowStyle Hidden ' +
+            '-ExecutionPolicy Bypass -EncodedCommand {0}' -f
+            $encodedCommand
+        )
+        $shortcut.WorkingDirectory = Split-Path -Parent $HelperPath
+        $shortcut.Description = 'Raccoon BgInfo updater'
+        $shortcut.Save()
+    }
+    finally {
+        if ($null -ne $shortcut -and
+            [Runtime.InteropServices.Marshal]::IsComObject($shortcut)) {
+            [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject(
+                $shortcut
+            )
+        }
+
+        if ($null -ne $shell -and
+            [Runtime.InteropServices.Marshal]::IsComObject($shell)) {
+            [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject(
+                $shell
+            )
+        }
+    }
+
+    return $shortcutPath
+}
+
 if (-not (Test-IsAdministrator)) {
-    throw 'Deploy-BgInfo-Computer.ps1 має виконуватися від SYSTEM або адміністратора.'
+    throw 'Deploy-BgInfo-Computer.ps1 must run as SYSTEM or administrator.'
 }
 
 $payloadRoot = Join-Path $PSScriptRoot 'Payload'
 $installRoot = 'C:\ProgramData\RaccoonAdminToolkit\BgInfo'
 
 if (-not (Test-Path -LiteralPath $payloadRoot -PathType Container)) {
-    throw "Не знайдено Payload: $payloadRoot"
+    throw "Payload not found: $payloadRoot"
 }
 
 foreach ($fileName in @(
@@ -176,7 +364,7 @@ foreach ($fileName in @(
         [System.Management.Automation.SignatureStatus]::Valid -or
         $publisher -notmatch '(?i)Microsoft') {
         throw (
-            'Файл {0} не має чинного підпису Microsoft. Статус: {1}. Видавець: {2}' -f
+            'File {0} does not have a valid Microsoft signature. Status: {1}. Publisher: {2}' -f
             $fileName,
             $signature.Status,
             $publisher
@@ -184,7 +372,10 @@ foreach ($fileName in @(
     }
 }
 
-if (-not (Test-Path -LiteralPath $installRoot -PathType Container)) {
+if (Test-Path -LiteralPath $installRoot -PathType Container) {
+    Set-BgInfoAcl -Path $installRoot
+}
+else {
     New-Item `
         -Path $installRoot `
         -ItemType Directory `
@@ -200,87 +391,15 @@ Copy-Item `
     -Force `
     -ErrorAction Stop
 
-$logsPath = Join-Path $installRoot 'Logs'
-
-if (-not (Test-Path -LiteralPath $logsPath -PathType Container)) {
-    New-Item `
-        -Path $logsPath `
-        -ItemType Directory `
-        -Force `
-        -ErrorAction Stop |
-    Out-Null
-}
-
-$startupPath = Join-Path `
-    $env:ProgramData `
-    'Microsoft\Windows\Start Menu\Programs\StartUp'
-
-if (-not (Test-Path -LiteralPath $startupPath -PathType Container)) {
-    New-Item `
-        -Path $startupPath `
-        -ItemType Directory `
-        -Force `
-        -ErrorAction Stop |
-    Out-Null
-}
-
 $helperPath = Join-Path $installRoot 'Update-BgInfo.ps1'
-$shortcutPath = Join-Path $startupPath 'Raccoon BgInfo.lnk'
-$powerShellPath = Join-Path `
-    $env:SystemRoot `
-    'System32\WindowsPowerShell\v1.0\powershell.exe'
 
-$shell = $null
-$shortcut = $null
-
-try {
-    $shell = New-Object -ComObject WScript.Shell
-    $shortcut = $shell.CreateShortcut($shortcutPath)
-    $shortcut.TargetPath = $powerShellPath
-    $shortcut.Arguments = (
-        '-NoLogo -NoProfile -NonInteractive -WindowStyle Hidden ' +
-        '-ExecutionPolicy Bypass -File "{0}"' -f
-        $helperPath
-    )
-    $shortcut.WorkingDirectory = $installRoot
-    $shortcut.Description =
-        'Оновлення інформаційної таблички Raccoon BgInfo'
-    $shortcut.Save()
-}
-finally {
-    if ($null -ne $shortcut -and
-        [Runtime.InteropServices.Marshal]::IsComObject($shortcut)) {
-        [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject(
-            $shortcut
-        )
-    }
-
-    if ($null -ne $shell -and
-        [Runtime.InteropServices.Marshal]::IsComObject($shell)) {
-        [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject(
-            $shell
-        )
-    }
-}
-
-$icaclsPath = Join-Path $env:SystemRoot 'System32\icacls.exe'
-
-& $icaclsPath `
-    $installRoot `
-    '/inheritance:r' `
-    '/grant:r' `
-    '*S-1-5-18:(OI)(CI)(F)' `
-    '*S-1-5-32-544:(OI)(CI)(F)' `
-    '*S-1-5-32-545:(OI)(CI)(RX)' `
-    '/T' `
-    '/C' |
+New-CommonStartupShortcut `
+    -HelperPath $helperPath |
 Out-Null
 
-if ($LASTEXITCODE -ne 0) {
-    throw "icacls завершився з кодом $LASTEXITCODE."
-}
+Set-BgInfoAcl -Path $installRoot
 
-Write-Host '[OK] Raccoon BgInfo встановлено або оновлено через GPO.'
+Write-Host '[OK] Raccoon BgInfo installed or updated through GPO.'
 '@
 
     $deployPath = Join-Path `

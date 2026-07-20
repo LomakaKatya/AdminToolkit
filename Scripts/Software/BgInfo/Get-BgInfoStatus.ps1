@@ -193,4 +193,13 @@ catch {
     Write-Host '[FAIL] Не вдалося перевірити BgInfo.' `
         -ForegroundColor Red
     Write-Host $_.Exception.Message -ForegroundColor Yellow
+
+    if ($_.Exception -is [System.UnauthorizedAccessException] -or
+        $_.Exception.Message -match '(?i)access.*denied|доступ.*заборон') {
+        Write-Host ''
+        Write-Host '[INFO] Права на каталог BgInfo пошкоджені.' `
+            -ForegroundColor Cyan
+        Write-Host 'Повторно запусти пункт встановлення або оновлення BgInfo.' `
+            -ForegroundColor Cyan
+    }
 }
