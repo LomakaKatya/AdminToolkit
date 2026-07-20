@@ -393,16 +393,59 @@ try {
             }
 
             Write-Host ''
-            $selectionText = Read-Host 'Оберіть користувача'
-            $selection = 0
+            Write-Host 'Можна ввести номер зі списку, повне ім''я DOMAIN\login або короткий login.' `
+                -ForegroundColor DarkGray
 
-            if (-not [int]::TryParse($selectionText, [ref]$selection) -or
-                $selection -lt 1 -or
-                $selection -gt $users.Count) {
-                throw 'Невірний номер користувача.'
+            $selectionText = (
+                Read-Host 'Оберіть користувача'
+            ).Trim()
+
+            if ([string]::IsNullOrWhiteSpace($selectionText)) {
+                throw 'Користувача не вказано.'
             }
 
-            $selectedUser = $users[$selection - 1]
+            $selection = 0
+            $selectedUser = ''
+
+            if ([int]::TryParse($selectionText, [ref]$selection)) {
+                if ($selection -lt 1 -or
+                    $selection -gt $users.Count) {
+                    throw 'Невірний номер користувача.'
+                }
+
+                $selectedUser = $users[$selection - 1]
+            }
+            else {
+                $matchingUsers = @(
+                    $users |
+                    Where-Object {
+                        $fullName = [string]$_
+                        $shortName = (
+                            $fullName -split '\\'
+                        )[-1]
+
+                        $fullName -ieq $selectionText -or
+                        $shortName -ieq $selectionText
+                    }
+                )
+
+                if ($matchingUsers.Count -eq 0) {
+                    throw (
+                        'Активного користувача "{0}" не знайдено.' -f
+                        $selectionText
+                    )
+                }
+
+                if ($matchingUsers.Count -gt 1) {
+                    throw (
+                        'Ім''я "{0}" неоднозначне. Введи повне ім''я: {1}' -f
+                        $selectionText,
+                        ($matchingUsers -join ', ')
+                    )
+                }
+
+                $selectedUser = [string]$matchingUsers[0]
+            }
 
             $targets = @(
                 $sessions |
@@ -466,8 +509,9 @@ try {
     $body = Read-MultilineMessage
 
     $message = (
-        "ПОВІДОМЛЕННЯ ВІД ПІДТРИМКИ{0}{0}{1}{0}{0}" +
-        "Підтримка: +380 67 001 10 12, дзвінки/Viber/Telegram/WhatsApp"
+        "ПОВІДОМЛЕННЯ ВІД ТЕХПІДТРИМКИ{0}{0}{1}{0}{0}" +
+        "Техпідтримка: +380 67 001 10 12, дзвінки/Viber/Telegram/WhatsApp{0}" +
+        "З повагою, компанія БІТ"
     ) -f [Environment]::NewLine, $body
 
     Write-Section -Title 'ПЕРЕВІРКА ПЕРЕД НАДСИЛАННЯМ'
