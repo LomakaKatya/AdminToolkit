@@ -14,6 +14,19 @@ function Test-IsAdministrator {
     )
 }
 
+function Confirm-Action {
+    param(
+        [Parameter(Mandatory)]
+        [string]$Prompt
+    )
+
+    $answer = (
+        Read-Host "$Prompt [Y/N | Д/Н]"
+    ).Trim()
+
+    return ($answer -match '^(?i:y|yes|д|да|так)$')
+}
+
 function Write-Utf8NoBom {
     param(
         [Parameter(Mandatory)]
@@ -87,9 +100,7 @@ try {
 
     $payloadRoot = Join-Path $packageRoot 'Payload'
 
-    $confirmation = Read-Host 'Для створення пакета введи GPO'
-
-    if ($confirmation -cne 'GPO') {
+    if (-not (Confirm-Action -Prompt 'Створити пакет для GPO?')) {
         Write-Host 'Створення пакета скасовано.' `
             -ForegroundColor Yellow
         return
@@ -429,8 +440,8 @@ RACCOON BGINFO - GPO PACKAGE
 The package installs files locally to:
 C:\ProgramData\RaccoonAdminToolkit\BgInfo
 
-The configuration uses the current user's wallpaper and writes a unique bitmap
-to the user's LocalAppData directory.
+The configuration uses the current user's wallpaper and reads per-session
+values from RACCOON_BGINFO_USER and RACCOON_BGINFO_SESSION_SINCE.
 
 Do not place the package on a public web server.
 The included executables are Microsoft Sysinternals files for internal deployment.

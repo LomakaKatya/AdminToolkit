@@ -2,27 +2,6 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
 
-function Write-BgInfoText {
-    param(
-        [Parameter(Mandatory)]
-        [string]$Path,
-
-        [Parameter(Mandatory)]
-        [AllowEmptyString()]
-        [string]$Text
-    )
-
-    $encoding = New-Object `
-        -TypeName System.Text.UTF8Encoding `
-        -ArgumentList $true
-
-    [System.IO.File]::WriteAllText(
-        $Path,
-        $Text,
-        $encoding
-    )
-}
-
 function Get-CurrentSessionLogonText {
     $sessionId = (Get-Process -Id $PID).SessionId
     $quserPath = Join-Path $env:SystemRoot 'System32\quser.exe'
@@ -46,6 +25,7 @@ function Get-CurrentSessionLogonText {
                     [char]' '
                 )
             )
+
             $tokens = @(
                 $clean -split '\s+' |
                 Where-Object {
@@ -110,8 +90,8 @@ $userRoot = Join-Path `
     $env:LOCALAPPDATA `
     'RaccoonAdminToolkit\BgInfo'
 
-$textPath = Join-Path $userRoot 'SystemInfo.txt'
 $logPath = Join-Path $userRoot 'BgInfo.log'
+$legacyTextPath = Join-Path $userRoot 'SystemInfo.txt'
 
 try {
     if (-not (Test-Path -LiteralPath $userRoot -PathType Container)) {
@@ -123,19 +103,16 @@ try {
         Out-Null
     }
 
-    $userName = [Security.Principal.WindowsIdentity]::GetCurrent().Name
-    $logonText = Get-CurrentSessionLogonText
+    Remove-Item `
+        -LiteralPath $legacyTextPath `
+        -Force `
+        -ErrorAction SilentlyContinue
 
-    $systemInfo = @(
-        'SYSTEM INFO'
-        ''
-        ('Користувач : {0}' -f $userName)
-        ('Сеанс з    : {0}' -f $logonText)
-        'Підтримка  : +380 67 001 10 12'
-        '             дзвінки / Viber / Telegram / WhatsApp'
-    ) -join [Environment]::NewLine
+    $env:RACCOON_BGINFO_USER =
+        [Security.Principal.WindowsIdentity]::GetCurrent().Name
 
-    Write-BgInfoText -Path $textPath -Text $systemInfo
+    $env:RACCOON_BGINFO_SESSION_SINCE =
+        Get-CurrentSessionLogonText
 
     if (-not (Test-Path -LiteralPath $configPath -PathType Leaf)) {
         return
@@ -162,6 +139,15 @@ try {
 }
 catch {
     try {
+        if (-not (Test-Path -LiteralPath $userRoot -PathType Container)) {
+            New-Item `
+                -Path $userRoot `
+                -ItemType Directory `
+                -Force `
+                -ErrorAction SilentlyContinue |
+            Out-Null
+        }
+
         $errorText = (
             '{0} {1}' -f
             (Get-Date).ToString('yyyy-MM-dd HH:mm:ss'),

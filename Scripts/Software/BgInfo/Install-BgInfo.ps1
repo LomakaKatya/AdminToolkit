@@ -14,6 +14,19 @@ function Test-IsAdministrator {
     )
 }
 
+function Confirm-Action {
+    param(
+        [Parameter(Mandatory)]
+        [string]$Prompt
+    )
+
+    $answer = (
+        Read-Host "$Prompt [Y/N | Д/Н]"
+    ).Trim()
+
+    return ($answer -match '^(?i:y|yes|д|да|так)$')
+}
+
 function Enable-Tls12 {
     try {
         [Net.ServicePointManager]::SecurityProtocol =
@@ -395,9 +408,7 @@ try {
         throw 'Невідомий режим джерела.'
     }
 
-    $confirmation = Read-Host 'Для встановлення введи BGINFO'
-
-    if ($confirmation -cne 'BGINFO') {
+    if (-not (Confirm-Action -Prompt 'Встановити або оновити BgInfo?')) {
         Write-Host 'Встановлення скасовано.' -ForegroundColor Yellow
         return
     }

@@ -14,6 +14,51 @@ function Test-IsAdministrator {
     )
 }
 
+function Confirm-Action {
+    param(
+        [Parameter(Mandatory)]
+        [string]$Prompt
+    )
+
+    $answer = (
+        Read-Host "$Prompt [Y/N | Д/Н]"
+    ).Trim()
+
+    return ($answer -match '^(?i:y|yes|д|да|так)$')
+}
+
+function Repair-BgInfoAccess {
+    param(
+        [Parameter(Mandatory)]
+        [string]$Path
+    )
+
+    if (-not (Test-Path -LiteralPath $Path -PathType Container)) {
+        return
+    }
+
+    $takeownPath = Join-Path $env:SystemRoot 'System32\takeown.exe'
+    $icaclsPath = Join-Path $env:SystemRoot 'System32\icacls.exe'
+
+    & $takeownPath `
+        '/F' `
+        $Path `
+        '/A' `
+        '/R' `
+        '/D' `
+        'Y' |
+    Out-Null
+
+    & $icaclsPath `
+        $Path `
+        '/grant:r' `
+        '*S-1-5-32-544:(OI)(CI)(F)' `
+        '/T' `
+        '/C' `
+        '/Q' |
+    Out-Null
+}
+
 try {
     Write-Host ''
     Write-Host 'Видалення Raccoon BgInfo' -ForegroundColor Cyan
@@ -42,9 +87,7 @@ try {
         -ForegroundColor DarkGray
     Write-Host ''
 
-    $confirmation = Read-Host 'Для видалення введи REMOVE'
-
-    if ($confirmation -cne 'REMOVE') {
+    if (-not (Confirm-Action -Prompt 'Видалити Raccoon BgInfo?')) {
         Write-Host 'Видалення скасовано.' -ForegroundColor Yellow
         return
     }
@@ -62,6 +105,8 @@ try {
     }
 
     if (Test-Path -LiteralPath $installRoot) {
+        Repair-BgInfoAccess -Path $installRoot
+
         Remove-Item `
             -LiteralPath $installRoot `
             -Recurse `

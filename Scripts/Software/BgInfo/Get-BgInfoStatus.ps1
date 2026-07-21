@@ -142,24 +142,15 @@ try {
             [ConsoleColor]::Red
         })
 
-    $userTextPath = Join-Path `
-        $env:LOCALAPPDATA `
-        'RaccoonAdminToolkit\BgInfo\SystemInfo.txt'
+    Write-Value `
+        -Label 'Поле користувача' `
+        -Value 'RACCOON_BGINFO_USER' `
+        -Color Cyan
 
     Write-Value `
-        -Label 'Дані цього сеансу' `
-        -Value $(if (Test-Path -LiteralPath $userTextPath -PathType Leaf) {
-            $userTextPath
-        }
-        else {
-            ''
-        }) `
-        -Color $(if (Test-Path -LiteralPath $userTextPath -PathType Leaf) {
-            [ConsoleColor]::Green
-        }
-        else {
-            [ConsoleColor]::DarkGray
-        })
+        -Label 'Поле часу сеансу' `
+        -Value 'RACCOON_BGINFO_SESSION_SINCE' `
+        -Color Cyan
 
     Write-Host ''
     Write-Host ('=' * 72) -ForegroundColor DarkCyan
