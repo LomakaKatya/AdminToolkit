@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Позначки та безпека | Raccoon Admin Toolkit</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="shell">
+<header class="topbar">
+<a class="brand" href="../index.html">Raccoon Admin Toolkit</a>
+<nav class="topnav">
+<a href="../index.html">Запуск</a>
+<a href="../faq.html">FAQ</a>
+<a href="https://github.com/LomakaKatya/AdminToolkit">GitHub</a>
+</nav>
+</header>
+<section class="hero">
+<p class="eyebrow">Правила</p>
+<h1>Позначки та безпека</h1>
+<p class="lead">Що саме обіцяють мітки біля пунктів меню.</p>
+</section>
+<div class="layout"><main class="content">
+
+<section class="tool" id="labels">
+<h2>Позначки меню</h2>
+<table><thead><tr><th>Позначка</th><th>Значення</th></tr></thead><tbody><tr><td><span class="badge safe">[SAFE]</span></td><td>Лише читання, перевірка або формування звіту.</td></tr>
+<tr><td><span class="badge warn">[ADMIN]</span></td><td>Потрібні права локального адміністратора.</td></tr>
+<tr><td><span class="badge safe">[MEMORY ONLY]</span></td><td>Runtime-скрипт виконується в пам&#x27;яті та не зберігається Toolkit на диск.</td></tr>
+<tr><td><span class="badge warn">[CHANGES SYSTEM]</span></td><td>Змінює службу, параметр Windows, реєстр або іншу системну конфігурацію.</td></tr>
+<tr><td><span class="badge danger">[CHANGES USER DATA]</span></td><td>Може видалити кеші або інші дані профілю користувача.</td></tr>
+<tr><td><span class="badge warn">[DOWNLOADS SOFTWARE]</span></td><td>Завантажує та встановлює стороннє програмне забезпечення.</td></tr>
+<tr><td><span class="badge danger">[SECURITY SENSITIVE]</span></td><td>Може вплинути на захисні параметри системи.</td></tr></tbody></table>
+</section>
+<section class="tool" id="confirmations">
+<h2>Підтвердження</h2>
+<p>Для звичайної публікації повідомлення або відкриття редактора достатньо однієї літери: <code>Y</code> або <code>Д</code>. Ризиковані операції можуть мати додаткове попередження всередині модуля.</p>
+</section>
+<section class="tool" id="privacy">
+<h2>Дані та конфіденційність</h2>
+<p>Toolkit не повинен містити паролі, токени, приватні ключі або секрети в публічному репозиторії. Введені адреси, логіни й тексти не відправляються в окрему аналітичну систему Toolkit.</p>
+</section>
+<section class="tool" id="source">
+<h2>Перевірка коду</h2>
+<p>Увесь вихідний код доступний у публічному репозиторії GitHub. Перед запуском критичного модуля адміністратор може відкрити відповідний файл у <code>Scripts</code> і переглянути його.</p>
+</section>
+
+</main><aside class="sidebar">
+<strong>На сторінці</strong>
+<a href="#labels">Позначки</a>
+<a href="#confirmations">Підтвердження</a>
+<a href="#privacy">Конфіденційність</a>
+<a href="#source">Вихідний код</a>
+</aside></div>
+<footer>Raccoon Admin Toolkit. Довідка для авторизованих технічних фахівців.</footer>
+</div>
+<script src="help.js"></script>
+</body>
+</html>

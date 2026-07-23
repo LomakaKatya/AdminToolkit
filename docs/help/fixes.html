@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Виправлення | Raccoon Admin Toolkit</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="shell">
+<header class="topbar">
+<a class="brand" href="../index.html">Raccoon Admin Toolkit</a>
+<nav class="topnav">
+<a href="../index.html">Запуск</a>
+<a href="../faq.html">FAQ</a>
+<a href="https://github.com/LomakaKatya/AdminToolkit">GitHub</a>
+</nav>
+</header>
+<section class="hero">
+<p class="eyebrow">Розділ 3</p>
+<h1>Виправлення</h1>
+<p class="lead">Модулі, які не лише діагностують, а й змінюють стан Windows або профілів.</p>
+</section>
+<div class="layout"><main class="content">
+<div class="warning">Розділ виправлень змінює систему або дані. Перед запуском прочитайте план дій, який показує модуль.</div><input class="search" type="search" data-help-search placeholder="Знайти інструмент виправлення..."><section class="tool" id="1c-cache" data-search-item data-search="Очищення кешу 1С"><h2>Очищення кешу 1С</h2><div class="badges"><span class="badge danger">CHANGES USER DATA</span></div><p>Видаляє локальний кеш 1С для виправлення пошкоджених форм, зависань або дивної поведінки клієнта. Незбережені дані у відкритій 1С треба закрити до запуску.</p></section>
+<section class="tool" id="rdp-clipboard" data-search-item data-search="Перезапуск RDP Clipboard"><h2>Перезапуск RDP Clipboard</h2><div class="badges"><span class="badge warn">CHANGES SYSTEM</span></div><p>Перезапускає компонент буфера обміну в поточному RDP-сеансі. Використовуйте, коли перестало працювати копіювання між локальним ПК і сервером.</p></section>
+<section class="tool" id="print-spooler" data-search-item data-search="Очищення черги друку"><h2>Очищення черги друку</h2><div class="badges"><span class="badge warn">ADMIN</span><span class="badge warn">CHANGES SYSTEM</span></div><p>Зупиняє Spooler, видаляє застряглі завдання й запускає службу знову. Активні черги друку будуть очищені.</p></section>
+<section class="tool" id="windows-time" data-search-item data-search="Виправлення часу Windows"><h2>Виправлення часу Windows</h2><div class="badges"><span class="badge warn">ADMIN</span><span class="badge warn">CHANGES SYSTEM</span></div><p>Перевіряє роль машини, налаштовує джерело часу, перезапускає W32Time та запитує повторну синхронізацію.</p></section>
+<section class="tool" id="rpc-privacy" data-search-item data-search="Сумісність RPC мережевого друку"><h2>Сумісність RPC мережевого друку</h2><div class="badges"><span class="badge warn">ADMIN</span><span class="badge danger">SECURITY SENSITIVE</span><span class="badge warn">CHANGES SYSTEM</span></div><p>Змінює параметр RPC Privacy для старих принт-серверів або клієнтів. Це security-sensitive обхід сумісності, а не стандартний перший крок.</p></section>
+<section class="tool" id="profile-caches" data-search-item data-search="Очищення кешів профілів"><h2>Очищення кешів профілів</h2><div class="badges"><span class="badge warn">ADMIN</span><span class="badge danger">CHANGES USER DATA</span></div><p>Очищає стандартні кеші в профілях користувачів. Перед виконанням перевірте звіт і переконайтеся, що потрібні програми закриті.</p></section><p class="warning hidden" data-search-empty>Інструмент не знайдено.</p>
+</main><aside class="sidebar"><strong>Інструменти</strong><a href="#1c-cache">Очищення кешу 1С</a><a href="#rdp-clipboard">Перезапуск RDP Clipboard</a><a href="#print-spooler">Очищення черги друку</a><a href="#windows-time">Виправлення часу Windows</a><a href="#rpc-privacy">Сумісність RPC мережевого друку</a><a href="#profile-caches">Очищення кешів профілів</a></aside></div>
+<footer>Raccoon Admin Toolkit. Довідка для авторизованих технічних фахівців.</footer>
+</div>
+<script src="help.js"></script>
+</body>
+</html>

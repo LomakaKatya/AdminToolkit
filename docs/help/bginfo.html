@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Microsoft Sysinternals BgInfo | Raccoon Admin Toolkit</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="shell">
+<header class="topbar">
+<a class="brand" href="../index.html">Raccoon Admin Toolkit</a>
+<nav class="topnav">
+<a href="../index.html">Запуск</a>
+<a href="../faq.html">FAQ</a>
+<a href="https://github.com/LomakaKatya/AdminToolkit">GitHub</a>
+</nav>
+</header>
+<section class="hero">
+<p class="eyebrow">Встановлення ПЗ</p>
+<h1>Microsoft Sysinternals BgInfo</h1>
+<p class="lead">Постійна системна табличка для спілкування користувача з техпідтримкою.</p>
+</section>
+<div class="layout"><main class="content">
+
+<section class="tool" id="purpose">
+<h2>Для чого потрібен BgInfo</h2>
+<p>BgInfo створює інформаційний блок на робочому столі користувача. У Toolkit він використовується не для повідомлень, а як підказка під час звернення до техпідтримки.</p>
+<pre>SYSTEM INFO
+
+Користувач : DOMAIN\ivanov
+Сеанс з    : 16.07.2026 03:12
+Підтримка  : +380 67 001 10 12
+             дзвінки / Viber / Telegram / WhatsApp</pre>
+</section>
+<section class="tool" id="install">
+<h2>Встановити або оновити</h2>
+<p>Toolkit завантажує офіційний архів Microsoft Sysinternals або використовує локальний ZIP, перевіряє цифровий підпис і встановлює потрібну розрядність у <code>C:\ProgramData\RaccoonAdminToolkit\BgInfo</code>.</p>
+</section>
+<section class="tool" id="template">
+<h2>Налаштувати шаблон</h2>
+<p>Редактор відкривається інтерактивно. Створіть два Custom Fields типу <strong>Environment variable</strong>:</p>
+<pre>RACCOON_BGINFO_USER
+RACCOON_BGINFO_SESSION_SINCE</pre>
+<p>Збережіть шаблон як:</p>
+<pre>C:\ProgramData\RaccoonAdminToolkit\BgInfo\Config\Raccoon-Standard.bgi</pre>
+</section>
+<section class="tool" id="startup">
+<h2>Запуск для всіх користувачів</h2>
+<p>Локальна установка створює загальний ярлик Startup. Допоміжний скрипт запускається в контексті кожного користувача, задає значення поточного сеансу й застосовує шаблон.</p>
+</section>
+<section class="tool" id="gpo">
+<h2>Пакет для доменної політики</h2>
+<p>Спочатку створіть і перевірте еталонний локальний шаблон. Потім Toolkit формує пакет для Computer Startup GPO з підписаними EXE, конфігурацією, helper-скриптом і сценарієм розгортання.</p>
+</section>
+<section class="tool" id="status">
+<h2>Перевірка стану</h2>
+<p>Перевіряється наявність потрібного EXE, цифровий підпис, шаблон, helper і загальний автозапуск.</p>
+</section>
+<section class="tool" id="uninstall">
+<h2>Видалення</h2>
+<p>Видаляє загальний автозапуск і каталог Toolkit BgInfo. Поточне зображення робочого столу може залишитися до вибору іншого фону або застосування політики.</p>
+</section>
+
+</main><aside class="sidebar">
+<strong>На сторінці</strong>
+<a href="#purpose">Призначення</a>
+<a href="#install">Встановлення</a>
+<a href="#template">Шаблон</a>
+<a href="#startup">Усі користувачі</a>
+<a href="#gpo">GPO</a>
+<a href="#status">Стан</a>
+<a href="#uninstall">Видалення</a>
+</aside></div>
+<footer>Raccoon Admin Toolkit. Довідка для авторизованих технічних фахівців.</footer>
+</div>
+<script src="help.js"></script>
+</body>
+</html>

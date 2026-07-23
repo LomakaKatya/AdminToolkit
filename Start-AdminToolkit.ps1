@@ -21,6 +21,9 @@
         $baseUrl =
             'https://raw.githubusercontent.com/LomakaKatya/AdminToolkit/main'
 
+        $faqUrl =
+            'https://admintoolkit.itraccoonverse.space/faq.html'
+
         function Write-Utf8NoBomLines {
             param(
                 [Parameter(Mandatory)]
@@ -143,6 +146,32 @@
             return $principal.IsInRole(
                 [Security.Principal.WindowsBuiltInRole]::Administrator
             )
+        }
+
+        function Open-RaccoonFaq {
+            Write-RaccoonHeader -SectionName 'FAQ І ДОВІДКА'
+
+            try {
+                Start-Process `
+                    -FilePath $faqUrl `
+                    -ErrorAction Stop
+
+                Write-Host (
+                    'FAQ відкрито у браузері.'
+                ) -ForegroundColor Green
+            }
+            catch {
+                Write-Host (
+                    'Не вдалося автоматично відкрити браузер.'
+                ) -ForegroundColor Yellow
+
+                Write-Host ''
+                Write-Host 'Відкрий адресу вручну:' `
+                    -ForegroundColor DarkGray
+                Write-Host $faqUrl -ForegroundColor Cyan
+            }
+
+            Pause-RaccoonToolkit
         }
 
         function Pause-RaccoonToolkit {
@@ -718,6 +747,14 @@
             Write-Host '     [ADMIN] [USES MSG.EXE]'
             Write-Host ''
 
+            Write-Host (
+                '  ДОВІДКА'
+            ) -ForegroundColor DarkCyan
+
+            Write-Host '  7. Відкрити FAQ у браузері'
+            Write-Host '     [SAFE] [ALSO: ?]'
+            Write-Host ''
+
             Write-Host '  0. Вихід і закриття PowerShell'
             Write-Host ''
 
@@ -755,6 +792,14 @@
                         -RequiresAdministrator
                 }
 
+                '7' {
+                    Open-RaccoonFaq
+                }
+
+                '?' {
+                    Open-RaccoonFaq
+                }
+
                 '0' {
                     Clear-Host
                     Write-Host (
@@ -786,6 +831,7 @@
         }
 
         $baseUrl = $null
+        $faqUrl = $null
         $adminText = $null
         $choice = $null
 

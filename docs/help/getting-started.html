@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Початок роботи | Raccoon Admin Toolkit</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="shell">
+<header class="topbar">
+<a class="brand" href="../index.html">Raccoon Admin Toolkit</a>
+<nav class="topnav">
+<a href="../index.html">Запуск</a>
+<a href="../faq.html">FAQ</a>
+<a href="https://github.com/LomakaKatya/AdminToolkit">GitHub</a>
+</nav>
+</header>
+<section class="hero">
+<p class="eyebrow">Основи</p>
+<h1>Початок роботи</h1>
+<p class="lead">Коротка схема запуску, вимоги та поведінка Toolkit.</p>
+</section>
+<div class="layout"><main class="content">
+
+<section class="tool" id="what-is-it">
+<h2>Що це таке</h2>
+<p>Raccoon Admin Toolkit - це меню для запуску окремих адміністративних PowerShell-модулів. Головний файл майже нічого не робить сам: він завантажує актуальний модуль із GitHub і запускає його в поточному сеансі.</p>
+</section>
+<section class="tool" id="run">
+<h2>Як запустити</h2>
+<pre>irm https://admintoolkit.itraccoonverse.space | iex</pre>
+<p>Для системних змін відкривайте Windows PowerShell від імені адміністратора. Без підвищених прав безпечна діагностика може працювати, але адміністративні модулі будуть заблоковані.</p>
+</section>
+<section class="tool" id="requirements">
+<h2>Вимоги</h2>
+<ul>
+<li>Windows.</li>
+<li>Доступ до HTTPS-домену Toolkit і GitHub Raw.</li>
+<li>Для стабільної роботи рекомендовано Windows PowerShell 5.1 або PowerShell 7+.</li>
+<li>Права адміністратора лише для пунктів із позначкою <code>[ADMIN]</code>.</li>
+</ul>
+</section>
+<section class="tool" id="updates">
+<h2>Як працюють оновлення</h2>
+<p>Під час кожного запуску меню і модулі завантажуються з гілки <code>main</code>. Локальну копію звичайного runtime-скрипта Toolkit не зберігає. Встановлюване програмне забезпечення, наприклад BgInfo, є окремим винятком і завжди вимагає явної дії адміністратора.</p>
+</section>
+<section class="tool" id="exit">
+<h2>Як завершити роботу</h2>
+<p>Оберіть пункт <code>0</code>. Toolkit очищає власні команди запуску з історії PowerShell і закриває сеанс.</p>
+</section>
+
+</main><aside class="sidebar">
+<strong>На сторінці</strong>
+<a href="#what-is-it">Що це таке</a>
+<a href="#run">Запуск</a>
+<a href="#requirements">Вимоги</a>
+<a href="#updates">Оновлення</a>
+<a href="#exit">Завершення</a>
+</aside></div>
+<footer>Raccoon Admin Toolkit. Довідка для авторизованих технічних фахівців.</footer>
+</div>
+<script src="help.js"></script>
+</body>
+</html>

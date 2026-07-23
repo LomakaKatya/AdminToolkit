@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Типові проблеми | Raccoon Admin Toolkit</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="shell">
+<header class="topbar">
+<a class="brand" href="../index.html">Raccoon Admin Toolkit</a>
+<nav class="topnav">
+<a href="../index.html">Запуск</a>
+<a href="../faq.html">FAQ</a>
+<a href="https://github.com/LomakaKatya/AdminToolkit">GitHub</a>
+</nav>
+</header>
+<section class="hero">
+<p class="eyebrow">Аварійна полиця</p>
+<h1>Типові проблеми</h1>
+<p class="lead">Швидкі пояснення для помилок запуску, доступу, мережі та кодування.</p>
+</section>
+<div class="layout"><main class="content">
+
+<section class="tool" id="irm">
+<h2>Команда irm не знайдена</h2>
+<p>Перевірте версію PowerShell:</p>
+<pre>$PSVersionTable.PSVersion</pre>
+<p>Для нормальної роботи Toolkit рекомендовано Windows PowerShell 5.1 або PowerShell 7+.</p>
+</section>
+<section class="tool" id="access">
+<h2>Access is denied</h2>
+<p>Закрийте Toolkit і відкрийте PowerShell від імені адміністратора. Для BgInfo повторний запуск інсталятора відновлює ACL на каталозі встановлення.</p>
+</section>
+<section class="tool" id="tls">
+<h2>Не завантажується GitHub або домен</h2>
+<pre>[Net.ServicePointManager]::SecurityProtocol =
+    [Net.ServicePointManager]::SecurityProtocol -bor 3072</pre>
+<p>Перевірте DNS, проксі, TLS 1.2, доступ до домену Toolkit і <code>raw.githubusercontent.com</code>.</p>
+</section>
+<section class="tool" id="encoding">
+<h2>Текст перетворився на РќРµ...</h2>
+<p>Це Windows PowerShell 5.1 прочитав UTF-8 без BOM через параметр <code>-File</code> як локальне ANSI-кодування. Runtime-файли Toolkit залишаються UTF-8 без BOM, а завантажувачі мають читати їх явно з <code>-Encoding UTF8</code>.</p>
+</section>
+<section class="tool" id="missing-menu">
+<h2>Новий пункт не з'явився</h2>
+<p>Перевірте, що змінений <code>Start-AdminToolkit.ps1</code> завантажено саме в гілку <code>main</code>. Перезапустіть Toolkit, оскільки меню формується заново при кожному запуску.</p>
+</section>
+<section class="tool" id="module">
+<h2>Модуль повернув 404 або порожній файл</h2>
+<p>Перевірте точний шлях, регістр літер і наявність файла у GitHub. Шлях у меню повинен повністю збігатися зі структурою репозиторію.</p>
+</section>
+
+</main><aside class="sidebar">
+<strong>Проблеми</strong>
+<a href="#irm">irm не знайдено</a>
+<a href="#access">Access denied</a>
+<a href="#tls">TLS і GitHub</a>
+<a href="#encoding">Кодування</a>
+<a href="#missing-menu">Немає пункту</a>
+<a href="#module">404 модуля</a>
+</aside></div>
+<footer>Raccoon Admin Toolkit. Довідка для авторизованих технічних фахівців.</footer>
+</div>
+<script src="help.js"></script>
+</body>
+</html>
