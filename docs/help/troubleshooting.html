@@ -13,7 +13,6 @@
 <nav class="topnav">
 <a href="../index.html">Запуск</a>
 <a href="../faq.html">FAQ</a>
-<a href="https://github.com/LomakaKatya/AdminToolkit">GitHub</a>
 </nav>
 </header>
 <section class="hero">
@@ -34,10 +33,10 @@
 <p>Закрийте Toolkit і відкрийте PowerShell від імені адміністратора. Для BgInfo повторний запуск інсталятора відновлює ACL на каталозі встановлення.</p>
 </section>
 <section class="tool" id="tls">
-<h2>Не завантажується GitHub або домен</h2>
+<h2>Не завантажується службове джерело або домен</h2>
 <pre>[Net.ServicePointManager]::SecurityProtocol =
     [Net.ServicePointManager]::SecurityProtocol -bor 3072</pre>
-<p>Перевірте DNS, проксі, TLS 1.2, доступ до домену Toolkit і <code>raw.githubusercontent.com</code>.</p>
+<p>Перевірте DNS, проксі, TLS 1.2, доступ до домену Toolkit і службового джерела модулів.</p>
 </section>
 <section class="tool" id="encoding">
 <h2>Текст перетворився на РќРµ...</h2>
@@ -45,18 +44,18 @@
 </section>
 <section class="tool" id="missing-menu">
 <h2>Новий пункт не з'явився</h2>
-<p>Перевірте, що змінений <code>Start-AdminToolkit.ps1</code> завантажено саме в гілку <code>main</code>. Перезапустіть Toolkit, оскільки меню формується заново при кожному запуску.</p>
+<p>Перевірте, що змінений <code>Start-AdminToolkit.ps1</code> опубліковано в актуальній робочій версії Toolkit. Перезапустіть Toolkit, оскільки меню формується заново при кожному запуску.</p>
 </section>
 <section class="tool" id="module">
 <h2>Модуль повернув 404 або порожній файл</h2>
-<p>Перевірте точний шлях, регістр літер і наявність файла у GitHub. Шлях у меню повинен повністю збігатися зі структурою репозиторію.</p>
+<p>Перевірте точний шлях, регістр літер і наявність файла у службовому сховищі. Шлях у меню повинен повністю збігатися зі структурою репозиторію.</p>
 </section>
 
 </main><aside class="sidebar">
 <strong>Проблеми</strong>
 <a href="#irm">irm не знайдено</a>
 <a href="#access">Access denied</a>
-<a href="#tls">TLS і GitHub</a>
+<a href="#tls">TLS і завантаження</a>
 <a href="#encoding">Кодування</a>
 <a href="#missing-menu">Немає пункту</a>
 <a href="#module">404 модуля</a>
