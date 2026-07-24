@@ -24,8 +24,35 @@
                 [Net.ServicePointManager]::SecurityProtocol -bor 3072
         }
 
-        $baseUrl =
-            'https://raw.githubusercontent.com/LomakaKatya/AdminToolkit/main'
+        $repositoryRef = 'main'
+
+        if (-not [string]::IsNullOrWhiteSpace(
+                [string]$env:RACCOON_TOOLKIT_REF
+            )) {
+
+            $candidateRef = (
+                [string]$env:RACCOON_TOOLKIT_REF
+            ).Trim()
+
+            if ($candidateRef -notmatch '^[A-Za-z0-9._/-]+$' -or
+                $candidateRef.Contains('..') -or
+                $candidateRef.StartsWith('/') -or
+                $candidateRef.EndsWith('/')) {
+
+                throw (
+                    'Некоректне значення RACCOON_TOOLKIT_REF: {0}' -f
+                    $candidateRef
+                )
+            }
+
+            $repositoryRef = $candidateRef
+        }
+
+        $baseUrl = (
+            'https://raw.githubusercontent.com/' +
+            'LomakaKatya/AdminToolkit/{0}' -f
+            $repositoryRef
+        )
 
         $faqUrl =
             'https://admintoolkit.itraccoonverse.space/faq.html'
@@ -238,6 +265,8 @@
         }
 
         $version = $null
+        $candidateRef = $null
+        $repositoryRef = $null
         $baseUrl = $null
         $faqUrl = $null
         $uiText = $null
