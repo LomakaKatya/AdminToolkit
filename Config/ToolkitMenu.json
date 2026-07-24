@@ -191,7 +191,8 @@
           "description": "Локальні користувачі й події входу.",
           "toolIds": [
             "local-user-logons",
-            "failed-logons"
+            "failed-logons",
+            "user-profile-storage-report"
           ]
         }
       ]
@@ -206,6 +207,14 @@
           "toolIds": [
             "computer-health",
             "bginfo-status"
+          ]
+        },
+        {
+          "id": "profile-storage",
+          "title": "Профілі та використання диска",
+          "description": "Хто займає місце, коли заходив і що лежить у профілі.",
+          "toolIds": [
+            "user-profile-storage-report"
           ]
         },
         {
@@ -259,7 +268,8 @@
         "restart-rdp-clipboard",
         "create-logoff-shortcut",
         "local-user-logons",
-        "failed-logons"
+        "failed-logons",
+        "user-profile-storage-report"
       ]
     },
     {
@@ -278,7 +288,8 @@
       "description": "1С, користувацькі кеші та обслуговування профілів.",
       "toolIds": [
         "clear-1c-cache",
-        "clear-profile-caches"
+        "clear-profile-caches",
+        "user-profile-storage-report"
       ]
     },
     {
@@ -729,6 +740,39 @@
         "ярлик",
         "shortcut",
         "кнопка"
+      ]
+    },
+    {
+      "id": "user-profile-storage-report",
+      "title": "Проаналізувати розмір профілів користувачів",
+      "description": "Облікові записи, остання активність, сеанси, розмір профілів і деталізація папок.",
+      "path": "Scripts/Reports/Get-UserProfileStorageReport.ps1",
+      "requiresAdmin": true,
+      "labels": [
+        "ADMIN",
+        "SAFE",
+        "CREATES REPORTS"
+      ],
+      "keywords": [
+        "профіль",
+        "профили",
+        "profile",
+        "місце",
+        "место",
+        "диск",
+        "розмір",
+        "размер",
+        "appdata",
+        "desktop",
+        "downloads",
+        "користувачі",
+        "пользователи",
+        "хто забив диск",
+        "кто забил диск",
+        "звіт",
+        "отчёт",
+        "csv",
+        "html"
       ]
     }
   ]

@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Контроль та звіти | Raccoon Admin Toolkit</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="shell">
+<header class="topbar">
+<a class="brand" href="../index.html">Raccoon Admin Toolkit</a>
+<nav class="topnav">
+<a href="../index.html">Запуск</a>
+<a href="../faq.html">FAQ</a>
+</nav>
+</header>
+<section class="hero">
+<p class="eyebrow">Контроль та звіти</p>
+<h1>Профілі користувачів і використання диска</h1>
+<p class="lead">Модуль поєднує дані облікових записів, останню активність, поточні сеанси та фактичний склад папок профілю.</p>
+</section>
+<div class="layout"><main class="content">
+<section class="tool" id="profile-storage">
+<h2>Аналіз розміру профілів користувачів</h2>
+<div class="badges">
+<span class="badge warn">ADMIN</span>
+<span class="badge safe">SAFE</span>
+<span class="badge">CREATES REPORTS</span>
+</div>
+<p>Інструмент знаходить зареєстровані профілі Windows та додаткові папки в коренях профілів, після чого сканує доступні файли один раз.</p>
+<h3>Що потрапляє у звіт</h3>
+<ul>
+<li>локальна, доменна або невизначена обліковий запис;</li>
+<li>активна, вимкнена, заблокована або видалена обліковий запис;</li>
+<li>останнє використання профілю та останній вхід облікового запису;</li>
+<li>поточні активні або відключені сеанси;</li>
+<li>повний розмір профілю, кількість файлів і помилки доступу;</li>
+<li>розмір Desktop, Downloads, AppData, Documents та інших папок верхнього рівня.</li>
+</ul>
+<h3>Формати експорту</h3>
+<pre>UserProfileStorage-Report.html
+UserProfileStorage-Summary.csv
+UserProfileStorage-Folders.csv</pre>
+<p>HTML-звіт автономний, має пошук і сортування, друкується без службових елементів і може бути збережений у PDF. CSV використовує UTF-8 з BOM та розділювач <code>;</code> для зручного відкриття в Excel.</p>
+<h3>Куди зберігається</h3>
+<pre>C:\ProgramData\RaccoonAdminToolkit\Reports\UserProfileStorage\COMPUTER-DATE</pre>
+<div class="warning">Розмір є логічною сумою довжин доступних файлів. NTFS compression, sparse files, deduplication та недоступні каталоги можуть давати інше фактичне використання диска. Reparse points навмисно не скануються.</div>
+</section>
+</main><aside class="sidebar">
+<strong>На сторінці</strong>
+<a href="#profile-storage">Профілі та диск</a>
+</aside></div>
+<footer>Raccoon Admin Toolkit. Довідка для авторизованих технічних фахівців.</footer>
+</div>
+<script src="help.js"></script>
+</body>
+</html>
