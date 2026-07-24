@@ -420,7 +420,7 @@ function Get-ProfileAccountInfo {
         if ($domainPart -ieq $env:COMPUTERNAME) {
             $accountType = 'Локальний'
             $accountExists = $false
-            $accountSource = 'профіль без локальної облікові записи'
+            $accountSource = 'профіль без локального облікового запису'
         }
         else {
             $accountType = 'Доменний'
@@ -748,6 +748,20 @@ function Get-ProfileCandidates {
 
         foreach ($directory in $directories) {
             if ($directory.Name -in $skipNames) {
+                continue
+            }
+
+            try {
+                if (
+                    (
+                        $directory.Attributes -band
+                        [IO.FileAttributes]::ReparsePoint
+                    ) -ne 0
+                ) {
+                    continue
+                }
+            }
+            catch {
                 continue
             }
 
@@ -1086,13 +1100,13 @@ $summaryExport = @(
             }
         },
         @{
-            Name = 'Тип облікові записи'
+            Name = 'Тип облікового запису'
             Expression = {
                 $_.AccountType
             }
         },
         @{
-            Name = 'Стан облікові записи'
+            Name = 'Стан облікового запису'
             Expression = {
                 $_.AccountState
             }
@@ -1116,7 +1130,7 @@ $summaryExport = @(
             }
         },
         @{
-            Name = 'Останній вхід облікові записи'
+            Name = 'Останній вхід облікового запису'
             Expression = {
                 Format-ReportDate $_.LastAccountLogon
             }
@@ -1404,7 +1418,7 @@ section{break-inside:avoid}
 <tr>
 <th data-type="number">#</th>
 <th>Користувач</th>
-<th>Стан облікові записи</th>
+<th>Стан облікового запису</th>
 <th>Активність і сеанс</th>
 <th data-type="number">Остання активність</th>
 <th data-type="number">Розмір</th>
