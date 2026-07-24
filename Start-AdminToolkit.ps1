@@ -186,15 +186,18 @@
             $cacheToken = [DateTime]::UtcNow.Ticks
             $uri = "$baseUrl/$Path`?nocache=$cacheToken"
 
-            $content = Invoke-RestMethod `
+            $response = Invoke-WebRequest `
                 -Uri $uri `
                 -Headers @{
                     'Cache-Control' = 'no-cache'
                     'Pragma'        = 'no-cache'
                 } `
+                -UseBasicParsing `
                 -ErrorAction Stop
 
-            if ([string]::IsNullOrWhiteSpace([string]$content)) {
+            $content = [string]$response.Content
+
+            if ([string]::IsNullOrWhiteSpace($content)) {
                 throw "Службове джерело повернуло порожній файл: $Path"
             }
 
@@ -271,6 +274,7 @@
         $faqUrl = $null
         $uiText = $null
         $uiBlock = $null
+        $response = $null
         $registryText = $null
         $registry = $null
 
