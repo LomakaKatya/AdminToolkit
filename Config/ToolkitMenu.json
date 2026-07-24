@@ -1,0 +1,735 @@
+{
+  "schemaVersion": 2,
+  "favorites": [
+    "internet-diagnostics",
+    "website-diagnostics",
+    "printer-diagnostics",
+    "send-user-message",
+    "restart-rdp-clipboard",
+    "restart-print-spooler"
+  ],
+  "views": {
+    "diagnose": {
+      "title": "ЗНАЙТИ ПРИЧИНУ",
+      "categories": [
+        {
+          "id": "network",
+          "title": "Мережа та інтернет",
+          "description": "Інтернет, Wi-Fi, шлюз, DNS і TCP.",
+          "toolIds": [
+            "internet-diagnostics",
+            "wifi-diagnostics",
+            "test-tcp"
+          ]
+        },
+        {
+          "id": "remote",
+          "title": "Віддалений доступ",
+          "description": "RDP і мережева доступність сервісу.",
+          "toolIds": [
+            "remote-access-diagnostics",
+            "test-tcp"
+          ]
+        },
+        {
+          "id": "printing",
+          "title": "Друк",
+          "description": "Принтери, драйвери, черги та Spooler.",
+          "toolIds": [
+            "printer-diagnostics"
+          ]
+        },
+        {
+          "id": "performance",
+          "title": "Продуктивність і зависання",
+          "description": "CPU, RAM, диски та системні події.",
+          "toolIds": [
+            "computer-health"
+          ]
+        },
+        {
+          "id": "users",
+          "title": "Користувачі та входи",
+          "description": "Локальні записи й невдалі входи.",
+          "toolIds": [
+            "local-user-logons",
+            "failed-logons"
+          ]
+        },
+        {
+          "id": "website",
+          "title": "Сайт або зовнішній сервіс",
+          "description": "DNS, TLS, HTTP(S) і потрібний порт.",
+          "toolIds": [
+            "website-diagnostics",
+            "test-tcp"
+          ]
+        }
+      ]
+    },
+    "fix": {
+      "title": "ВИПРАВИТИ",
+      "categories": [
+        {
+          "id": "user-programs",
+          "title": "Користувацькі програми",
+          "description": "Кеші програм і компоненти поточного сеансу.",
+          "toolIds": [
+            "clear-1c-cache",
+            "restart-rdp-clipboard"
+          ]
+        },
+        {
+          "id": "services",
+          "title": "Служби Windows",
+          "description": "Spooler, W32Time та пов'язані компоненти.",
+          "toolIds": [
+            "restart-print-spooler",
+            "repair-windows-time"
+          ]
+        },
+        {
+          "id": "printing",
+          "title": "Друк",
+          "description": "Черга, Spooler і RPC-сумісність.",
+          "toolIds": [
+            "restart-print-spooler",
+            "configure-print-rpc"
+          ]
+        },
+        {
+          "id": "profiles",
+          "title": "Профілі користувачів",
+          "description": "Стандартні кеші AppData у профілях.",
+          "toolIds": [
+            "clear-profile-caches"
+          ]
+        },
+        {
+          "id": "time-domain",
+          "title": "Час і домен",
+          "description": "W32Time, NTP, PDC та доменна ієрархія.",
+          "toolIds": [
+            "repair-windows-time"
+          ]
+        },
+        {
+          "id": "compatibility",
+          "title": "Сумісність і захисні параметри",
+          "description": "Винятки для старих систем і сервісів.",
+          "toolIds": [
+            "configure-print-rpc"
+          ]
+        }
+      ]
+    },
+    "configure": {
+      "title": "НАЛАШТУВАТИ ТА РОЗГОРНУТИ",
+      "categories": [
+        {
+          "id": "software",
+          "title": "Встановлення ПЗ",
+          "description": "Встановлення, оновлення та видалення програм.",
+          "toolIds": [
+            "bginfo-install",
+            "bginfo-uninstall"
+          ]
+        },
+        {
+          "id": "templates",
+          "title": "Шаблони та робочий стіл",
+          "description": "Стандартні користувацькі шаблони.",
+          "toolIds": [
+            "bginfo-configure",
+            "bginfo-status"
+          ]
+        },
+        {
+          "id": "gpo",
+          "title": "Групові політики та масове розгортання",
+          "description": "Підготовка пакетів для доменного середовища.",
+          "toolIds": [
+            "bginfo-gpo"
+          ]
+        },
+        {
+          "id": "shortcuts",
+          "title": "Автозапуск і ярлики",
+          "description": "Кнопки, ярлики та запуск для користувачів.",
+          "toolIds": [
+            "create-logoff-shortcut",
+            "bginfo-install"
+          ]
+        },
+        {
+          "id": "windows-settings",
+          "title": "Налаштування Windows",
+          "description": "Системні параметри та сумісність.",
+          "toolIds": [
+            "configure-print-rpc",
+            "repair-windows-time"
+          ]
+        }
+      ]
+    },
+    "users": {
+      "title": "КОРИСТУВАЧІ ТА СЕАНСИ",
+      "categories": [
+        {
+          "id": "sessions",
+          "title": "Активні сеанси та зв'язок",
+          "description": "Повідомлення, RDP Clipboard і завершення сеансу.",
+          "toolIds": [
+            "send-user-message",
+            "restart-rdp-clipboard",
+            "create-logoff-shortcut"
+          ]
+        },
+        {
+          "id": "accounts",
+          "title": "Облікові записи та входи",
+          "description": "Локальні користувачі й події входу.",
+          "toolIds": [
+            "local-user-logons",
+            "failed-logons"
+          ]
+        }
+      ]
+    },
+    "control": {
+      "title": "КОНТРОЛЬ ТА ЗВІТИ",
+      "categories": [
+        {
+          "id": "system-state",
+          "title": "Стан комп'ютера",
+          "description": "Продуктивність і встановлені службові компоненти.",
+          "toolIds": [
+            "computer-health",
+            "bginfo-status"
+          ]
+        },
+        {
+          "id": "access-events",
+          "title": "Користувачі та події входу",
+          "description": "Облікові записи та журнал безпеки.",
+          "toolIds": [
+            "local-user-logons",
+            "failed-logons"
+          ]
+        },
+        {
+          "id": "monitoring",
+          "title": "Моніторинг",
+          "description": "Розділ під майбутню інтеграцію системи моніторингу.",
+          "toolIds": []
+        }
+      ]
+    }
+  },
+  "catalog": [
+    {
+      "id": "network",
+      "title": "Мережа та інтернет",
+      "description": "TCP, Wi-Fi, інтернет, сайти й віддалений доступ.",
+      "toolIds": [
+        "test-tcp",
+        "wifi-diagnostics",
+        "internet-diagnostics",
+        "website-diagnostics",
+        "remote-access-diagnostics"
+      ]
+    },
+    {
+      "id": "windows",
+      "title": "Windows і служби",
+      "description": "Продуктивність, W32Time, Spooler і системні параметри.",
+      "toolIds": [
+        "computer-health",
+        "restart-print-spooler",
+        "repair-windows-time",
+        "configure-print-rpc"
+      ]
+    },
+    {
+      "id": "users-rdp",
+      "title": "Користувачі та RDP",
+      "description": "Сеанси, повідомлення, входи та облікові записи.",
+      "toolIds": [
+        "send-user-message",
+        "restart-rdp-clipboard",
+        "create-logoff-shortcut",
+        "local-user-logons",
+        "failed-logons"
+      ]
+    },
+    {
+      "id": "printing",
+      "title": "Друк",
+      "description": "Діагностика, черги та RPC-сумісність.",
+      "toolIds": [
+        "printer-diagnostics",
+        "restart-print-spooler",
+        "configure-print-rpc"
+      ]
+    },
+    {
+      "id": "applications",
+      "title": "Програми та профілі",
+      "description": "1С, користувацькі кеші та обслуговування профілів.",
+      "toolIds": [
+        "clear-1c-cache",
+        "clear-profile-caches"
+      ]
+    },
+    {
+      "id": "security",
+      "title": "Безпека та журнали",
+      "description": "Невдалі входи та security-sensitive параметри.",
+      "toolIds": [
+        "failed-logons",
+        "configure-print-rpc"
+      ]
+    },
+    {
+      "id": "deployment",
+      "title": "ПЗ та розгортання",
+      "description": "BgInfo, шаблони, GPO, автозапуск і ярлики.",
+      "toolIds": [
+        "bginfo-install",
+        "bginfo-configure",
+        "bginfo-status",
+        "bginfo-gpo",
+        "bginfo-uninstall",
+        "create-logoff-shortcut"
+      ]
+    }
+  ],
+  "tools": [
+    {
+      "id": "test-tcp",
+      "title": "Перевірити TCP-підключення",
+      "description": "Перевірка доступності адреси та порту.",
+      "path": "Scripts/Diagnostics/Test-TcpConnection.ps1",
+      "requiresAdmin": false,
+      "labels": [
+        "SAFE",
+        "MEMORY ONLY"
+      ],
+      "keywords": [
+        "tcp",
+        "порт",
+        "port",
+        "з'єднання",
+        "доступність",
+        "rdp",
+        "sql",
+        "443",
+        "80"
+      ]
+    },
+    {
+      "id": "wifi-diagnostics",
+      "title": "Комплексна діагностика Wi-Fi",
+      "description": "Адаптер, профіль, сигнал, шлюз і DNS.",
+      "path": "Scripts/Diagnostics/Get-WifiDiagnostics.ps1",
+      "requiresAdmin": false,
+      "labels": [
+        "SAFE",
+        "MEMORY ONLY"
+      ],
+      "keywords": [
+        "wifi",
+        "wi-fi",
+        "вайфай",
+        "бездротова",
+        "сигнал",
+        "адаптер"
+      ]
+    },
+    {
+      "id": "internet-diagnostics",
+      "title": "Комплексна діагностика інтернету",
+      "description": "Локальна мережа, шлюз, DNS і зовнішня доступність.",
+      "path": "Scripts/Diagnostics/Get-InternetDiagnostics.ps1",
+      "requiresAdmin": false,
+      "labels": [
+        "SAFE",
+        "MEMORY ONLY"
+      ],
+      "keywords": [
+        "інтернет",
+        "internet",
+        "мережа",
+        "dns",
+        "шлюз",
+        "gateway",
+        "немає інтернету"
+      ]
+    },
+    {
+      "id": "website-diagnostics",
+      "title": "Діагностика доступу до сайту",
+      "description": "DNS, hosts, TCP, HTTP(S) і TLS.",
+      "path": "Scripts/Diagnostics/Test-WebsiteAccess.ps1",
+      "requiresAdmin": false,
+      "labels": [
+        "SAFE",
+        "MEMORY ONLY"
+      ],
+      "keywords": [
+        "сайт",
+        "website",
+        "url",
+        "https",
+        "tls",
+        "сертифікат",
+        "не відкривається"
+      ]
+    },
+    {
+      "id": "remote-access-diagnostics",
+      "title": "Діагностика віддаленого доступу",
+      "description": "Перевірка типових причин проблем RDP і віддаленого підключення.",
+      "path": "Scripts/Diagnostics/Get-RemoteAccessDiagnostics.ps1",
+      "requiresAdmin": false,
+      "labels": [
+        "SAFE",
+        "MEMORY ONLY"
+      ],
+      "keywords": [
+        "rdp",
+        "remote",
+        "віддалений доступ",
+        "3389",
+        "термінал",
+        "не підключається"
+      ]
+    },
+    {
+      "id": "printer-diagnostics",
+      "title": "Діагностика друку",
+      "description": "Принтери, драйвери, порти, черги та Spooler.",
+      "path": "Scripts/Diagnostics/Get-PrinterDiagnostics.ps1",
+      "requiresAdmin": false,
+      "labels": [
+        "SAFE",
+        "MEMORY ONLY"
+      ],
+      "keywords": [
+        "принтер",
+        "друк",
+        "printer",
+        "spooler",
+        "черга",
+        "не друкує"
+      ]
+    },
+    {
+      "id": "computer-health",
+      "title": "Діагностика зависань і продуктивності",
+      "description": "Навантаження, пам'ять, диски та системні події.",
+      "path": "Scripts/Diagnostics/Get-ComputerHealthDiagnostics.ps1",
+      "requiresAdmin": false,
+      "labels": [
+        "SAFE",
+        "MEMORY ONLY"
+      ],
+      "keywords": [
+        "зависає",
+        "гальмує",
+        "продуктивність",
+        "cpu",
+        "ram",
+        "пам'ять",
+        "диск"
+      ]
+    },
+    {
+      "id": "local-user-logons",
+      "title": "Локальні користувачі та останній вхід",
+      "description": "Локальні облікові записи та доступні дані входу.",
+      "path": "Scripts/Diagnostics/Get-LocalUserLogonInfo.ps1",
+      "requiresAdmin": false,
+      "labels": [
+        "SAFE",
+        "MEMORY ONLY"
+      ],
+      "keywords": [
+        "користувач",
+        "user",
+        "локальний",
+        "останній вхід",
+        "last logon",
+        "обліковий запис"
+      ]
+    },
+    {
+      "id": "failed-logons",
+      "title": "Невдалі спроби входу, подія 4625",
+      "description": "Аналіз невдалих входів із журналу безпеки.",
+      "path": "Scripts/Diagnostics/Get-FailedLogons.ps1",
+      "requiresAdmin": true,
+      "labels": [
+        "SAFE",
+        "MEMORY ONLY",
+        "ADMIN"
+      ],
+      "keywords": [
+        "4625",
+        "невдалий вхід",
+        "failed logon",
+        "security log",
+        "злом",
+        "пароль"
+      ]
+    },
+    {
+      "id": "clear-1c-cache",
+      "title": "Очистити кеш 1С",
+      "description": "Видалення локального кешу 1С поточного користувача.",
+      "path": "Scripts/Fix/Clear-1CCache.ps1",
+      "requiresAdmin": false,
+      "labels": [
+        "CHANGES USER DATA"
+      ],
+      "keywords": [
+        "1с",
+        "1c",
+        "кеш",
+        "cache",
+        "форми",
+        "зависає"
+      ]
+    },
+    {
+      "id": "restart-rdp-clipboard",
+      "title": "Перезапустити RDP Clipboard",
+      "description": "Перезапуск rdpclip.exe у поточному сеансі.",
+      "path": "Scripts/Fix/Restart-RdpClipboard.ps1",
+      "requiresAdmin": false,
+      "confirmBeforeRun": true,
+      "confirmPrompt": "Перезапустити буфер обміну RDP?",
+      "labels": [
+        "CHANGES SYSTEM"
+      ],
+      "keywords": [
+        "rdpclip",
+        "clipboard",
+        "буфер обміну",
+        "копіювання",
+        "rdp"
+      ]
+    },
+    {
+      "id": "restart-print-spooler",
+      "title": "Очистити чергу та перезапустити Spooler",
+      "description": "Видалення незавершених завдань друку й перезапуск служби.",
+      "path": "Scripts/Fix/Restart-PrintSpoolerAndClearQueue.ps1",
+      "requiresAdmin": true,
+      "labels": [
+        "ADMIN",
+        "CHANGES SYSTEM"
+      ],
+      "keywords": [
+        "spooler",
+        "черга",
+        "друк",
+        "принтер",
+        "зависло завдання"
+      ]
+    },
+    {
+      "id": "repair-windows-time",
+      "title": "Виправити синхронізацію часу Windows",
+      "description": "Роль комп'ютера, W32Time, NTP і повторна синхронізація.",
+      "path": "Scripts/Fix/Repair-WindowsTime.ps1",
+      "requiresAdmin": true,
+      "labels": [
+        "ADMIN",
+        "CHANGES SYSTEM"
+      ],
+      "keywords": [
+        "час",
+        "time",
+        "w32time",
+        "ntp",
+        "pdc",
+        "домен",
+        "синхронізація"
+      ]
+    },
+    {
+      "id": "configure-print-rpc",
+      "title": "Налаштувати RPC-сумісність мережевого друку",
+      "description": "Керування RpcAuthnLevelPrivacyEnabled для старого друку.",
+      "path": "Scripts/Fix/Configure-PrintRpcPrivacy.ps1",
+      "requiresAdmin": true,
+      "labels": [
+        "ADMIN",
+        "SECURITY SENSITIVE",
+        "CHANGES SYSTEM"
+      ],
+      "keywords": [
+        "rpc",
+        "privacy",
+        "принтер",
+        "друк",
+        "legacy",
+        "0x0000011b",
+        "сумісність"
+      ]
+    },
+    {
+      "id": "clear-profile-caches",
+      "title": "Очистити стандартні кеші профілів",
+      "description": "Очищення типових кешів у профілях користувачів.",
+      "path": "Scripts/Fix/Clear-UserProfileCaches.ps1",
+      "requiresAdmin": true,
+      "labels": [
+        "ADMIN",
+        "CHANGES USER DATA"
+      ],
+      "keywords": [
+        "appdata",
+        "кеш",
+        "cache",
+        "профіль",
+        "profiles",
+        "temp"
+      ]
+    },
+    {
+      "id": "bginfo-install",
+      "title": "Встановити або оновити BgInfo",
+      "description": "Офіційний Microsoft Sysinternals BgInfo для всіх користувачів.",
+      "path": "Scripts/Software/BgInfo/Install-BgInfo.ps1",
+      "requiresAdmin": true,
+      "labels": [
+        "ADMIN",
+        "DOWNLOADS SOFTWARE",
+        "CHANGES SYSTEM"
+      ],
+      "keywords": [
+        "bginfo",
+        "sysinternals",
+        "встановити",
+        "install",
+        "оновити",
+        "wallpaper"
+      ]
+    },
+    {
+      "id": "bginfo-configure",
+      "title": "Налаштувати шаблон BgInfo",
+      "description": "Стандартна системна табличка й поля поточного сеансу.",
+      "path": "Scripts/Software/BgInfo/Configure-BgInfo.ps1",
+      "requiresAdmin": true,
+      "labels": [
+        "ADMIN",
+        "INTERACTIVE",
+        "CHANGES USER DESKTOP"
+      ],
+      "keywords": [
+        "bginfo",
+        "шаблон",
+        "template",
+        "користувач",
+        "сеанс",
+        "фон"
+      ]
+    },
+    {
+      "id": "bginfo-status",
+      "title": "Перевірити стан BgInfo",
+      "description": "EXE, цифровий підпис, шаблон, helper і автозапуск.",
+      "path": "Scripts/Software/BgInfo/Get-BgInfoStatus.ps1",
+      "requiresAdmin": false,
+      "labels": [
+        "SAFE"
+      ],
+      "keywords": [
+        "bginfo",
+        "стан",
+        "status",
+        "підпис",
+        "автозапуск"
+      ]
+    },
+    {
+      "id": "bginfo-gpo",
+      "title": "Підготувати пакет BgInfo для GPO",
+      "description": "Пакет розгортання через Computer Startup Policy.",
+      "path": "Scripts/Software/BgInfo/Prepare-BgInfoGpoPackage.ps1",
+      "requiresAdmin": true,
+      "labels": [
+        "ADMIN",
+        "CREATES FILES"
+      ],
+      "keywords": [
+        "bginfo",
+        "gpo",
+        "групова політика",
+        "deployment",
+        "домен",
+        "пакет"
+      ]
+    },
+    {
+      "id": "bginfo-uninstall",
+      "title": "Видалити BgInfo",
+      "description": "Видалення автозапуску й каталогу Raccoon BgInfo.",
+      "path": "Scripts/Software/BgInfo/Uninstall-BgInfo.ps1",
+      "requiresAdmin": true,
+      "labels": [
+        "ADMIN",
+        "CHANGES SYSTEM"
+      ],
+      "keywords": [
+        "bginfo",
+        "видалити",
+        "uninstall",
+        "автозапуск"
+      ]
+    },
+    {
+      "id": "send-user-message",
+      "title": "Надіслати повідомлення користувачам",
+      "description": "Повідомлення через msg.exe всім, користувачу або сеансу.",
+      "path": "Scripts/Server/Send-UserMessage.ps1",
+      "requiresAdmin": true,
+      "labels": [
+        "ADMIN",
+        "USES MSG.EXE"
+      ],
+      "keywords": [
+        "msg",
+        "повідомлення",
+        "message",
+        "користувач",
+        "сеанс",
+        "сповіщення"
+      ]
+    },
+    {
+      "id": "create-logoff-shortcut",
+      "title": "Створити кнопку завершення сеансу",
+      "description": "Створення або відновлення ярлика коректного виходу.",
+      "path": "Scripts/Server/Create-LogoffShortcut.ps1",
+      "requiresAdmin": true,
+      "confirmBeforeRun": true,
+      "confirmPrompt": "Створити або відновити кнопку завершення сеансу?",
+      "labels": [
+        "ADMIN",
+        "CHANGES SYSTEM"
+      ],
+      "keywords": [
+        "logoff",
+        "вихід",
+        "сеанс",
+        "ярлик",
+        "shortcut",
+        "кнопка"
+      ]
+    }
+  ]
+}
