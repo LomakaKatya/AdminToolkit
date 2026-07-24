@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Навігація Shell v2 | Raccoon Admin Toolkit</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="shell">
+<header class="topbar">
+<a class="brand" href="../index.html">Raccoon Admin Toolkit</a>
+<nav class="topnav">
+<a href="../index.html">Запуск</a>
+<a href="../faq.html">FAQ</a>
+</nav>
+</header>
+<section class="hero">
+<p class="eyebrow">Shell v2</p>
+<h1>Навігація без зайвого Enter</h1>
+<p class="lead">Меню організоване за наміром адміністратора, а одна й та сама утиліта може бути доступна через швидкий доступ, пошук, дію та каталог.</p>
+</section>
+<div class="layout"><main class="content">
+<section class="tool" id="keys">
+<h2>Клавіші</h2>
+<table>
+<thead><tr><th>Клавіша</th><th>Дія</th></tr></thead>
+<tbody>
+<tr><td><code>1-9</code></td><td>Вибрати видимий пункт без Enter.</td></tr>
+<tr><td><code>0</code> або <code>Esc</code></td><td>Повернутися назад.</td></tr>
+<tr><td><code>F1</code></td><td>Відкрити FAQ.</td></tr>
+<tr><td><code>F2</code></td><td>Пошук інструмента за назвою або проблемою.</td></tr>
+<tr><td><code>F3</code></td><td>Швидкий доступ: обране та останні запуски.</td></tr>
+<tr><td><code>Left / Right</code></td><td>Перемикати сторінки довгого списку.</td></tr>
+</tbody>
+</table>
+</section>
+<section class="tool" id="modes">
+<h2>Способи знайти один інструмент</h2>
+<p>Інструмент зберігається в реєстрі один раз, але може з'являтися в кількох робочих представленнях:</p>
+<ul>
+<li><strong>Швидкий доступ</strong> для виїзду та термінових задач.</li>
+<li><strong>Знайти причину</strong> для діагностики проблеми.</li>
+<li><strong>Виправити</strong> для відновлення функції.</li>
+<li><strong>Налаштувати та розгорнути</strong> для ПЗ, параметрів і GPO.</li>
+<li><strong>Користувачі та сеанси</strong> для RDP, входів і повідомлень.</li>
+<li><strong>Контроль та звіти</strong> для стану й журналів.</li>
+<li><strong>Каталог</strong> для повного списку за компонентами.</li>
+</ul>
+</section>
+<section class="tool" id="confirm">
+<h2>Підтвердження</h2>
+<p>Усі підтвердження приймаються однією клавішею:</p>
+<pre>[Y/Д] Так     [N/Н] Ні</pre>
+<p>Старі словесні підтвердження модулів на кшталт TIME, CLEAN або LEGACY перехоплюються оболонкою й показуються в єдиному форматі.</p>
+</section>
+<section class="tool" id="search">
+<h2>Пошук</h2>
+<p>У пошуку текст вводиться звичайно, тому Enter там залишається. Пошук розуміє назви, компоненти та побутові описи проблем, наприклад:</p>
+<pre>принтер не друкує
+час
+4625
+сайт
+повідомлення</pre>
+</section>
+<section class="tool" id="recent">
+<h2>Останні інструменти</h2>
+<p>Історія останніх запусків зберігається локально для поточного адміністратора в його профілі. Runtime-скрипти при цьому як і раніше виконуються в пам'яті.</p>
+</section>
+</main><aside class="sidebar">
+<strong>На сторінці</strong>
+<a href="#keys">Клавіші</a>
+<a href="#modes">Режими</a>
+<a href="#confirm">Підтвердження</a>
+<a href="#search">Пошук</a>
+<a href="#recent">Останні</a>
+</aside></div>
+<footer>Raccoon Admin Toolkit. Довідка для авторизованих технічних фахівців.</footer>
+</div>
+<script src="help.js"></script>
+</body>
+</html>
