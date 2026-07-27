@@ -1,12 +1,17 @@
-# User Profile Storage Report
+# FAQ and Toolkit map update
 
-Upload these files to the `shell-v2` branch:
+Upload these files through a documentation branch, for example `docs/tool-map`:
 
-1. `Scripts/Reports/Get-UserProfileStorageReport.ps1`
-2. `Config/ToolkitMenu.json`
-3. `docs/help/reports.html`
-4. `docs/faq.html`
+- `docs/faq.html`
+- `docs/help/tool-map.html`
+- `docs/help/navigation.html`
+- `docs/help/getting-started.html`
 
-The open pull request from `shell-v2` to `main` will update automatically.
+No runtime PowerShell files are changed.
 
-The runtime PowerShell file is UTF-8 without BOM.
+The new page contains:
+- a task-oriented quick guide;
+- the current Shell v2 menu tree;
+- tools available through multiple routes;
+- the physical repository structure;
+- the standard path for adding a new tool.
