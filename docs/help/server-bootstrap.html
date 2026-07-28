@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Підготовка нового сервера | Raccoon Admin Toolkit</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="shell">
+<header class="topbar">
+<a class="brand" href="../index.html">Raccoon Admin Toolkit</a>
+<nav class="topnav">
+<a href="../index.html">Запуск</a>
+<a href="tool-map.html">Карта Toolkit</a>
+<a href="../faq.html">FAQ</a>
+</nav>
+</header>
+<section class="hero">
+<p class="eyebrow">Розгортання</p>
+<h1>Підготовка нового сервера</h1>
+<p class="lead">Toolkit підключає SMB-сховище як диск Z: у поточному вході Windows, перевіряє комплект і запускає Server Base Kit.</p>
+</section>
+<div class="layout"><main class="content">
+
+<section class="tool" id="location">
+<h2>Де знайти</h2>
+<pre>4. Налаштувати та розгорнути
+   → Підготовка нового сервера
+      → Підключити сховище та запустити Server Base Kit</pre>
+</section>
+
+<section class="tool" id="flow">
+<h2>Що відбувається</h2>
+<ol>
+<li>Перевіряються права адміністратора.</li>
+<li>Toolkit перевіряє, чи зайнята літера <code>Z:</code>.</li>
+<li>Якщо <code>Z:</code> уже підключена до потрібного сховища, використовується чинне підключення.</li>
+<li>Якщо диска немає, Toolkit підключає SMB-шару з параметром <code>/persistent:no</code>.</li>
+<li>Пароль запитує системна команда <code>net use</code>. Пароль не записується в JSON, журнал або репозиторій.</li>
+<li>Перевіряються <code>config.json</code>, основний скрипт і всі увімкнені інсталятори.</li>
+<li>Запускається <code>Z:\Server_install\Install-ServerBase.ps1</code>.</li>
+</ol>
+</section>
+
+<section class="tool" id="storage">
+<h2>Сховище</h2>
+<table>
+<tbody>
+<tr><th>SMB-шлях</th><td><code>\\u292275-sub7.your-storagebox.de\u292275-sub7</code></td></tr>
+<tr><th>Користувач</th><td><code>u292275-sub7</code></td></tr>
+<tr><th>Каталог комплекту</th><td><code>Z:\Server_install</code></td></tr>
+<tr><th>Постійне підключення</th><td>Ні. Диск не відновлюється автоматично після нового входу Windows.</td></tr>
+</tbody>
+</table>
+</section>
+
+<section class="tool" id="occupied">
+<h2>Якщо Z: уже зайнятий</h2>
+<p>Toolkit ніколи не видаляє і не перепризначає чужий диск. Якщо <code>Z:</code> є локальним диском або вказує на іншу мережеву шару, запуск зупиниться з поясненням.</p>
+</section>
+
+<section class="tool" id="validation">
+<h2>Перевірка комплекту</h2>
+<p>Перед запуском обов'язково перевіряються:</p>
+<ul>
+<li><code>Install-ServerBase.ps1</code></li>
+<li><code>config.json</code></li>
+<li><code>Installers</code></li>
+<li>кожний файл пакета з <code>Enabled: true</code></li>
+</ul>
+<p>Відсутній <code>techsys.dll</code> дає попередження, але не блокує основне встановлення.</p>
+</section>
+
+<section class="tool" id="parallel">
+<h2>Одночасний запуск</h2>
+<div class="warning"><strong>Не запускайте поточний Server Base Kit одночасно на кількох серверах.</strong> Каталог <code>Work</code> спільний, а основний скрипт очищує і повторно створює робочі підкаталоги під час розпакування.</div>
+<p>Наступний етап розвитку комплекту: локальний робочий каталог для кожного сервера або підкаталог із назвою комп'ютера.</p>
+</section>
+
+<section class="tool" id="validation-only">
+<h2>Безпечна перевірка без встановлення</h2>
+<p>При прямому запуску модуля параметр <code>-ValidateOnly</code> підключає диск і перевіряє весь комплект, але не запускає інсталятори:</p>
+<pre>.\Start-ServerBaseKit.ps1 -ValidateOnly</pre>
+</section>
+
+<section class="tool" id="disconnect">
+<h2>Відключення диска</h2>
+<p>За замовчуванням створений Toolkit диск залишається до завершення поточного входу Windows. Відключити його вручну:</p>
+<pre>net use Z: /delete /y</pre>
+<p>При прямому запуску модуля доступний параметр <code>-DisconnectAfterRun</code>.</p>
+</section>
+
+<section class="tool" id="logs">
+<h2>Журнали</h2>
+<p>Основний комплект продовжує зберігати журнали у:</p>
+<pre>Z:\Server_install\Logs</pre>
+<p>Результати створення користувачів і RDP-файли залишаються в каталозі <code>Result</code>.</p>
+</section>
+
+</main><aside class="sidebar">
+<strong>На сторінці</strong>
+<a href="#location">Де знайти</a>
+<a href="#flow">Сценарій</a>
+<a href="#storage">Сховище</a>
+<a href="#occupied">Зайнятий Z:</a>
+<a href="#validation">Перевірка</a>
+<a href="#parallel">Одночасний запуск</a>
+<a href="#validation-only">ValidateOnly</a>
+<a href="#disconnect">Відключення</a>
+<a href="#logs">Журнали</a>
+</aside></div>
+<footer>Raccoon Admin Toolkit. Підготовка нового сервера.</footer>
+</div>
+<script src="help.js"></script>
+</body>
+</html>

@@ -127,6 +127,14 @@
       "title": "НАЛАШТУВАТИ ТА РОЗГОРНУТИ",
       "categories": [
         {
+          "id": "server-bootstrap",
+          "title": "Підготовка нового сервера",
+          "description": "Підключення сховища та запуск базового пакета розгортання.",
+          "toolIds": [
+            "server-base-kit"
+          ]
+        },
+        {
           "id": "software",
           "title": "Встановлення ПЗ",
           "description": "Встановлення, оновлення та видалення програм.",
@@ -306,6 +314,7 @@
       "title": "ПЗ та розгортання",
       "description": "BgInfo, шаблони, GPO, автозапуск і ярлики.",
       "toolIds": [
+        "server-base-kit",
         "bginfo-install",
         "bginfo-configure",
         "bginfo-status",
@@ -773,6 +782,40 @@
         "отчёт",
         "csv",
         "html"
+      ]
+    },
+    {
+      "id": "server-base-kit",
+      "title": "Підключити сховище та запустити Server Base Kit",
+      "description": "Підключення SMB-сховища як Z: у поточному сеансі та запуск Install-ServerBase.ps1.",
+      "path": "Scripts/Deployment/Start-ServerBaseKit.ps1",
+      "requiresAdmin": true,
+      "confirmBeforeRun": true,
+      "confirmPrompt": "Підключити сховище як Z: та запустити встановлення сервера?",
+      "labels": [
+        "ADMIN",
+        "DOWNLOADS SOFTWARE",
+        "CHANGES SYSTEM",
+        "LONG RUNNING"
+      ],
+      "keywords": [
+        "новий сервер",
+        "новый сервер",
+        "server setup",
+        "server base",
+        "serverbasekit",
+        "server install",
+        "встановлення сервера",
+        "установка сервера",
+        "розгортання",
+        "deployment",
+        "z:",
+        "мережевий диск",
+        "сетевой диск",
+        "storage box",
+        "smb",
+        "інсталятори",
+        "установщики"
       ]
     }
   ]

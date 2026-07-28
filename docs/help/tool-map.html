@@ -36,6 +36,7 @@
 <tr><td>Проблема з часом або NTP</td><td><code>3. Виправити → Час і домен</code></td><td><code>F2: час / w32time / ntp</code></td></tr>
 <tr><td>Надіслати повідомлення користувачу</td><td><code>5. Користувачі та сеанси → Активні сеанси та зв'язок</code></td><td><code>F2: повідомлення / msg</code></td></tr>
 <tr><td>Хто займає місце на сервері</td><td><code>6. Контроль та звіти → Профілі та використання диска</code></td><td><code>F2: профіль / місце / хто забив диск</code></td></tr>
+<tr><td>Підготувати сервер з нуля</td><td><code>4. Налаштувати та розгорнути → Підготовка нового сервера</code></td><td><code>F2: новий сервер / server base / z:</code></td></tr>
 <tr><td>Встановити або перевірити BgInfo</td><td><code>4. Налаштувати та розгорнути</code></td><td><code>F2: bginfo</code></td></tr>
 <tr><td>Невдалі входи та подія 4625</td><td><code>2. Знайти причину → Користувачі та входи</code></td><td><code>6. Контроль та звіти → Користувачі та події входу</code></td></tr>
 </tbody>
@@ -90,6 +91,12 @@
 </section>
 <section class="tool" id="configure">
 <h2>4. Налаштувати та розгорнути</h2>
+<details open>
+<summary>Підготовка нового сервера</summary>
+<ul>
+<li><a href="server-bootstrap.html">Підключити сховище та запустити Server Base Kit</a></li>
+</ul>
+</details>
 <details open><summary>Встановлення ПЗ</summary><ul><li>Встановити або оновити BgInfo</li><li>Видалити BgInfo</li></ul></details>
 <details><summary>Шаблони та робочий стіл</summary><ul><li>Налаштувати шаблон BgInfo</li><li>Перевірити стан BgInfo</li></ul></details>
 <details><summary>Групові політики та масове розгортання</summary><ul><li>Підготувати пакет BgInfo для GPO</li></ul></details>
@@ -119,7 +126,7 @@
 <tr><td>Друк</td><td>Діагностика, черга, Spooler і RPC-сумісність.</td></tr>
 <tr><td>Програми та профілі</td><td>Кеш 1С, кеші профілів і аналіз зайнятого місця.</td></tr>
 <tr><td>Безпека та журнали</td><td>Подія 4625 і security-sensitive параметри друку.</td></tr>
-<tr><td>ПЗ та розгортання</td><td>BgInfo, GPO, шаблони, автозапуск і ярлики.</td></tr>
+<tr><td>ПЗ та розгортання</td><td>Server Base Kit, BgInfo, GPO, шаблони, автозапуск і ярлики.</td></tr>
 </tbody>
 </table>
 </section>
@@ -147,6 +154,7 @@
 <tr><td><code>Start-AdminToolkit.ps1</code></td><td>Мінімальний завантажувач Shell v2.</td></tr>
 <tr><td><code>Scripts/Common/Raccoon-Ui.ps1</code></td><td>Меню, клавіші, пошук, підтвердження, швидкий доступ і запуск модулів.</td></tr>
 <tr><td><code>Config/ToolkitMenu.json</code></td><td>Єдиний реєстр інструментів, категорій, ключових слів і міток.</td></tr>
+<tr><td><code>Scripts/Deployment/</code></td><td>Підключення сховищ і запуск пакетів підготовки нового сервера.</td></tr>
 <tr><td><code>Scripts/Diagnostics/</code></td><td>Діагностика мережі, друку, продуктивності та входів.</td></tr>
 <tr><td><code>Scripts/Fix/</code></td><td>Виправлення кешів, служб, часу, друку та профілів.</td></tr>
 <tr><td><code>Scripts/Software/BgInfo/</code></td><td>Встановлення, шаблон, перевірка, GPO-пакет і видалення BgInfo.</td></tr>
