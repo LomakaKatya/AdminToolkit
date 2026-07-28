@@ -355,9 +355,7 @@ if (-not (Test-RaccoonAdministrator)) {
 $DriveLetter = $DriveLetter.ToUpperInvariant()
 $LocalPath = $DriveLetter + ':'
 $DriveRoot = $LocalPath + '\'
-$KitRoot = Join-Path `
-    $DriveRoot `
-    $ServerInstallDirectory
+$KitRoot = $DriveRoot + $ServerInstallDirectory
 
 $CreatedMapping = $false
 $DriveState = Get-RaccoonDriveState `
