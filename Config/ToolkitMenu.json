@@ -135,6 +135,15 @@
           ]
         },
         {
+          "id": "account-provisioning",
+          "title": "Облікові записи",
+          "description": "Створення адміністративних і звичайних користувачів.",
+          "toolIds": [
+            "create-admin-users",
+            "create-regular-users"
+          ]
+        },
+        {
           "id": "software",
           "title": "Встановлення ПЗ",
           "description": "Встановлення, оновлення та видалення програм.",
@@ -196,8 +205,10 @@
         {
           "id": "accounts",
           "title": "Облікові записи та входи",
-          "description": "Локальні користувачі й події входу.",
+          "description": "Створення облікових записів, входи та профілі.",
           "toolIds": [
+            "create-admin-users",
+            "create-regular-users",
             "local-user-logons",
             "failed-logons",
             "user-profile-storage-report"
@@ -272,6 +283,8 @@
       "title": "Користувачі та RDP",
       "description": "Сеанси, повідомлення, входи та облікові записи.",
       "toolIds": [
+        "create-admin-users",
+        "create-regular-users",
         "send-user-message",
         "restart-rdp-clipboard",
         "create-logoff-shortcut",
@@ -312,9 +325,11 @@
     {
       "id": "deployment",
       "title": "ПЗ та розгортання",
-      "description": "BgInfo, шаблони, GPO, автозапуск і ярлики.",
+      "description": "Server Base Kit, облікові записи, BgInfo, GPO, автозапуск і ярлики.",
       "toolIds": [
         "server-base-kit",
+        "create-admin-users",
+        "create-regular-users",
         "bginfo-install",
         "bginfo-configure",
         "bginfo-status",
@@ -816,6 +831,61 @@
         "smb",
         "інсталятори",
         "установщики"
+      ]
+    },
+    {
+      "id": "create-admin-users",
+      "title": "Створити адміністративні облікові записи",
+      "description": "Створення відсутніх локальних або доменних адміністраторів і локального CSV з паролями.",
+      "path": "Scripts/Users/Create-AdminUsers.ps1",
+      "requiresAdmin": true,
+      "confirmBeforeRun": true,
+      "confirmPrompt": "Створити відсутні адміністративні облікові записи та додати їх до привілейованих груп?",
+      "labels": [
+        "ADMIN",
+        "SECURITY SENSITIVE",
+        "CHANGES SYSTEM",
+        "CREATES FILES"
+      ],
+      "keywords": [
+        "адміністратор",
+        "администратор",
+        "admin users",
+        "domain admins",
+        "локальні адміністратори",
+        "облікові записи",
+        "учётные записи",
+        "паролі",
+        "пароли"
+      ]
+    },
+    {
+      "id": "create-regular-users",
+      "title": "Створити або оновити звичайних користувачів",
+      "description": "Створення локальних або AD-користувачів із users.csv, зміна паролів і генерація RDP-комплектів.",
+      "path": "Scripts/Users/Create-RegularUsers.ps1",
+      "requiresAdmin": true,
+      "confirmBeforeRun": true,
+      "confirmPrompt": "Обробити users.csv? Існуючим обліковим записам буде змінено пароль.",
+      "labels": [
+        "ADMIN",
+        "SECURITY SENSITIVE",
+        "CHANGES SYSTEM",
+        "CHANGES CREDENTIALS",
+        "CREATES FILES",
+        "INTERACTIVE"
+      ],
+      "keywords": [
+        "користувачі",
+        "пользователи",
+        "users.csv",
+        "створити користувачів",
+        "создать пользователей",
+        "rdp комплект",
+        "паролі",
+        "пароли",
+        "active directory",
+        "локальні користувачі"
       ]
     }
   ]

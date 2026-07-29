@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Створення користувачів | Raccoon Admin Toolkit</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="shell">
+<header class="topbar">
+<a class="brand" href="../index.html">Raccoon Admin Toolkit</a>
+<nav class="topnav">
+<a href="../index.html">Запуск</a>
+<a href="tool-map.html">Карта Toolkit</a>
+<a href="../faq.html">FAQ</a>
+</nav>
+</header>
+<section class="hero">
+<p class="eyebrow">Облікові записи</p>
+<h1>Створення користувачів із Git</h1>
+<p class="lead">Обидва модулі завантажуються з поточної гілки Toolkit і виконуються в пам'яті. На SMB-сховищі або локальному диску не потрібна постійна копія PowerShell-скриптів.</p>
+</section>
+<div class="layout"><main class="content">
+<section class="tool" id="location">
+<h2>Де знайти</h2>
+<pre>4. Налаштувати та розгорнути
+   → Облікові записи
+
+5. Користувачі та сеанси
+   → Облікові записи та входи</pre>
+</section>
+<section class="tool" id="admins">
+<h2>Адміністративні облікові записи</h2>
+<p>Інструмент використовує вбудований список адміністраторів. У доменному режимі створює відсутні записи Active Directory, додає їх до Domain Admins і записує нові паролі в локальний CSV. У локальному режимі створює локальних користувачів та додає їх до Administrators і Remote Desktop Users.</p>
+<div class="warning">Існуючі адміністративні записи пропускаються. Перед запуском перевірте вбудовані параметри домену, OU та UPN у модулі.</div>
+<pre>C:\Admin_Accounts_Passwords.csv</pre>
+</section>
+<section class="tool" id="regular">
+<h2>Звичайні користувачі</h2>
+<p>Перший запуск створює порожній шаблон:</p>
+<pre>C:\ProgramData\RaccoonAdminToolkit\UserProvisioning\users.csv</pre>
+<p>Заповніть його у форматі:</p>
+<pre>Login,FullName,Phone,Title
+persona17,Іванов Іван,+380670000000,Бухгалтер</pre>
+<p>Після повторного запуску модуль визначає доменний або локальний режим, створює користувачів, генерує RDP-файли та локальні файли з обліковими даними.</p>
+<div class="warning"><strong>Для існуючого користувача пароль буде замінено новим.</strong> Саме тому перед запуском Toolkit показує окреме підтвердження.</div>
+</section>
+<section class="tool" id="results">
+<h2>Локальні результати</h2>
+<pre>C:\ProgramData\RaccoonAdminToolkit\UserProvisioning\Result
+C:\ProgramData\RaccoonAdminToolkit\UserProvisioning\Create-RegularUsers.log</pre>
+<p>CSV, паролі, RDP-комплекти й журнали не передаються в Git. Репозиторій містить тільки код.</p>
+</section>
+<section class="tool" id="passwords">
+<h2>Генерація паролів</h2>
+<p>Перший символ завжди є літерою або цифрою. У паролі гарантовано присутні великі й малі літери, цифра та спеціальний символ. Для звичайних користувачів виключені неоднозначні символи <code>0/O</code> і <code>1/I/l</code>.</p>
+</section>
+</main><aside class="sidebar">
+<strong>На сторінці</strong>
+<a href="#location">Де знайти</a>
+<a href="#admins">Адміністратори</a>
+<a href="#regular">Звичайні користувачі</a>
+<a href="#results">Результати</a>
+<a href="#passwords">Паролі</a>
+</aside></div>
+<footer>Raccoon Admin Toolkit. Користувацькі дані залишаються на сервері.</footer>
+</div>
+<script src="help.js"></script>
+</body>
+</html>

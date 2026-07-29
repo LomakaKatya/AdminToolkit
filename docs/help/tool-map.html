@@ -36,6 +36,7 @@
 <tr><td>Проблема з часом або NTP</td><td><code>3. Виправити → Час і домен</code></td><td><code>F2: час / w32time / ntp</code></td></tr>
 <tr><td>Надіслати повідомлення користувачу</td><td><code>5. Користувачі та сеанси → Активні сеанси та зв'язок</code></td><td><code>F2: повідомлення / msg</code></td></tr>
 <tr><td>Хто займає місце на сервері</td><td><code>6. Контроль та звіти → Профілі та використання диска</code></td><td><code>F2: профіль / місце / хто забив диск</code></td></tr>
+<tr><td>Створити адміністраторів або звичайних користувачів</td><td><code>4. Налаштувати та розгорнути → Облікові записи</code></td><td><code>5. Користувачі та сеанси → Облікові записи та входи</code></td></tr>
 <tr><td>Підготувати сервер з нуля</td><td><code>4. Налаштувати та розгорнути → Підготовка нового сервера</code></td><td><code>F2: новий сервер / server base / z:</code></td></tr>
 <tr><td>Встановити або перевірити BgInfo</td><td><code>4. Налаштувати та розгорнути</code></td><td><code>F2: bginfo</code></td></tr>
 <tr><td>Невдалі входи та подія 4625</td><td><code>2. Знайти причину → Користувачі та входи</code></td><td><code>6. Контроль та звіти → Користувачі та події входу</code></td></tr>
@@ -97,6 +98,13 @@
 <li><a href="server-bootstrap.html">Підключити сховище та запустити Server Base Kit</a></li>
 </ul>
 </details>
+<details>
+<summary>Облікові записи</summary>
+<ul>
+<li><a href="user-provisioning.html">Створити адміністративні облікові записи</a></li>
+<li><a href="user-provisioning.html">Створити або оновити звичайних користувачів</a></li>
+</ul>
+</details>
 <details open><summary>Встановлення ПЗ</summary><ul><li>Встановити або оновити BgInfo</li><li>Видалити BgInfo</li></ul></details>
 <details><summary>Шаблони та робочий стіл</summary><ul><li>Налаштувати шаблон BgInfo</li><li>Перевірити стан BgInfo</li></ul></details>
 <details><summary>Групові політики та масове розгортання</summary><ul><li>Підготувати пакет BgInfo для GPO</li></ul></details>
@@ -106,7 +114,7 @@
 <section class="tool" id="users">
 <h2>5. Користувачі та сеанси</h2>
 <details open><summary>Активні сеанси та зв'язок</summary><ul><li>Надіслати повідомлення користувачам</li><li>Перезапустити RDP Clipboard</li><li>Створити кнопку завершення сеансу</li></ul></details>
-<details><summary>Облікові записи та входи</summary><ul><li>Локальні користувачі та останній вхід</li><li>Невдалі спроби входу, подія 4625</li><li>Проаналізувати розмір профілів користувачів</li></ul></details>
+<details><summary>Облікові записи та входи</summary><ul><li><a href="user-provisioning.html">Створити адміністративні облікові записи</a></li><li><a href="user-provisioning.html">Створити або оновити звичайних користувачів</a></li><li>Локальні користувачі та останній вхід</li><li>Невдалі спроби входу, подія 4625</li><li>Проаналізувати розмір профілів користувачів</li></ul></details>
 </section>
 <section class="tool" id="control">
 <h2>6. Контроль та звіти</h2>
@@ -155,6 +163,7 @@
 <tr><td><code>Scripts/Common/Raccoon-Ui.ps1</code></td><td>Меню, клавіші, пошук, підтвердження, швидкий доступ і запуск модулів.</td></tr>
 <tr><td><code>Config/ToolkitMenu.json</code></td><td>Єдиний реєстр інструментів, категорій, ключових слів і міток.</td></tr>
 <tr><td><code>Scripts/Deployment/</code></td><td>Підключення сховищ і запуск пакетів підготовки нового сервера.</td></tr>
+<tr><td><code>Scripts/Users/</code></td><td>Створення локальних і доменних облікових записів та RDP-комплектів.</td></tr>
 <tr><td><code>Scripts/Diagnostics/</code></td><td>Діагностика мережі, друку, продуктивності та входів.</td></tr>
 <tr><td><code>Scripts/Fix/</code></td><td>Виправлення кешів, служб, часу, друку та профілів.</td></tr>
 <tr><td><code>Scripts/Software/BgInfo/</code></td><td>Встановлення, шаблон, перевірка, GPO-пакет і видалення BgInfo.</td></tr>
