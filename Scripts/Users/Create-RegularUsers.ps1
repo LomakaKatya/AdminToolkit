@@ -458,6 +458,91 @@ function Test-ADModuleAvailable {
     }
 }
 
+function Resolve-DomainOrganizationalUnit {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$DomainDN
+    )
+
+    Write-Host ''
+    Write-Host (
+        "Текущий домен: $DomainDN"
+    ) -ForegroundColor DarkCyan
+
+    Write-Host (
+        'Введите имя OU или полный distinguishedName. ' +
+        'Оставьте пустым, чтобы использовать стандартный контейнер Users.'
+    ) -ForegroundColor Cyan
+
+    $RequestedOU = Read-Host 'OU'
+
+    if ([string]::IsNullOrWhiteSpace($RequestedOU)) {
+        return ''
+    }
+
+    $RequestedOU = $RequestedOU.Trim()
+
+    if ($RequestedOU -match '(?i)^OU=') {
+        try {
+            $OU = Get-ADOrganizationalUnit `
+                -Identity $RequestedOU `
+                -ErrorAction Stop
+        }
+        catch {
+            throw (
+                "Указанная OU не найдена: $RequestedOU. " +
+                $_.Exception.Message
+            )
+        }
+
+        if (
+            -not $OU.DistinguishedName.EndsWith(
+                ",$DomainDN",
+                [StringComparison]::OrdinalIgnoreCase
+            )
+        ) {
+            throw (
+                'Указанная OU не принадлежит текущему домену: ' +
+                $OU.DistinguishedName
+            )
+        }
+
+        return [string]$OU.DistinguishedName
+    }
+
+    $Matches = @(
+        Get-ADOrganizationalUnit `
+            -Filter * `
+            -SearchBase $DomainDN `
+            -SearchScope Subtree `
+            -ErrorAction Stop |
+        Where-Object {
+            $_.Name -eq $RequestedOU
+        }
+    )
+
+    if ($Matches.Count -eq 1) {
+        return [string]$Matches[0].DistinguishedName
+    }
+
+    if ($Matches.Count -eq 0) {
+        throw (
+            "OU с именем '$RequestedOU' не найдена в домене $DomainDN."
+        )
+    }
+
+    $DistinguishedNames = @(
+        $Matches |
+        Select-Object -ExpandProperty DistinguishedName
+    ) -join "`r`n  "
+
+    throw (
+        "Найдено несколько OU с именем '$RequestedOU'. " +
+        "Повтори запуск и укажи полный distinguishedName:`r`n  " +
+        $DistinguishedNames
+    )
+}
+
 function New-RdpFile {
     param(
         [Parameter(Mandatory = $true)]
@@ -866,21 +951,17 @@ if ($IsDomainJoined -and $ADAvailable) {
     $Mode = "Domain"
     Write-Log "Режим работы: доменный. Будут создаваться/обновляться пользователи Active Directory."
 
-    Write-Host ""
-    Write-Host "Введите OU для создания новых пользователей." -ForegroundColor Cyan
-    Write-Host "Пример: OU=Employees,DC=resurs,DC=lan" -ForegroundColor DarkCyan
-    Write-Host "Можно оставить пустым, тогда новые пользователи попадут в стандартный контейнер Users." -ForegroundColor DarkCyan
+    $Domain = Get-ADDomain -ErrorAction Stop
+    $DomainDN = [string]$Domain.DistinguishedName
 
-    $DomainOU = Read-Host "OU"
+    Write-Log "Текущий домен: $($Domain.DNSRoot)"
+    Write-Log "Текущий Domain DN: $DomainDN"
+
+    $DomainOU = Resolve-DomainOrganizationalUnit `
+        -DomainDN $DomainDN
 
     if (-not [string]::IsNullOrWhiteSpace($DomainOU)) {
-        try {
-            Get-ADOrganizationalUnit -Identity $DomainOU -ErrorAction Stop | Out-Null
-            Write-Log "OU найдена: $DomainOU"
-        }
-        catch {
-            throw "Указанная OU не найдена или недоступна: $DomainOU"
-        }
+        Write-Log "OU найдена: $DomainOU"
     }
     else {
         Write-Log "OU не указана. Новые пользователи будут созданы в стандартном контейнере Users."
