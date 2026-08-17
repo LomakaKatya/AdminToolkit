@@ -68,18 +68,13 @@
       "id": "software-installation",
       "title": "Встановлення софту",
       "description": "Підготовка сервера, облікові записи, ярлики та BgInfo.",
+      "toolIds": [
+        "create-logoff-shortcut",
+        "server-base-kit",
+        "create-admin-users",
+        "create-regular-users"
+      ],
       "categories": [
-        {
-          "id": "software-main",
-          "title": "Основне",
-          "description": "Базова підготовка сервера та облікових записів.",
-          "toolIds": [
-            "create-logoff-shortcut",
-            "server-base-kit",
-            "create-admin-users",
-            "create-regular-users"
-          ]
-        },
         {
           "id": "bginfo",
           "title": "BGInfo",
