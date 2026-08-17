@@ -112,20 +112,15 @@
             }
         }
 
-        $cacheToken = [DateTime]::UtcNow.Ticks
         $launcherUrl =
-            "https://raw.githubusercontent.com/LomakaKatya/AdminToolkit/main/Start-AdminToolkit.ps1?nocache=$cacheToken"
+            'https://admintoolkit.itraccoonverse.space/Start-AdminToolkit.ps1'
 
         $launcherCode = Invoke-RestMethod `
             -Uri $launcherUrl `
-            -Headers @{
-                'Cache-Control' = 'no-cache'
-                'Pragma'        = 'no-cache'
-            } `
             -ErrorAction Stop
 
         if ([string]::IsNullOrWhiteSpace([string]$launcherCode)) {
-            throw 'GitHub повернув порожній завантажувач.'
+            throw 'Службове джерело повернуло порожній завантажувач.'
         }
 
         $bomMarkers = [char[]]@(
