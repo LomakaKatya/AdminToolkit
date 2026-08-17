@@ -11,12 +11,14 @@ Create-RegularUsers-Universal.ps1
    - через Active Setup для будущих входов пользователей.
 3. Читает пользователей из локального файла ProgramData\RaccoonAdminToolkit\UserProvisioning\users.csv.
 4. Если компьютер в домене и доступен модуль ActiveDirectory:
-   - спрашивает OU для новых пользователей;
+   - спрашивает OU для новых пользователей и создаёт её при необходимости;
    - создаёт доменных пользователей;
-   - если пользователь уже существует, меняет ему пароль на новый.
+   - если пользователь уже существует, меняет ему пароль на новый;
+   - выдаёт пользователю право входа через Remote Desktop Users.
 5. Если домена нет или AD-модуль недоступен:
    - создаёт локальных пользователей;
-   - если пользователь уже существует, меняет ему пароль на новый.
+   - если пользователь уже существует, меняет ему пароль на новый;
+   - добавляет пользователя в локальную Remote Desktop Users.
 6. Запрещает пользователям менять пароль самостоятельно.
 7. Ставит "Срок действия пароля не ограничен".
 8. На каждого пользователя создаёт отдельную папку:
@@ -98,8 +100,9 @@ $KeyboardLayouts = @(
 # $DomainGroupToAdd = "GG_RDS_Users"
 $DomainGroupToAdd = ""
 
-# Группа для локальных пользователей.
+# Базовая локальная группа Users и группа RDP-доступа.
 $LocalGroupSidToAdd = 'S-1-5-32-545'
+$RemoteDesktopUsersSid = 'S-1-5-32-555'
 
 # Требовать смену пароля при первом входе.
 # Для готовых RDP-комплектов обычно удобнее $false.
@@ -218,7 +221,13 @@ function New-StrongPassword {
 
 function Ensure-HKUDrive {
     if (-not (Get-PSDrive -Name HKU -ErrorAction SilentlyContinue)) {
-        New-PSDrive -Name HKU -PSProvider Registry -Root HKEY_USERS | Out-Null
+        New-PSDrive `
+            -Name HKU `
+            -PSProvider Registry `
+            -Root HKEY_USERS `
+            -Scope Script `
+            -ErrorAction Stop |
+        Out-Null
     }
 }
 
@@ -458,6 +467,118 @@ function Test-ADModuleAvailable {
     }
 }
 
+function Test-IsDomainController {
+    $ComputerSystem = Get-CimInstance `
+        -ClassName Win32_ComputerSystem `
+        -ErrorAction Stop
+
+    return ([int]$ComputerSystem.DomainRole -in @(4, 5))
+}
+
+function Add-LocalGroupMemberSafe {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$GroupName,
+
+        [Parameter(Mandatory = $true)]
+        [string]$MemberName
+    )
+
+    try {
+        Add-LocalGroupMember `
+            -Group $GroupName `
+            -Member $MemberName `
+            -ErrorAction Stop
+
+        Write-Log "'$MemberName' добавлен в локальную группу '$GroupName'."
+    }
+    catch {
+        if ($_.Exception.Message -match 'already|уже|вже|ist bereits|является членом') {
+            Write-Log "'$MemberName' уже состоит в локальной группе '$GroupName'."
+            return
+        }
+
+        throw
+    }
+}
+
+function Ensure-DomainUserRdpAccess {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Login
+    )
+
+    if (Test-IsDomainController) {
+        $RdpGroup = Get-ADGroup `
+            -Identity $RemoteDesktopUsersSid `
+            -ErrorAction Stop
+
+        $Account = Get-ADUser `
+            -Identity $Login `
+            -Properties SID `
+            -ErrorAction Stop
+
+        $AlreadyMember = @(
+            Get-ADGroupMember `
+                -Identity $RdpGroup `
+                -ErrorAction Stop |
+            Where-Object {
+                $_.SID -eq $Account.SID
+            }
+        ).Count -gt 0
+
+        if (-not $AlreadyMember) {
+            Add-ADGroupMember `
+                -Identity $RdpGroup `
+                -Members $Account `
+                -ErrorAction Stop
+        }
+
+        Write-Log (
+            "RDP-доступ разрешён пользователю '$Login' через " +
+            "'$($RdpGroup.Name)' на контроллере домена."
+        )
+
+        return
+    }
+
+    $RdpGroupName = Resolve-LocalGroupNameBySid `
+        -Sid $RemoteDesktopUsersSid
+
+    if ([string]::IsNullOrWhiteSpace($RdpGroupName)) {
+        throw "Локальная группа Remote Desktop Users не найдена. SID: $RemoteDesktopUsersSid"
+    }
+
+    $Domain = Get-ADDomain -ErrorAction Stop
+    $MemberName = "$($Domain.NetBIOSName)\$Login"
+
+    Add-LocalGroupMemberSafe `
+        -GroupName $RdpGroupName `
+        -MemberName $MemberName
+
+    Write-Log "RDP-доступ разрешён доменному пользователю '$MemberName'."
+}
+
+function Ensure-LocalUserRdpAccess {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Login
+    )
+
+    $RdpGroupName = Resolve-LocalGroupNameBySid `
+        -Sid $RemoteDesktopUsersSid
+
+    if ([string]::IsNullOrWhiteSpace($RdpGroupName)) {
+        throw "Локальная группа Remote Desktop Users не найдена. SID: $RemoteDesktopUsersSid"
+    }
+
+    Add-LocalGroupMemberSafe `
+        -GroupName $RdpGroupName `
+        -MemberName $Login
+
+    Write-Log "RDP-доступ разрешён локальному пользователю '$Login'."
+}
+
 function Resolve-DomainOrganizationalUnit {
     param(
         [Parameter(Mandatory = $true)]
@@ -526,9 +647,24 @@ function Resolve-DomainOrganizationalUnit {
     }
 
     if ($Matches.Count -eq 0) {
-        throw (
-            "OU с именем '$RequestedOU' не найдена в домене $DomainDN."
+        Write-Log (
+            "OU '$RequestedOU' не найдена. " +
+            "Создаю её в корне домена $DomainDN."
+        ) 'WARN'
+
+        $CreatedOU = New-ADOrganizationalUnit `
+            -Name $RequestedOU `
+            -Path $DomainDN `
+            -ProtectedFromAccidentalDeletion $true `
+            -PassThru `
+            -ErrorAction Stop
+
+        Write-Log (
+            'OU создана: ' +
+            $CreatedOU.DistinguishedName
         )
+
+        return [string]$CreatedOU.DistinguishedName
     }
 
     $DistinguishedNames = @(
@@ -715,6 +851,8 @@ function Create-OrUpdateDomainUser {
             -CannotChangePassword (-not $UserCanChangePassword) `
             -ErrorAction SilentlyContinue
 
+        Ensure-DomainUserRdpAccess -Login $Login
+
         Write-Log "Пароль доменного пользователя '$Login' изменён. Смена пароля пользователем запрещена."
         return "PasswordChanged"
     }
@@ -764,6 +902,8 @@ function Create-OrUpdateDomainUser {
         }
     }
 
+    Ensure-DomainUserRdpAccess -Login $Login
+
     Write-Log "Создан доменный пользователь '$Login'. Смена пароля пользователем запрещена."
     return "Created"
 }
@@ -798,6 +938,8 @@ function Create-OrUpdateLocalUser {
         Set-LocalUserPasswordChangePermission `
             -Login $Login `
             -CanChangePassword $UserCanChangePassword
+
+        Ensure-LocalUserRdpAccess -Login $Login
 
         Write-Log "Пароль локального пользователя '$Login' изменён. Смена пароля пользователем запрещена."
         return "PasswordChanged"
@@ -845,24 +987,12 @@ function Create-OrUpdateLocalUser {
         -Sid $LocalGroupSidToAdd
 
     if (-not [string]::IsNullOrWhiteSpace($LocalGroupToAdd)) {
-        try {
-            Add-LocalGroupMember `
-                -Group $LocalGroupToAdd `
-                -Member $Login `
-                -ErrorAction Stop
-
-            Write-Log (
-                "Пользователь '$Login' добавлен в локальную группу " +
-                "'$LocalGroupToAdd'."
-            )
-        }
-        catch {
-            Write-Log (
-                "Не удалось добавить '$Login' в локальную группу " +
-                "'$LocalGroupToAdd': $($_.Exception.Message)"
-            ) 'WARN'
-        }
+        Add-LocalGroupMemberSafe `
+            -GroupName $LocalGroupToAdd `
+            -MemberName $Login
     }
+
+    Ensure-LocalUserRdpAccess -Login $Login
 
     Write-Log "Создан локальный пользователь '$Login'. Смена пароля пользователем запрещена."
     return "Created"

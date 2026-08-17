@@ -18,193 +18,156 @@
 </header>
 <section class="hero">
 <p class="eyebrow">Карта системи</p>
-<h1>Що де лежить</h1>
-<p class="lead">Карта поєднує робочі маршрути в меню та фізичну структуру файлів. Номери відповідають поточній версії Shell v2, а назви розділів залишаються головним орієнтиром при подальшому розширенні.</p>
+<h1>Функціональна структура Toolkit</h1>
+<p class="lead">Головне меню згруповане за призначенням інструментів. Один runtime-скрипт може бути показаний у кількох розділах без дублювання файлу, як аудит файлових баз 1С/BAS.</p>
 </section>
 <div class="layout">
 <main class="content">
-<section class="tool" id="quick-orientation">
-<h2>Швидкий орієнтир за проблемою</h2>
-<table>
-<thead><tr><th>Задача</th><th>Куди йти</th><th>Альтернатива</th></tr></thead>
-<tbody>
-<tr><td>Немає інтернету, DNS або Wi-Fi</td><td><code>2. Знайти причину → Мережа та інтернет</code></td><td><code>F2: інтернет / dns / wifi</code></td></tr>
-<tr><td>Не відкривається сайт</td><td><code>2. Знайти причину → Сайт або зовнішній сервіс</code></td><td><code>F2: сайт</code></td></tr>
-<tr><td>Не підключається RDP</td><td><code>2. Знайти причину → Віддалений доступ</code></td><td><code>F2: rdp / 3389</code></td></tr>
-<tr><td>Принтер не друкує</td><td><code>2. Знайти причину → Друк</code></td><td><code>3. Виправити → Друк</code></td></tr>
-<tr><td>Комп'ютер зависає або гальмує</td><td><code>2. Знайти причину → Продуктивність і зависання</code></td><td><code>6. Контроль та звіти → Стан комп'ютера</code></td></tr>
-<tr><td>Проблема з часом або NTP</td><td><code>3. Виправити → Час і домен</code></td><td><code>F2: час / w32time / ntp</code></td></tr>
-<tr><td>Надіслати повідомлення користувачу</td><td><code>5. Користувачі та сеанси → Активні сеанси та зв'язок</code></td><td><code>F2: повідомлення / msg</code></td></tr>
-<tr><td>Хто займає місце на сервері</td><td><code>6. Контроль та звіти → Профілі та використання диска</code></td><td><code>F2: профіль / місце / хто забив диск</code></td></tr>
-<tr><td>Створити адміністраторів або звичайних користувачів</td><td><code>4. Налаштувати та розгорнути → Облікові записи</code></td><td><code>5. Користувачі та сеанси → Облікові записи та входи</code></td></tr>
-<tr><td>Підготувати сервер з нуля</td><td><code>4. Налаштувати та розгорнути → Підготовка нового сервера</code></td><td><code>F2: новий сервер / server base / z:</code></td></tr>
-<tr><td>Встановити або перевірити BgInfo</td><td><code>4. Налаштувати та розгорнути</code></td><td><code>F2: bginfo</code></td></tr>
-<tr><td>Невдалі входи та подія 4625</td><td><code>2. Знайти причину → Користувачі та входи</code></td><td><code>6. Контроль та звіти → Користувачі та події входу</code></td></tr>
-</tbody>
-</table>
-</section>
 <section class="tool" id="main-menu">
 <h2>Головне меню</h2>
 <table>
 <thead><tr><th>Пункт</th><th>Призначення</th></tr></thead>
 <tbody>
-<tr><td><code>1. Швидкий доступ</code></td><td>Закріплені та останні запущені інструменти. Склад частково динамічний.</td></tr>
-<tr><td><code>2. Знайти причину</code></td><td>Діагностика проблем і перевірка гіпотез.</td></tr>
-<tr><td><code>3. Виправити</code></td><td>Відновлення служб, кешів і системних функцій.</td></tr>
-<tr><td><code>4. Налаштувати та розгорнути</code></td><td>ПЗ, параметри Windows, GPO, шаблони, автозапуск і ярлики.</td></tr>
-<tr><td><code>5. Користувачі та сеанси</code></td><td>RDP, повідомлення, входи та облікові записи.</td></tr>
-<tr><td><code>6. Контроль та звіти</code></td><td>Стан системи, журнали, профілі й звітність.</td></tr>
-<tr><td><code>7. Каталог інструментів</code></td><td>Повний список, згрупований за компонентами системи.</td></tr>
-<tr><td><code>8. FAQ і довідка</code></td><td>Веб-довідка, карта, безпека та типові проблеми.</td></tr>
+<tr><td><code>1. Інтернет і мережа</code></td><td>TCP, Wi-Fi, інтернет, сайти, віддалений доступ і RDP-параметри.</td></tr>
+<tr><td><code>2. Друк</code></td><td>Діагностика друку, Spooler і RPC-сумісність.</td></tr>
+<tr><td><code>3. Перевірка обладнання</code></td><td>Продуктивність комп'ютера та компоненти RDP-сеансу.</td></tr>
+<tr><td><code>4. Аудит серверів</code></td><td>Входи, користувачі, час, профілі, повідомлення та інвентаризація.</td></tr>
+<tr><td><code>5. 1С / BAS</code></td><td>Кеш 1С/BAS та аудит файлових баз.</td></tr>
+<tr><td><code>6. Встановлення софту</code></td><td>Server Base Kit, користувачі, кнопка завершення сеансу та BGInfo.</td></tr>
+<tr><td><code>7. FAQ і довідка</code></td><td>Веб-довідка та карта Toolkit.</td></tr>
 </tbody>
 </table>
-<div class="note">Цифри зручні для поточної версії. Для довгоживучих інструкцій краще посилатися на назву розділу або використовувати <code>F2</code>.</div>
+<div class="note"><code>F2</code> відкриває глобальний пошук, <code>F3</code> відкриває швидкий доступ, <code>F1</code> відкриває довідку.</div>
 </section>
-<section class="tool" id="quick-access">
-<h2>1. Швидкий доступ</h2>
-<p>Перші позиції формуються з обраного, вільні місця заповнюються останніми запусками.</p>
+
+<section class="tool" id="network">
+<h2>1. Інтернет і мережа</h2>
 <ul>
+<li>Перевірити TCP-підключення</li>
+<li>Комплексна діагностика Wi-Fi</li>
 <li>Комплексна діагностика інтернету</li>
 <li>Діагностика доступу до сайту</li>
+<li>Діагностика віддаленого доступу</li>
+<li>Налаштувати попередження перенаправлення RDP</li>
+</ul>
+</section>
+
+<section class="tool" id="printing">
+<h2>2. Друк</h2>
+<ul>
 <li>Діагностика друку</li>
-<li>Надіслати повідомлення користувачам</li>
-<li>Перезапустити RDP Clipboard</li>
 <li>Очистити чергу та перезапустити Spooler</li>
+<li>Налаштувати RPC-сумісність мережевого друку</li>
 </ul>
 </section>
-<section class="tool" id="diagnose">
-<h2>2. Знайти причину</h2>
-<details open><summary>Мережа та інтернет</summary><ul><li>Комплексна діагностика інтернету</li><li>Комплексна діагностика Wi-Fi</li><li>Перевірити TCP-підключення</li></ul></details>
-<details><summary>Віддалений доступ</summary><ul><li>Діагностика віддаленого доступу</li><li>Перевірити TCP-підключення</li></ul></details>
-<details><summary>Друк</summary><ul><li>Діагностика друку</li></ul></details>
-<details><summary>Продуктивність і зависання</summary><ul><li>Діагностика зависань і продуктивності</li></ul></details>
-<details><summary>Користувачі та входи</summary><ul><li>Локальні користувачі та останній вхід</li><li>Невдалі спроби входу, подія 4625</li></ul></details>
-<details><summary>Сайт або зовнішній сервіс</summary><ul><li>Діагностика доступу до сайту</li><li>Перевірити TCP-підключення</li></ul></details>
+
+<section class="tool" id="hardware">
+<h2>3. Перевірка обладнання</h2>
+<ul>
+<li>Діагностика зависань і продуктивності</li>
+<li>Перезапустити RDP Clipboard</li>
+</ul>
 </section>
-<section class="tool" id="fix">
-<h2>3. Виправити</h2>
-<details open><summary>Користувацькі програми</summary><ul><li>Очистити кеш 1С</li><li>Перезапустити RDP Clipboard</li></ul></details>
-<details><summary>Служби Windows</summary><ul><li>Очистити чергу та перезапустити Spooler</li><li>Виправити синхронізацію часу Windows</li></ul></details>
-<details><summary>Друк</summary><ul><li>Очистити чергу та перезапустити Spooler</li><li>Налаштувати RPC-сумісність мережевого друку</li></ul></details>
-<details><summary>Профілі користувачів</summary><ul><li>Очистити стандартні кеші профілів</li></ul></details>
-<details><summary>Час і домен</summary><ul><li>Виправити синхронізацію часу Windows</li></ul></details>
-<details><summary>Сумісність і захисні параметри</summary><ul><li>Налаштувати RPC-сумісність мережевого друку</li></ul></details>
+
+<section class="tool" id="audit">
+<h2>4. Аудит серверів</h2>
+<ul>
+<li>Невдалі спроби входу, подія 4625</li>
+<li>Локальні користувачі та останній вхід</li>
+<li>Виправити синхронізацію часу Windows</li>
+<li>Очистити стандартні кеші профілів</li>
+<li>Надіслати повідомлення користувачам</li>
+<li>Проаналізувати розмір профілів користувачів</li>
+<li>Аудит файлових баз 1С/BAS</li>
+</ul>
 </section>
-<section class="tool" id="configure">
-<h2>4. Налаштувати та розгорнути</h2>
+
+<section class="tool" id="onec">
+<h2>5. 1С / BAS</h2>
+<ul>
+<li>Очистити кеш 1С</li>
+<li>Аудит файлових баз 1С/BAS</li>
+</ul>
+<div class="note">Аудит файлових баз зареєстрований один раз і показується одночасно в розділах <strong>Аудит серверів</strong> та <strong>1С / BAS</strong>.</div>
+</section>
+
+<section class="tool" id="software">
+<h2>6. Встановлення софту</h2>
 <details open>
-<summary>Підготовка нового сервера</summary>
+<summary>Основне</summary>
 <ul>
-<li><a href="server-bootstrap.html">Підключити сховище та запустити Server Base Kit</a></li>
-</ul>
-</details>
-<details>
-<summary>Облікові записи</summary>
-<ul>
+<li>Створити кнопку завершення сеансу</li>
+<li>Підключити сховище та запустити Server Base Kit</li>
 <li><a href="user-provisioning.html">Створити адміністративні облікові записи</a></li>
 <li><a href="user-provisioning.html">Створити або оновити звичайних користувачів</a></li>
 </ul>
 </details>
-<details open><summary>Встановлення ПЗ</summary><ul><li>Встановити або оновити BgInfo</li><li>Видалити BgInfo</li></ul></details>
-<details><summary>Шаблони та робочий стіл</summary><ul><li>Налаштувати шаблон BgInfo</li><li>Перевірити стан BgInfo</li></ul></details>
-<details><summary>Групові політики та масове розгортання</summary><ul><li>Підготувати пакет BgInfo для GPO</li></ul></details>
-<details><summary>Автозапуск і ярлики</summary><ul><li>Створити кнопку завершення сеансу</li><li>Встановити або оновити BgInfo</li></ul></details>
-<details><summary>Налаштування Windows</summary><ul><li>Налаштувати RPC-сумісність мережевого друку</li><li>Виправити синхронізацію часу Windows</li></ul></details>
+<details open>
+<summary>BGInfo</summary>
+<ul>
+<li>Встановити або оновити BgInfo</li>
+<li>Налаштувати шаблон BgInfo</li>
+<li>Перевірити стан BgInfo</li>
+<li>Підготувати пакет BgInfo для GPO</li>
+<li>Видалити BgInfo</li>
+</ul>
+</details>
 </section>
-<section class="tool" id="users">
-<h2>5. Користувачі та сеанси</h2>
-<details open><summary>Активні сеанси та зв'язок</summary><ul><li>Надіслати повідомлення користувачам</li><li>Перезапустити RDP Clipboard</li><li>Створити кнопку завершення сеансу</li></ul></details>
-<details><summary>Облікові записи та входи</summary><ul><li><a href="user-provisioning.html">Створити адміністративні облікові записи</a></li><li><a href="user-provisioning.html">Створити або оновити звичайних користувачів</a></li><li>Локальні користувачі та останній вхід</li><li>Невдалі спроби входу, подія 4625</li><li>Проаналізувати розмір профілів користувачів</li></ul></details>
+
+<section class="tool" id="audit-1c">
+<h2>Аудит файлових баз 1С/BAS</h2>
+<p>Інструмент читає <code>ibases.v8i</code> у локальних профілях, групує однакові фізичні бази, перевіряє <code>1Cv8.1CD</code>, розмір і дату останньої зміни. За замовчуванням додатково шукає файлові бази на локальних fixed-дисках.</p>
+<p>HTML-звіти з запуску Toolkit зберігаються тут:</p>
+<pre>C:\ProgramData\RaccoonAdminToolkit\Reports\1CFileBases</pre>
 </section>
-<section class="tool" id="control">
-<h2>6. Контроль та звіти</h2>
-<details open><summary>Стан комп'ютера</summary><ul><li>Діагностика зависань і продуктивності</li><li>Перевірити стан BgInfo</li></ul></details>
-<details><summary>Профілі та використання диска</summary><ul><li>Проаналізувати розмір профілів користувачів</li></ul></details>
-<details><summary>Користувачі та події входу</summary><ul><li>Локальні користувачі та останній вхід</li><li>Невдалі спроби входу, подія 4625</li></ul></details>
-<details><summary>Моніторинг</summary><p>Розділ зарезервовано під майбутню інтеграцію системи моніторингу.</p></details>
-</section>
-<section class="tool" id="catalog">
-<h2>7. Каталог інструментів</h2>
-<table>
-<thead><tr><th>Категорія</th><th>Що містить</th></tr></thead>
-<tbody>
-<tr><td>Мережа та інтернет</td><td>TCP, Wi-Fi, інтернет, сайти та віддалений доступ.</td></tr>
-<tr><td>Windows і служби</td><td>Продуктивність, Spooler, W32Time та RPC-параметри.</td></tr>
-<tr><td>Користувачі та RDP</td><td>Повідомлення, сеанси, входи, ярлик виходу та звіт по профілях.</td></tr>
-<tr><td>Друк</td><td>Діагностика, черга, Spooler і RPC-сумісність.</td></tr>
-<tr><td>Програми та профілі</td><td>Кеш 1С, кеші профілів і аналіз зайнятого місця.</td></tr>
-<tr><td>Безпека та журнали</td><td>Подія 4625 і security-sensitive параметри друку.</td></tr>
-<tr><td>ПЗ та розгортання</td><td>Server Base Kit, BgInfo, GPO, шаблони, автозапуск і ярлики.</td></tr>
-</tbody>
-</table>
-</section>
-<section class="tool" id="multiple-paths">
-<h2>Один інструмент, кілька маршрутів</h2>
-<p>Повтор у меню не означає копію скрипта. Реєстр просто показує одну утиліту в різних робочих контекстах.</p>
-<table>
-<thead><tr><th>Інструмент</th><th>Де зустрічається</th></tr></thead>
-<tbody>
-<tr><td>Перевірити TCP-підключення</td><td>Мережа та інтернет, Віддалений доступ, Сайт або зовнішній сервіс, Каталог.</td></tr>
-<tr><td>Очистити чергу та перезапустити Spooler</td><td>Швидкий доступ, Служби Windows, Друк, Каталог.</td></tr>
-<tr><td>Виправити синхронізацію часу Windows</td><td>Служби Windows, Час і домен, Налаштування Windows, Каталог.</td></tr>
-<tr><td>Налаштувати RPC-сумісність друку</td><td>Друк, Сумісність і захисні параметри, Налаштування Windows, Каталог.</td></tr>
-<tr><td>Проаналізувати розмір профілів</td><td>Облікові записи та входи, Профілі та використання диска, два розділи Каталогу.</td></tr>
-<tr><td>Перевірити стан BgInfo</td><td>Шаблони та робочий стіл, Стан комп'ютера, Каталог.</td></tr>
-<tr><td>Створити кнопку завершення сеансу</td><td>Автозапуск і ярлики, Активні сеанси та зв'язок, Каталог.</td></tr>
-</tbody>
-</table>
-</section>
+
 <section class="tool" id="repository">
-<h2>Фізична структура файлів</h2>
+<h2>Фізичні файли</h2>
 <table>
 <thead><tr><th>Шлях</th><th>Призначення</th></tr></thead>
 <tbody>
-<tr><td><code>Start-AdminToolkit.ps1</code></td><td>Мінімальний завантажувач Shell v2.</td></tr>
-<tr><td><code>Scripts/Common/Raccoon-Ui.ps1</code></td><td>Меню, клавіші, пошук, підтвердження, швидкий доступ і запуск модулів.</td></tr>
-<tr><td><code>Config/ToolkitMenu.json</code></td><td>Єдиний реєстр інструментів, категорій, ключових слів і міток.</td></tr>
-<tr><td><code>Scripts/Deployment/</code></td><td>Підключення сховищ і запуск пакетів підготовки нового сервера.</td></tr>
-<tr><td><code>Scripts/Users/</code></td><td>Створення локальних і доменних облікових записів та RDP-комплектів.</td></tr>
-<tr><td><code>Scripts/Diagnostics/</code></td><td>Діагностика мережі, друку, продуктивності та входів.</td></tr>
-<tr><td><code>Scripts/Fix/</code></td><td>Виправлення кешів, служб, часу, друку та профілів.</td></tr>
-<tr><td><code>Scripts/Software/BgInfo/</code></td><td>Встановлення, шаблон, перевірка, GPO-пакет і видалення BgInfo.</td></tr>
-<tr><td><code>Scripts/Server/</code></td><td>Повідомлення користувачам і серверні дії із сеансами.</td></tr>
-<tr><td><code>Scripts/Reports/</code></td><td>Збір даних та експорт HTML/CSV-звітів.</td></tr>
-<tr><td><code>Tools/Test-Repository.ps1</code></td><td>Перевірка синтаксису, UTF-8 без BOM і небезпечних символів.</td></tr>
-<tr><td><code>docs/index.html</code></td><td>Стартова веб-сторінка з командою запуску.</td></tr>
-<tr><td><code>docs/faq.html</code></td><td>Центральний каталог довідки.</td></tr>
-<tr><td><code>docs/help/</code></td><td>Окремі сторінки по навігації, безпеці, модулях, звітах і типових проблемах.</td></tr>
+<tr><td><code>Start-AdminToolkit.ps1</code></td><td>Завантажувач Shell v2.</td></tr>
+<tr><td><code>Scripts/Common/Raccoon-Ui.ps1</code></td><td>Меню, клавіші, пошук, швидкий доступ і запуск інструментів.</td></tr>
+<tr><td><code>Config/ToolkitMenu.json</code></td><td>Функціональна структура меню, картки інструментів, ключові слова та мітки.</td></tr>
+<tr><td><code>Scripts/Network/Set-RdpRedirectionWarningDialog.ps1</code></td><td>Політика <code>RedirectionWarningDialogVersion=1</code>.</td></tr>
+<tr><td><code>Scripts/Reports/Audit-1CFileBases.ps1</code></td><td>Інвентаризація файлових баз 1С/BAS та HTML-звіт.</td></tr>
+<tr><td><code>Scripts/Users/Create-RegularUsers.ps1</code></td><td>Створення користувачів, OU, паролі, RDP-доступ і RDP-комплекти.</td></tr>
+<tr><td><code>Scripts/Diagnostics/</code></td><td>Існуючі діагностичні модулі.</td></tr>
+<tr><td><code>Scripts/Fix/</code></td><td>Існуючі модулі виправлення та обслуговування.</td></tr>
+<tr><td><code>Scripts/Software/BgInfo/</code></td><td>Комплект BGInfo.</td></tr>
+<tr><td><code>Scripts/Deployment/</code></td><td>Server Base Kit launcher та розгортання.</td></tr>
+<tr><td><code>Scripts/Server/</code></td><td>Існуючі серверні допоміжні модулі.</td></tr>
 </tbody>
 </table>
+<p>Фізичні каталоги старих скриптів у цьому рефакторингу не переміщуються. Змінюється саме логіка меню, тому ризику зламати старі шляхи немає.</p>
 </section>
+
 <section class="tool" id="add-tool">
-<h2>Куди додавати новий інструмент</h2>
+<h2>Додавання нового інструмента</h2>
 <ol>
-<li>Створити runtime-скрипт у відповідній папці <code>Scripts</code>.</li>
-<li>Додати одну картку інструмента до <code>Config/ToolkitMenu.json</code>.</li>
-<li>Включити його до потрібних робочих розділів і категорій Каталогу.</li>
-<li>Оновити відповідну сторінку довідки та цю карту.</li>
-<li>Прогнати <code>Tools/Test-Repository.ps1</code> у Windows PowerShell 5.1 і PowerShell 7.</li>
+<li>Додати runtime-скрипт у <code>Scripts</code>.</li>
+<li>Додати одну картку до <code>Config/ToolkitMenu.json</code>.</li>
+<li>Додати його ID до потрібного функціонального розділу. Один ID можна використовувати в кількох розділах.</li>
+<li>Оновити цю карту та відповідну сторінку довідки.</li>
+<li>Прогнати <code>Tools/Test-Repository.ps1</code>.</li>
 </ol>
-<div class="success">Джерелом правди для меню є <code>Config/ToolkitMenu.json</code>. Якщо карта й реєстр розійшлися, правильним вважається реєстр, а довідку треба оновити.</div>
 </section>
 </main>
 <aside class="sidebar">
 <strong>На сторінці</strong>
-<a href="#quick-orientation">За проблемою</a>
 <a href="#main-menu">Головне меню</a>
-<a href="#quick-access">1. Швидкий доступ</a>
-<a href="#diagnose">2. Знайти причину</a>
-<a href="#fix">3. Виправити</a>
-<a href="#configure">4. Налаштувати</a>
-<a href="#users">5. Користувачі</a>
-<a href="#control">6. Контроль</a>
-<a href="#catalog">7. Каталог</a>
-<a href="#multiple-paths">Кілька маршрутів</a>
-<a href="#repository">Структура файлів</a>
-<a href="#add-tool">Додавання інструмента</a>
+<a href="#network">1. Інтернет і мережа</a>
+<a href="#printing">2. Друк</a>
+<a href="#hardware">3. Обладнання</a>
+<a href="#audit">4. Аудит серверів</a>
+<a href="#onec">5. 1С / BAS</a>
+<a href="#software">6. Встановлення</a>
+<a href="#audit-1c">Аудит баз 1С</a>
+<a href="#repository">Фізичні файли</a>
+<a href="#add-tool">Додавання</a>
 </aside>
 </div>
-<footer>Raccoon Admin Toolkit. Карта відповідає поточній структурі Shell v2.</footer>
+<footer>Raccoon Admin Toolkit. Карта відповідає функціональній структурі меню.</footer>
 </div>
 <script src="help.js"></script>
 </body>
