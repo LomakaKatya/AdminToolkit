@@ -1,0 +1,59 @@
+diff --git a/docs/bootstrap.ps1 b/docs/bootstrap.ps1
+--- a/docs/bootstrap.ps1
++++ b/docs/bootstrap.ps1
+@@ -109,23 +109,16 @@
+                 }
+             }
+         }
+         catch {
+         }
+
+-        $cacheToken = [DateTime]::UtcNow.Ticks
+         $launcherUrl =
+-            "https://raw.githubusercontent.com/LomakaKatya/AdminToolkit/main/Start-AdminToolkit.ps1?nocache=$cacheToken"
++            'https://admintoolkit.itraccoonverse.space/Start-AdminToolkit.ps1'
+
+         $launcherCode = Invoke-RestMethod `
+             -Uri $launcherUrl `
+-            -Headers @{
+-                'Cache-Control' = 'no-cache'
+-                'Pragma'        = 'no-cache'
+-            } `
+             -ErrorAction Stop
+
+         if ([string]::IsNullOrWhiteSpace([string]$launcherCode)) {
+-            throw 'GitHub повернув порожній завантажувач.'
++            throw 'Службове джерело повернуло порожній завантажувач.'
+         }
+
+         $bomMarkers = [char[]]@(
+             [char]0xFEFF,
+             [char]0x00EF,
+diff --git a/Start-AdminToolkit.ps1 b/Start-AdminToolkit.ps1
+--- a/Start-AdminToolkit.ps1
++++ b/Start-AdminToolkit.ps1
+@@ -43,11 +43,19 @@
+
+             $repositoryRef = $candidateRef
+         }
+
+-        $baseUrl = (
+-            'https://raw.githubusercontent.com/' +
+-            'LomakaKatya/AdminToolkit/{0}' -f
+-            $repositoryRef
+-        )
++        if ($repositoryRef -eq 'main') {
++            $baseUrl =
++                'https://admintoolkit.itraccoonverse.space'
++        }
++        else {
++            # Feature refs still use GitHub Raw for explicit test runs.
++            $baseUrl = (
++                'https://raw.githubusercontent.com/' +
++                'LomakaKatya/AdminToolkit/{0}' -f
++                $repositoryRef
++            )
++        }
+
+         $faqUrl =
+             'https://admintoolkit.itraccoonverse.space/faq.html'
