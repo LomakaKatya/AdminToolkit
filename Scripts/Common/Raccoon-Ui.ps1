@@ -764,7 +764,7 @@ function Show-RaccoonSearch {
         '  Введи назву, компонент або опис проблеми.'
     ) -ForegroundColor DarkGray
     Write-Host (
-        '  Приклади: принтер, час, 4625, сайт, повідомлення.'
+        '  Приклади: принтер, час, 4625, сайт, 1с база, повідомлення.'
     ) -ForegroundColor DarkGray
     Write-Host ''
 
@@ -1212,6 +1212,62 @@ function Show-RaccoonCatalog {
         -FaqUrl $FaqUrl
 }
 
+function Show-RaccoonMainSection {
+    param(
+        [Parameter(Mandatory)]
+        [object]$Section,
+
+        [Parameter(Mandatory)]
+        [object]$Registry,
+
+        [Parameter(Mandatory)]
+        [string]$BaseUrl,
+
+        [Parameter(Mandatory)]
+        [string]$FaqUrl
+    )
+
+    $categories = @(
+        Get-RaccoonValue `
+            -Object $Section `
+            -Name 'categories' `
+            -DefaultValue @()
+    )
+
+    if ($categories.Count -gt 0) {
+        $view = [pscustomobject]@{
+            title      = [string]$Section.title
+            categories = $categories
+        }
+
+        Show-RaccoonView `
+            -View $view `
+            -Registry $Registry `
+            -BaseUrl $BaseUrl `
+            -FaqUrl $FaqUrl
+
+        return
+    }
+
+    $toolIds = @(
+        Get-RaccoonValue `
+            -Object $Section `
+            -Name 'toolIds' `
+            -DefaultValue @()
+    )
+
+    $tools = Get-RaccoonToolsByIds `
+        -Registry $Registry `
+        -Ids $toolIds
+
+    Show-RaccoonToolList `
+        -Title ([string]$Section.title).ToUpperInvariant() `
+        -Tools $tools `
+        -Registry $Registry `
+        -BaseUrl $BaseUrl `
+        -FaqUrl $FaqUrl
+}
+
 function Show-RaccoonMainMenu {
     param(
         [Parameter(Mandatory)]
@@ -1223,6 +1279,21 @@ function Show-RaccoonMainMenu {
         [Parameter(Mandatory)]
         [string]$FaqUrl
     )
+
+    $sections = @(
+        Get-RaccoonValue `
+            -Object $Registry `
+            -Name 'mainMenu' `
+            -DefaultValue @()
+    )
+
+    if ($sections.Count -eq 0) {
+        throw 'У Config/ToolkitMenu.json відсутній mainMenu.'
+    }
+
+    if ($sections.Count -gt 8) {
+        throw 'Головне меню підтримує не більше восьми функціональних розділів.'
+    }
 
     while ($true) {
         Write-RaccoonHeader -SectionName ''
@@ -1256,46 +1327,40 @@ function Show-RaccoonMainMenu {
         )
 
         Write-Host ''
-        Write-Host '  РЕЖИМ РОБОТИ' -ForegroundColor DarkCyan
+        Write-Host '  РОЗДІЛИ' -ForegroundColor DarkCyan
         Write-Host ''
 
-        Write-Host '  1. Швидкий доступ'
-        Write-Host '     Обране та останні запущені інструменти.' `
-            -ForegroundColor DarkGray
-        Write-Host ''
+        for ($index = 0; $index -lt $sections.Count; $index++) {
+            $section = $sections[$index]
 
-        Write-Host '  2. Знайти причину'
-        Write-Host '     Діагностика проблем і перевірка гіпотез.' `
-            -ForegroundColor DarkGray
-        Write-Host ''
+            Write-Host (
+                '  {0}. {1}' -f
+                ($index + 1),
+                [string]$section.title
+            )
 
-        Write-Host '  3. Виправити'
-        Write-Host '     Відновлення служб, кешів і системних функцій.' `
-            -ForegroundColor DarkGray
-        Write-Host ''
+            $description = [string](
+                Get-RaccoonValue `
+                    -Object $section `
+                    -Name 'description' `
+                    -DefaultValue ''
+            )
 
-        Write-Host '  4. Налаштувати та розгорнути'
-        Write-Host '     Параметри Windows, ПЗ, GPO та впровадження.' `
-            -ForegroundColor DarkGray
-        Write-Host ''
+            if (-not [string]::IsNullOrWhiteSpace($description)) {
+                Write-Host "     $description" `
+                    -ForegroundColor DarkGray
+            }
 
-        Write-Host '  5. Користувачі та сеанси'
-        Write-Host '     Входи, повідомлення, RDP та облікові записи.' `
-            -ForegroundColor DarkGray
-        Write-Host ''
+            Write-Host ''
+        }
 
-        Write-Host '  6. Контроль та звіти'
-        Write-Host '     Стан системи, журнали та моніторинг.' `
-            -ForegroundColor DarkGray
-        Write-Host ''
+        $faqIndex = $sections.Count + 1
 
-        Write-Host '  7. Каталог інструментів'
-        Write-Host '     Повний список за компонентами системи.' `
-            -ForegroundColor DarkGray
-        Write-Host ''
+        if ($faqIndex -le 9) {
+            Write-Host "  $faqIndex. FAQ і довідка"
+            Write-Host ''
+        }
 
-        Write-Host '  8. FAQ і довідка'
-        Write-Host ''
         Write-Host '  0. Вихід' -ForegroundColor DarkGray
         Write-Host ''
         Write-Host (
@@ -1305,92 +1370,56 @@ function Show-RaccoonMainMenu {
 
         $key = Read-RaccoonKey
 
-        switch ($key) {
-            '1' {
-                Show-RaccoonQuickAccess `
+        if ($key -eq 'f1') {
+            Open-RaccoonFaq -FaqUrl $FaqUrl
+            continue
+        }
+
+        if ($key -eq 'f2') {
+            Show-RaccoonSearch `
+                -Registry $Registry `
+                -BaseUrl $BaseUrl `
+                -FaqUrl $FaqUrl
+
+            continue
+        }
+
+        if ($key -eq 'f3') {
+            Show-RaccoonQuickAccess `
+                -Registry $Registry `
+                -BaseUrl $BaseUrl `
+                -FaqUrl $FaqUrl
+
+            continue
+        }
+
+        if ($key -match '^[1-9]$') {
+            $selected = [int]$key
+
+            if ($selected -ge 1 -and $selected -le $sections.Count) {
+                Show-RaccoonMainSection `
+                    -Section $sections[$selected - 1] `
                     -Registry $Registry `
                     -BaseUrl $BaseUrl `
                     -FaqUrl $FaqUrl
+
+                continue
             }
 
-            '2' {
-                Show-RaccoonView `
-                    -View $Registry.views.diagnose `
-                    -Registry $Registry `
-                    -BaseUrl $BaseUrl `
-                    -FaqUrl $FaqUrl
-            }
-
-            '3' {
-                Show-RaccoonView `
-                    -View $Registry.views.fix `
-                    -Registry $Registry `
-                    -BaseUrl $BaseUrl `
-                    -FaqUrl $FaqUrl
-            }
-
-            '4' {
-                Show-RaccoonView `
-                    -View $Registry.views.configure `
-                    -Registry $Registry `
-                    -BaseUrl $BaseUrl `
-                    -FaqUrl $FaqUrl
-            }
-
-            '5' {
-                Show-RaccoonView `
-                    -View $Registry.views.users `
-                    -Registry $Registry `
-                    -BaseUrl $BaseUrl `
-                    -FaqUrl $FaqUrl
-            }
-
-            '6' {
-                Show-RaccoonView `
-                    -View $Registry.views.control `
-                    -Registry $Registry `
-                    -BaseUrl $BaseUrl `
-                    -FaqUrl $FaqUrl
-            }
-
-            '7' {
-                Show-RaccoonCatalog `
-                    -Registry $Registry `
-                    -BaseUrl $BaseUrl `
-                    -FaqUrl $FaqUrl
-            }
-
-            '8' {
+            if ($selected -eq $faqIndex) {
                 Open-RaccoonFaq -FaqUrl $FaqUrl
+                continue
             }
+        }
 
-            'f1' {
-                Open-RaccoonFaq -FaqUrl $FaqUrl
-            }
+        if ($key -in @(
+                '0',
+                'esc'
+            )) {
 
-            'f2' {
-                Show-RaccoonSearch `
-                    -Registry $Registry `
-                    -BaseUrl $BaseUrl `
-                    -FaqUrl $FaqUrl
-            }
-
-            'f3' {
-                Show-RaccoonQuickAccess `
-                    -Registry $Registry `
-                    -BaseUrl $BaseUrl `
-                    -FaqUrl $FaqUrl
-            }
-
-            { $_ -in @(
-                    '0',
-                    'esc'
-                ) } {
-
-                if (Confirm-RaccoonAction `
-                        -Prompt 'Завершити роботу Toolkit?') {
-                    return
-                }
+            if (Confirm-RaccoonAction `
+                    -Prompt 'Завершити роботу Toolkit?') {
+                return
             }
         }
     }

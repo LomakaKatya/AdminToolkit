@@ -8,295 +8,24 @@
     "restart-rdp-clipboard",
     "restart-print-spooler"
   ],
-  "views": {
-    "diagnose": {
-      "title": "ЗНАЙТИ ПРИЧИНУ",
-      "categories": [
-        {
-          "id": "network",
-          "title": "Мережа та інтернет",
-          "description": "Інтернет, Wi-Fi, шлюз, DNS і TCP.",
-          "toolIds": [
-            "internet-diagnostics",
-            "wifi-diagnostics",
-            "test-tcp"
-          ]
-        },
-        {
-          "id": "remote",
-          "title": "Віддалений доступ",
-          "description": "RDP і мережева доступність сервісу.",
-          "toolIds": [
-            "remote-access-diagnostics",
-            "test-tcp"
-          ]
-        },
-        {
-          "id": "printing",
-          "title": "Друк",
-          "description": "Принтери, драйвери, черги та Spooler.",
-          "toolIds": [
-            "printer-diagnostics"
-          ]
-        },
-        {
-          "id": "performance",
-          "title": "Продуктивність і зависання",
-          "description": "CPU, RAM, диски та системні події.",
-          "toolIds": [
-            "computer-health"
-          ]
-        },
-        {
-          "id": "users",
-          "title": "Користувачі та входи",
-          "description": "Локальні записи й невдалі входи.",
-          "toolIds": [
-            "local-user-logons",
-            "failed-logons"
-          ]
-        },
-        {
-          "id": "website",
-          "title": "Сайт або зовнішній сервіс",
-          "description": "DNS, TLS, HTTP(S) і потрібний порт.",
-          "toolIds": [
-            "website-diagnostics",
-            "test-tcp"
-          ]
-        }
-      ]
-    },
-    "fix": {
-      "title": "ВИПРАВИТИ",
-      "categories": [
-        {
-          "id": "user-programs",
-          "title": "Користувацькі програми",
-          "description": "Кеші програм і компоненти поточного сеансу.",
-          "toolIds": [
-            "clear-1c-cache",
-            "restart-rdp-clipboard"
-          ]
-        },
-        {
-          "id": "services",
-          "title": "Служби Windows",
-          "description": "Spooler, W32Time та пов'язані компоненти.",
-          "toolIds": [
-            "restart-print-spooler",
-            "repair-windows-time"
-          ]
-        },
-        {
-          "id": "printing",
-          "title": "Друк",
-          "description": "Черга, Spooler і RPC-сумісність.",
-          "toolIds": [
-            "restart-print-spooler",
-            "configure-print-rpc"
-          ]
-        },
-        {
-          "id": "profiles",
-          "title": "Профілі користувачів",
-          "description": "Стандартні кеші AppData у профілях.",
-          "toolIds": [
-            "clear-profile-caches"
-          ]
-        },
-        {
-          "id": "time-domain",
-          "title": "Час і домен",
-          "description": "W32Time, NTP, PDC та доменна ієрархія.",
-          "toolIds": [
-            "repair-windows-time"
-          ]
-        },
-        {
-          "id": "compatibility",
-          "title": "Сумісність і захисні параметри",
-          "description": "Винятки для старих систем і сервісів.",
-          "toolIds": [
-            "configure-print-rpc"
-          ]
-        }
-      ]
-    },
-    "configure": {
-      "title": "НАЛАШТУВАТИ ТА РОЗГОРНУТИ",
-      "categories": [
-        {
-          "id": "server-bootstrap",
-          "title": "Підготовка нового сервера",
-          "description": "Підключення сховища та запуск базового пакета розгортання.",
-          "toolIds": [
-            "server-base-kit"
-          ]
-        },
-        {
-          "id": "account-provisioning",
-          "title": "Облікові записи",
-          "description": "Створення адміністративних і звичайних користувачів.",
-          "toolIds": [
-            "create-admin-users",
-            "create-regular-users"
-          ]
-        },
-        {
-          "id": "software",
-          "title": "Встановлення ПЗ",
-          "description": "Встановлення, оновлення та видалення програм.",
-          "toolIds": [
-            "bginfo-install",
-            "bginfo-uninstall"
-          ]
-        },
-        {
-          "id": "templates",
-          "title": "Шаблони та робочий стіл",
-          "description": "Стандартні користувацькі шаблони.",
-          "toolIds": [
-            "bginfo-configure",
-            "bginfo-status"
-          ]
-        },
-        {
-          "id": "gpo",
-          "title": "Групові політики та масове розгортання",
-          "description": "Підготовка пакетів для доменного середовища.",
-          "toolIds": [
-            "bginfo-gpo"
-          ]
-        },
-        {
-          "id": "shortcuts",
-          "title": "Автозапуск і ярлики",
-          "description": "Кнопки, ярлики та запуск для користувачів.",
-          "toolIds": [
-            "create-logoff-shortcut",
-            "bginfo-install"
-          ]
-        },
-        {
-          "id": "windows-settings",
-          "title": "Налаштування Windows",
-          "description": "Системні параметри та сумісність.",
-          "toolIds": [
-            "configure-print-rpc",
-            "repair-windows-time"
-          ]
-        }
-      ]
-    },
-    "users": {
-      "title": "КОРИСТУВАЧІ ТА СЕАНСИ",
-      "categories": [
-        {
-          "id": "sessions",
-          "title": "Активні сеанси та зв'язок",
-          "description": "Повідомлення, RDP Clipboard і завершення сеансу.",
-          "toolIds": [
-            "send-user-message",
-            "restart-rdp-clipboard",
-            "create-logoff-shortcut"
-          ]
-        },
-        {
-          "id": "accounts",
-          "title": "Облікові записи та входи",
-          "description": "Створення облікових записів, входи та профілі.",
-          "toolIds": [
-            "create-admin-users",
-            "create-regular-users",
-            "local-user-logons",
-            "failed-logons",
-            "user-profile-storage-report"
-          ]
-        }
-      ]
-    },
-    "control": {
-      "title": "КОНТРОЛЬ ТА ЗВІТИ",
-      "categories": [
-        {
-          "id": "system-state",
-          "title": "Стан комп'ютера",
-          "description": "Продуктивність і встановлені службові компоненти.",
-          "toolIds": [
-            "computer-health",
-            "bginfo-status"
-          ]
-        },
-        {
-          "id": "profile-storage",
-          "title": "Профілі та використання диска",
-          "description": "Хто займає місце, коли заходив і що лежить у профілі.",
-          "toolIds": [
-            "user-profile-storage-report"
-          ]
-        },
-        {
-          "id": "access-events",
-          "title": "Користувачі та події входу",
-          "description": "Облікові записи та журнал безпеки.",
-          "toolIds": [
-            "local-user-logons",
-            "failed-logons"
-          ]
-        },
-        {
-          "id": "monitoring",
-          "title": "Моніторинг",
-          "description": "Розділ під майбутню інтеграцію системи моніторингу.",
-          "toolIds": []
-        }
-      ]
-    }
-  },
-  "catalog": [
+  "mainMenu": [
     {
-      "id": "network",
-      "title": "Мережа та інтернет",
-      "description": "TCP, Wi-Fi, інтернет, сайти й віддалений доступ.",
+      "id": "internet-network",
+      "title": "Інтернет і мережа",
+      "description": "TCP, Wi-Fi, інтернет, сайти, віддалений доступ і RDP-параметри.",
       "toolIds": [
         "test-tcp",
         "wifi-diagnostics",
         "internet-diagnostics",
         "website-diagnostics",
-        "remote-access-diagnostics"
-      ]
-    },
-    {
-      "id": "windows",
-      "title": "Windows і служби",
-      "description": "Продуктивність, W32Time, Spooler і системні параметри.",
-      "toolIds": [
-        "computer-health",
-        "restart-print-spooler",
-        "repair-windows-time",
-        "configure-print-rpc"
-      ]
-    },
-    {
-      "id": "users-rdp",
-      "title": "Користувачі та RDP",
-      "description": "Сеанси, повідомлення, входи та облікові записи.",
-      "toolIds": [
-        "create-admin-users",
-        "create-regular-users",
-        "send-user-message",
-        "restart-rdp-clipboard",
-        "create-logoff-shortcut",
-        "local-user-logons",
-        "failed-logons",
-        "user-profile-storage-report"
+        "remote-access-diagnostics",
+        "configure-rdp-redirection-warning"
       ]
     },
     {
       "id": "printing",
       "title": "Друк",
-      "description": "Діагностика, черги та RPC-сумісність.",
+      "description": "Діагностика друку, Spooler і RPC-сумісність.",
       "toolIds": [
         "printer-diagnostics",
         "restart-print-spooler",
@@ -304,38 +33,145 @@
       ]
     },
     {
-      "id": "applications",
-      "title": "Програми та профілі",
-      "description": "1С, користувацькі кеші та обслуговування профілів.",
+      "id": "hardware-check",
+      "title": "Перевірка обладнання",
+      "description": "Стан комп'ютера, продуктивність і компоненти RDP-сеансу.",
       "toolIds": [
-        "clear-1c-cache",
-        "clear-profile-caches",
-        "user-profile-storage-report"
+        "computer-health",
+        "restart-rdp-clipboard"
       ]
     },
     {
-      "id": "security",
-      "title": "Безпека та журнали",
-      "description": "Невдалі входи та security-sensitive параметри.",
+      "id": "server-audit",
+      "title": "Аудит серверів",
+      "description": "Входи, користувачі, час, профілі, повідомлення та інвентаризація.",
       "toolIds": [
         "failed-logons",
+        "local-user-logons",
+        "repair-windows-time",
+        "clear-profile-caches",
+        "send-user-message",
+        "user-profile-storage-report",
+        "audit-1c-file-bases"
+      ]
+    },
+    {
+      "id": "onec",
+      "title": "1С / BAS",
+      "description": "Обслуговування 1С/BAS та аудит файлових баз.",
+      "toolIds": [
+        "clear-1c-cache",
+        "audit-1c-file-bases"
+      ]
+    },
+    {
+      "id": "software-installation",
+      "title": "Встановлення софту",
+      "description": "Підготовка сервера, облікові записи, ярлики та BgInfo.",
+      "categories": [
+        {
+          "id": "software-main",
+          "title": "Основне",
+          "description": "Базова підготовка сервера та облікових записів.",
+          "toolIds": [
+            "create-logoff-shortcut",
+            "server-base-kit",
+            "create-admin-users",
+            "create-regular-users"
+          ]
+        },
+        {
+          "id": "bginfo",
+          "title": "BGInfo",
+          "description": "Встановлення, шаблон, перевірка, GPO та видалення BgInfo.",
+          "toolIds": [
+            "bginfo-install",
+            "bginfo-configure",
+            "bginfo-status",
+            "bginfo-gpo",
+            "bginfo-uninstall"
+          ]
+        }
+      ]
+    }
+  ],
+  "catalog": [
+    {
+      "id": "internet-network",
+      "title": "Інтернет і мережа",
+      "description": "TCP, Wi-Fi, інтернет, сайти, RDP і мережеві параметри.",
+      "toolIds": [
+        "test-tcp",
+        "wifi-diagnostics",
+        "internet-diagnostics",
+        "website-diagnostics",
+        "remote-access-diagnostics",
+        "configure-rdp-redirection-warning"
+      ]
+    },
+    {
+      "id": "printing",
+      "title": "Друк",
+      "description": "Діагностика, черга, Spooler і RPC-сумісність.",
+      "toolIds": [
+        "printer-diagnostics",
+        "restart-print-spooler",
         "configure-print-rpc"
       ]
     },
     {
-      "id": "deployment",
-      "title": "ПЗ та розгортання",
-      "description": "Server Base Kit, облікові записи, BgInfo, GPO, автозапуск і ярлики.",
+      "id": "hardware-check",
+      "title": "Перевірка обладнання",
+      "description": "Продуктивність і компоненти RDP-сеансу.",
       "toolIds": [
+        "computer-health",
+        "restart-rdp-clipboard"
+      ]
+    },
+    {
+      "id": "server-audit",
+      "title": "Аудит серверів",
+      "description": "Журнали, користувачі, профілі, час, повідомлення та інвентаризація.",
+      "toolIds": [
+        "failed-logons",
+        "local-user-logons",
+        "repair-windows-time",
+        "clear-profile-caches",
+        "send-user-message",
+        "user-profile-storage-report",
+        "audit-1c-file-bases"
+      ]
+    },
+    {
+      "id": "onec",
+      "title": "1С / BAS",
+      "description": "Кеш 1С/BAS та аудит файлових баз.",
+      "toolIds": [
+        "clear-1c-cache",
+        "audit-1c-file-bases"
+      ]
+    },
+    {
+      "id": "software-main",
+      "title": "Встановлення софту",
+      "description": "Server Base Kit, облікові записи та кнопка завершення сеансу.",
+      "toolIds": [
+        "create-logoff-shortcut",
         "server-base-kit",
         "create-admin-users",
-        "create-regular-users",
+        "create-regular-users"
+      ]
+    },
+    {
+      "id": "bginfo",
+      "title": "BGInfo",
+      "description": "Встановлення, шаблон, перевірка, GPO та видалення.",
+      "toolIds": [
         "bginfo-install",
         "bginfo-configure",
         "bginfo-status",
         "bginfo-gpo",
-        "bginfo-uninstall",
-        "create-logoff-shortcut"
+        "bginfo-uninstall"
       ]
     }
   ],
@@ -862,7 +698,7 @@
     {
       "id": "create-regular-users",
       "title": "Створити або оновити звичайних користувачів",
-      "description": "Створення локальних або AD-користувачів із users.csv, зміна паролів і генерація RDP-комплектів.",
+      "description": "Створення локальних або AD-користувачів із users.csv, зміна паролів, RDP-доступ і генерація RDP-комплектів.",
       "path": "Scripts/Users/Create-RegularUsers.ps1",
       "requiresAdmin": true,
       "confirmBeforeRun": true,
@@ -885,7 +721,66 @@
         "паролі",
         "пароли",
         "active directory",
-        "локальні користувачі"
+        "локальні користувачі",
+        "remote desktop users",
+        "rdp доступ",
+        "rdp access"
+      ]
+    },
+    {
+      "id": "configure-rdp-redirection-warning",
+      "title": "Налаштувати попередження перенаправлення RDP",
+      "description": "Записує RedirectionWarningDialogVersion=1 у політику клієнта Remote Desktop.",
+      "path": "Scripts/Network/Set-RdpRedirectionWarningDialog.ps1",
+      "requiresAdmin": true,
+      "confirmBeforeRun": true,
+      "confirmPrompt": "Записати RedirectionWarningDialogVersion = 1 у системну політику RDP-клієнта?",
+      "labels": [
+        "ADMIN",
+        "CHANGES SYSTEM"
+      ],
+      "keywords": [
+        "rdp",
+        "remote desktop",
+        "redirectionwarningdialogversion",
+        "redirection warning",
+        "перенаправлення",
+        "перенаправление",
+        "попередження",
+        "предупреждение",
+        "terminal services",
+        "registry",
+        "реєстр",
+        "реестр"
+      ]
+    },
+    {
+      "id": "audit-1c-file-bases",
+      "title": "Аудит файлових баз 1С/BAS",
+      "description": "Пошук файлових баз у профілях і на локальних дисках, розмір, дата змін, користувачі та HTML-звіт.",
+      "path": "Scripts/Reports/Audit-1CFileBases.ps1",
+      "requiresAdmin": true,
+      "labels": [
+        "ADMIN",
+        "SAFE",
+        "LONG RUNNING",
+        "CREATES REPORTS"
+      ],
+      "keywords": [
+        "1с",
+        "1c",
+        "bas",
+        "файлова база",
+        "файловая база",
+        "1cv8.1cd",
+        "ibases.v8i",
+        "аудит баз",
+        "інвентаризація баз",
+        "инвентаризация баз",
+        "розмір бази",
+        "размер базы",
+        "html звіт",
+        "html отчет"
       ]
     }
   ]
