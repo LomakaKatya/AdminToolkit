@@ -1227,12 +1227,130 @@ function Show-RaccoonMainSection {
         [string]$FaqUrl
     )
 
+    $toolIds = @(
+        Get-RaccoonValue `
+            -Object $Section `
+            -Name 'toolIds' `
+            -DefaultValue @()
+    )
+
     $categories = @(
         Get-RaccoonValue `
             -Object $Section `
             -Name 'categories' `
             -DefaultValue @()
     )
+
+    $tools = Get-RaccoonToolsByIds `
+        -Registry $Registry `
+        -Ids $toolIds
+
+    if ($tools.Count -gt 0 -and $categories.Count -gt 0) {
+        if (($tools.Count + $categories.Count) -gt 9) {
+            throw (
+                'Змішаний розділ підтримує не більше дев''яти ' +
+                'інструментів і підрозділів на одному екрані.'
+            )
+        }
+
+        while ($true) {
+            Write-RaccoonHeader `
+                -SectionName ([string]$Section.title)
+
+            $entryIndex = 1
+
+            foreach ($tool in @($tools)) {
+                Write-RaccoonToolLine `
+                    -Index $entryIndex `
+                    -Tool $tool
+
+                $entryIndex++
+            }
+
+            foreach ($category in @($categories)) {
+                Write-Host (
+                    '  {0}. {1}' -f
+                    $entryIndex,
+                    [string]$category.title
+                )
+
+                $description = [string](
+                    Get-RaccoonValue `
+                        -Object $category `
+                        -Name 'description' `
+                        -DefaultValue ''
+                )
+
+                if (-not [string]::IsNullOrWhiteSpace($description)) {
+                    Write-Host "     $description" `
+                        -ForegroundColor DarkGray
+                }
+
+                Write-Host ''
+                $entryIndex++
+            }
+
+            Write-Host '  0. Назад' -ForegroundColor DarkGray
+            Write-Host (
+                '  F1 Довідка   F2 Пошук   F3 Швидкий доступ   Esc Назад'
+            ) -ForegroundColor DarkGray
+            Write-Host ''
+
+            $key = Read-RaccoonKey
+
+            if ($key -in @(
+                    '0',
+                    'esc'
+                )) {
+                return
+            }
+
+            if (Invoke-RaccoonGlobalKey `
+                    -Key $key `
+                    -Registry $Registry `
+                    -BaseUrl $BaseUrl `
+                    -FaqUrl $FaqUrl) {
+                continue
+            }
+
+            if ($key -match '^[1-9]$') {
+                $selectedIndex = [int]$key - 1
+
+                if ($selectedIndex -lt $tools.Count) {
+                    Invoke-RaccoonTool `
+                        -Tool $tools[$selectedIndex] `
+                        -BaseUrl $BaseUrl
+
+                    continue
+                }
+
+                $categoryIndex = $selectedIndex - $tools.Count
+
+                if ($categoryIndex -ge 0 -and
+                    $categoryIndex -lt $categories.Count) {
+
+                    $category = $categories[$categoryIndex]
+                    $categoryToolIds = @(
+                        Get-RaccoonValue `
+                            -Object $category `
+                            -Name 'toolIds' `
+                            -DefaultValue @()
+                    )
+
+                    $categoryTools = Get-RaccoonToolsByIds `
+                        -Registry $Registry `
+                        -Ids $categoryToolIds
+
+                    Show-RaccoonToolList `
+                        -Title ([string]$category.title).ToUpperInvariant() `
+                        -Tools $categoryTools `
+                        -Registry $Registry `
+                        -BaseUrl $BaseUrl `
+                        -FaqUrl $FaqUrl
+                }
+            }
+        }
+    }
 
     if ($categories.Count -gt 0) {
         $view = [pscustomobject]@{
@@ -1248,17 +1366,6 @@ function Show-RaccoonMainSection {
 
         return
     }
-
-    $toolIds = @(
-        Get-RaccoonValue `
-            -Object $Section `
-            -Name 'toolIds' `
-            -DefaultValue @()
-    )
-
-    $tools = Get-RaccoonToolsByIds `
-        -Registry $Registry `
-        -Ids $toolIds
 
     Show-RaccoonToolList `
         -Title ([string]$Section.title).ToUpperInvariant() `
