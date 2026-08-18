@@ -19,7 +19,7 @@
       - добавлена справка по статусам и требованиям к резервному копированию.
 
 .PARAMETER OutputPath
-    Путь к HTML-отчёту. По умолчанию отчёт создаётся рядом со скриптом.
+    Путь к HTML-отчёту. По умолчанию отчёт создаётся в C:\Temp.
 
 .PARAMETER ProfileOnly
     Не выполнять глубокий поиск по дискам. Анализировать только базы,
@@ -608,19 +608,34 @@ $started = Get-Date
 $isAdmin = Test-IsAdministrator
 
 if ([string]::IsNullOrWhiteSpace($OutputPath)) {
-    if (-not [string]::IsNullOrWhiteSpace($PSScriptRoot)) {
-        $reportRoot = $PSScriptRoot
-    }
-    else {
-        $reportRoot = (Get-Location).Path
+    $reportRoot = 'C:\Temp'
+
+    if (-not (Test-Path -LiteralPath $reportRoot -PathType Container)) {
+        New-Item `
+            -ItemType Directory `
+            -Path $reportRoot `
+            -Force `
+            -ErrorAction Stop |
+        Out-Null
     }
 
-    $OutputPath = Join-Path $reportRoot ('1C_FileBases_{0}_{1}.html' -f $env:COMPUTERNAME, (Get-Date -Format 'yyyyMMdd_HHmmss'))
+    $OutputPath = Join-Path `
+        $reportRoot `
+        ('1C_FileBases_{0}_{1}.html' -f
+            $env:COMPUTERNAME,
+            (Get-Date -Format 'yyyyMMdd_HHmmss'))
 }
 
 $outputDir = Split-Path $OutputPath -Parent
-if (-not [string]::IsNullOrWhiteSpace($outputDir) -and -not (Test-Path $outputDir)) {
-    New-Item -ItemType Directory -Path $outputDir -Force | Out-Null
+if (-not [string]::IsNullOrWhiteSpace($outputDir) -and
+    -not (Test-Path -LiteralPath $outputDir -PathType Container)) {
+
+    New-Item `
+        -ItemType Directory `
+        -Path $outputDir `
+        -Force `
+        -ErrorAction Stop |
+    Out-Null
 }
 
 Write-Step 'Профили пользователей'
@@ -999,6 +1014,19 @@ body {
 .search:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(49,94,251,.10); }
 .table-wrap { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; font-size: 13px; }
+#basesTable {
+    table-layout: fixed;
+    min-width: 1450px;
+}
+#basesTable col.col-status   { width: 8%; }
+#basesTable col.col-base     { width: 10%; }
+#basesTable col.col-path     { width: 32%; }
+#basesTable col.col-aliases  { width: 12%; }
+#basesTable col.col-users    { width: 15%; }
+#basesTable col.col-size     { width: 6%; }
+#basesTable col.col-created  { width: 8.5%; }
+#basesTable col.col-modified { width: 8.5%; }
+#basesTable th { white-space: normal; }
 th {
     position: sticky;
     top: 0;
@@ -1017,7 +1045,19 @@ td {
     vertical-align: top;
 }
 tr:hover td { background: #fafcff; }
-.path { font-family: Consolas, "Courier New", monospace; font-size: 12px; word-break: break-all; }
+.path {
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 12px;
+    word-break: normal;
+    overflow-wrap: anywhere;
+}
+.date-cell {
+    white-space: nowrap;
+    line-height: 1.35;
+}
+.date-cell .time {
+    color: var(--muted);
+}
 .badge {
     display: inline-block;
     padding: 3px 7px;
@@ -1029,10 +1069,12 @@ tr:hover td { background: #fafcff; }
 }
 .status {
     display: inline-block;
+    max-width: 100%;
     padding: 4px 8px;
-    border-radius: 999px;
+    border-radius: 12px;
     font-weight: 600;
-    white-space: nowrap;
+    line-height: 1.2;
+    white-space: normal;
 }
 .status-ok { background: var(--ok-bg); color: var(--ok); }
 .status-missing { background: var(--bad-bg); color: var(--bad); }
@@ -1113,19 +1155,50 @@ foreach ($card in $cards) {
 [void]$sb.AppendLine('<section class="panel">')
 [void]$sb.AppendLine('<div class="panel-head"><h2>Файловые базы</h2><input id="baseSearch" class="search" type="search" placeholder="Поиск по базе, пути, пользователю, названию…" oninput="filterTable(''baseSearch'',''basesTable'')"></div>')
 [void]$sb.AppendLine('<div class="table-wrap"><table id="basesTable">')
+[void]$sb.AppendLine('<colgroup>')
+[void]$sb.AppendLine('<col class="col-status">')
+[void]$sb.AppendLine('<col class="col-base">')
+[void]$sb.AppendLine('<col class="col-path">')
+[void]$sb.AppendLine('<col class="col-aliases">')
+[void]$sb.AppendLine('<col class="col-users">')
+[void]$sb.AppendLine('<col class="col-size">')
+[void]$sb.AppendLine('<col class="col-created">')
+[void]$sb.AppendLine('<col class="col-modified">')
+[void]$sb.AppendLine('</colgroup>')
 [void]$sb.AppendLine('<thead><tr>')
 $headers = @('Статус','База / каталог','Путь','Названия у пользователей','Пользователи','Размер','Дата создания','Последнее изменение')
 for ($i = 0; $i -lt $headers.Count; $i++) {
-    [void]$sb.AppendLine(('<th onclick="sortTable(''basesTable'',{0})">{1}</th>' -f $i, (HtmlEncode $headers[$i])))
+    $headerHtml = HtmlEncode $headers[$i]
+
+    if ($i -eq 6) {
+        $headerHtml = 'Дата<br>создания'
+    }
+    elseif ($i -eq 7) {
+        $headerHtml = 'Последнее<br>изменение'
+    }
+
+    [void]$sb.AppendLine(('<th onclick="sortTable(''basesTable'',{0})">{1}</th>' -f $i, $headerHtml))
 }
 [void]$sb.AppendLine('</tr></thead><tbody>')
 
 foreach ($row in $reportRows) {
     switch ($row.Status) {
-        'OK'      { $statusClass = 'status-ok' }
-        'MISSING' { $statusClass = 'status-missing' }
-        'ORPHAN'  { $statusClass = 'status-orphan' }
-        default   { $statusClass = '' }
+        'OK' {
+            $statusClass = 'status-ok'
+            $statusHtml = 'OK'
+        }
+        'MISSING' {
+            $statusClass = 'status-missing'
+            $statusHtml = 'Не<br>найдена'
+        }
+        'ORPHAN' {
+            $statusClass = 'status-orphan'
+            $statusHtml = 'Не прописана<br>у пользователей'
+        }
+        default {
+            $statusClass = ''
+            $statusHtml = HtmlEncode $row.StatusText
+        }
     }
 
     $aliasHtml = if ($row.Aliases.Count -eq 0) {
@@ -1154,15 +1227,35 @@ foreach ($row in $reportRows) {
     $dateSort = if ($null -eq $row.LastWriteTime) { '00000000000000' } else { $row.LastWriteTime.ToString('yyyyMMddHHmmss') }
     $sizeSort = if ($null -eq $row.SizeBytes) { '0' } else { ([Int64]$row.SizeBytes).ToString('D20') }
 
+    $createdHtml = if ($null -eq $row.CreationTime) {
+        '<span class="muted">—</span>'
+    }
+    else {
+        (HtmlEncode $row.CreationTime.ToString('dd.MM.yyyy')) +
+        '<br><span class="time">' +
+        (HtmlEncode $row.CreationTime.ToString('HH:mm:ss')) +
+        '</span>'
+    }
+
+    $lastWriteHtml = if ($null -eq $row.LastWriteTime) {
+        '<span class="muted">—</span>'
+    }
+    else {
+        (HtmlEncode $row.LastWriteTime.ToString('dd.MM.yyyy')) +
+        '<br><span class="time">' +
+        (HtmlEncode $row.LastWriteTime.ToString('HH:mm:ss')) +
+        '</span>'
+    }
+
     [void]$sb.AppendLine('<tr>')
-    [void]$sb.AppendLine(('<td><span class="status {0}">{1}</span></td>' -f $statusClass, (HtmlEncode $row.StatusText)))
+    [void]$sb.AppendLine(('<td><span class="status {0}">{1}</span></td>' -f $statusClass, $statusHtml))
     [void]$sb.AppendLine(('<td><b>{0}</b></td>' -f (HtmlEncode $row.BaseName)))
     [void]$sb.AppendLine(('<td><div class="path">{0}</div>{1}</td>' -f (HtmlEncode $row.Path), $originalPathDetails))
     [void]$sb.AppendLine(('<td>{0}</td>' -f $aliasHtml))
     [void]$sb.AppendLine(('<td>{0}</td>' -f $usersHtml))
     [void]$sb.AppendLine(('<td data-sort="{0}">{1}</td>' -f $sizeSort, (HtmlEncode $row.SizeText)))
-    [void]$sb.AppendLine(('<td data-sort="{0}">{1}</td>' -f $createdSort, (HtmlEncode $row.CreationText)))
-    [void]$sb.AppendLine(('<td data-sort="{0}">{1}</td>' -f $dateSort, (HtmlEncode $row.LastWriteText)))
+    [void]$sb.AppendLine(('<td class="date-cell" data-sort="{0}">{1}</td>' -f $createdSort, $createdHtml))
+    [void]$sb.AppendLine(('<td class="date-cell" data-sort="{0}">{1}</td>' -f $dateSort, $lastWriteHtml))
     [void]$sb.AppendLine('</tr>')
 }
 
