@@ -21,7 +21,9 @@ $Users = @(
     @{ Login = 'm.skorokhod';   DisplayName = 'Skorokhod Mykola' },
     @{ Login = 'k.lomaka';      DisplayName = 'Lomaka Kateryna' },
     @{ Login = 'r.ignatenko';   DisplayName = 'Rodion Ignatenko' },
-    @{ Login = 'o.sushko';      DisplayName = 'Oleksii Sushko' }
+    @{ Login = 'o.sushko';      DisplayName = 'Oleksii Sushko' },
+    @{ Login = 'l.nesterenko';  DisplayName = 'Larysa Nesterenko' },
+    @{ Login = 's.chernomorec'; DisplayName = 'Sergij Chernomorets' }
 )
 
 $Results = New-Object `
