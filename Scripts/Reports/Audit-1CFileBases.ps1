@@ -12,6 +12,11 @@
     6. Формирует автономный HTML-отчёт без внешних библиотек.
 
     Совместимость: Windows PowerShell 3.0+ / Windows Server 2012+.
+    v1.4:
+      - служебные каталоги cfg-cache и cgf-cache жёстко исключаются на всех этапах;
+      - добавлена дата создания файла базы (CreationTime 1Cv8.1CD);
+      - верхняя панель отчёта адаптирована для отправки клиенту;
+      - добавлена справка по статусам и требованиям к резервному копированию.
 
 .PARAMETER OutputPath
     Путь к HTML-отчёту. По умолчанию отчёт создаётся рядом со скриптом.
@@ -425,12 +430,44 @@ function Get-IBaseEntries {
 # Глубокий поиск 1Cv8.1CD
 # -----------------------------------------------------------------------------
 
+function Test-Is1CCachePath {
+    param([string]$Path)
+
+    if ([string]::IsNullOrWhiteSpace($Path)) { return $false }
+
+    # Проверяем ВСЕ компоненты пути, а не только имя текущего каталога.
+    # Это даёт дополнительную страховку: даже если сканирование стартовало
+    # внутри служебного каталога, 1Cv8.1CD из cfg-cache в отчёт не попадёт.
+    $normalized = $Path.Replace('/', '\').TrimEnd('\')
+    $parts = @($normalized -split '\\')
+
+    foreach ($part in $parts) {
+        if ($part -ieq 'cfg-cache' -or $part -ieq 'cgf-cache') {
+            return $true
+        }
+    }
+
+    return $false
+}
+
 function Test-SkipDeepScanDirectory {
     param([string]$Path)
 
+    if (Test-Is1CCachePath -Path $Path) {
+        return $true
+    }
+
     $name = Split-Path $Path -Leaf
 
-    if ($name -in @('$Recycle.Bin','System Volume Information','Recovery','Windows','Windows.old')) {
+    # Системные каталоги не сканируем. cfg-cache/cgf-cache проверяются отдельно выше
+    # по полному пути, поэтому фильтр работает независимо от глубины вложенности.
+    if ($name -in @(
+        '$Recycle.Bin',
+        'System Volume Information',
+        'Recovery',
+        'Windows',
+        'Windows.old'
+    )) {
         return $true
     }
 
@@ -471,6 +508,12 @@ function Find-1CBaseFiles {
         try {
             $files = [System.IO.Directory]::GetFiles($dir, '1Cv8.1CD', [System.IO.SearchOption]::TopDirectoryOnly)
             foreach ($file in $files) {
+                # Финальный жёсткий фильтр: никакой 1Cv8.1CD из cfg-cache/cgf-cache
+                # не должен попасть в список найденных файлов даже при нестандартном ScanRoot.
+                if (Test-Is1CCachePath -Path $file) {
+                    continue
+                }
+
                 [void]$found.Add($file)
             }
         }
@@ -514,6 +557,7 @@ function New-BaseRecord {
         DatabaseExists   = $false
         DirectoryExists  = $false
         SizeBytes        = $null
+        CreationTime     = $null
         LastWriteTime    = $null
     }
 }
@@ -545,10 +589,12 @@ function Refresh-BaseFileInfo {
         try {
             $fi = Get-Item -LiteralPath $dbFile -Force -ErrorAction Stop
             $Base.SizeBytes = [Int64]$fi.Length
+            $Base.CreationTime = $fi.CreationTime
             $Base.LastWriteTime = $fi.LastWriteTime
         }
         catch {
             $Base.SizeBytes = $null
+            $Base.CreationTime = $null
             $Base.LastWriteTime = $null
         }
     }
@@ -562,17 +608,14 @@ $started = Get-Date
 $isAdmin = Test-IsAdministrator
 
 if ([string]::IsNullOrWhiteSpace($OutputPath)) {
-    # Toolkit выполняет runtime-скрипт в памяти, поэтому отчёты сохраняем
-    # в стабильном локальном каталоге вместо $PSScriptRoot.
-    $reportRoot = Join-Path `
-        $env:ProgramData `
-        'RaccoonAdminToolkit\Reports\1CFileBases'
+    if (-not [string]::IsNullOrWhiteSpace($PSScriptRoot)) {
+        $reportRoot = $PSScriptRoot
+    }
+    else {
+        $reportRoot = (Get-Location).Path
+    }
 
-    $OutputPath = Join-Path `
-        $reportRoot `
-        ('1C_FileBases_{0}_{1}.html' -f `
-            $env:COMPUTERNAME, `
-            (Get-Date -Format 'yyyyMMdd_HHmmss'))
+    $OutputPath = Join-Path $reportRoot ('1C_FileBases_{0}_{1}.html' -f $env:COMPUTERNAME, (Get-Date -Format 'yyyyMMdd_HHmmss'))
 }
 
 $outputDir = Split-Path $OutputPath -Parent
@@ -751,6 +794,11 @@ Write-Step 'Формирование отчёта'
 $reportRows = New-Object System.Collections.ArrayList
 
 foreach ($base in $bases.Values) {
+    # Последняя страховка от служебных кэшей, независимо от источника записи.
+    if (Test-Is1CCachePath -Path $base.Path) {
+        continue
+    }
+
     $baseName = Split-Path $base.Path -Leaf
     if ([string]::IsNullOrWhiteSpace($baseName)) { $baseName = $base.Path }
 
@@ -788,6 +836,8 @@ foreach ($base in $bases.Values) {
         UserCount       = $users.Count
         SizeBytes       = $base.SizeBytes
         SizeText        = Format-Bytes -Bytes $base.SizeBytes
+        CreationTime    = $base.CreationTime
+        CreationText    = $(if ($null -eq $base.CreationTime) { '—' } else { $base.CreationTime.ToString('dd.MM.yyyy HH:mm:ss') })
         LastWriteTime   = $base.LastWriteTime
         LastWriteText   = $(if ($null -eq $base.LastWriteTime) { '—' } else { $base.LastWriteTime.ToString('dd.MM.yyyy HH:mm:ss') })
         Referenced      = $base.Referenced
@@ -810,15 +860,6 @@ foreach ($row in $reportRows) {
     if ($null -ne $row.SizeBytes) { $totalBytes += [Int64]$row.SizeBytes }
 }
 
-try {
-    $os = Get-WmiObject Win32_OperatingSystem -ErrorAction Stop
-    $osText = ('{0} ({1})' -f $os.Caption, $os.Version)
-}
-catch {
-    $osText = [Environment]::OSVersion.VersionString
-}
-
-$modeText = if ($ProfileOnly) { 'Только пользовательские профили' } else { 'Профили + глубокий поиск по дискам' }
 $finished = Get-Date
 $duration = $finished - $started
 
@@ -873,6 +914,48 @@ body {
 }
 .header h1 { margin: 0 0 8px; font-size: 28px; }
 .header .meta { opacity: .82; line-height: 1.6; font-size: 14px; }
+.header .intro {
+    margin-top: 14px;
+    max-width: 1350px;
+    line-height: 1.55;
+    font-size: 14px;
+}
+.header .legend {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(220px, 1fr));
+    gap: 10px;
+    margin-top: 16px;
+}
+.header .legend-item {
+    background: rgba(255,255,255,.08);
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 12px;
+    padding: 11px 13px;
+    line-height: 1.45;
+    font-size: 13px;
+}
+.header .legend-item strong {
+    display: block;
+    margin-bottom: 3px;
+    font-size: 14px;
+}
+.header .client-request {
+    margin-top: 12px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: rgba(255,255,255,.10);
+    line-height: 1.5;
+    font-size: 14px;
+}
+.header .backup-warning {
+    margin-top: 10px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: rgba(255, 196, 80, .14);
+    border: 1px solid rgba(255, 211, 119, .28);
+    line-height: 1.5;
+    font-size: 13px;
+}
 .cards {
     display: grid;
     grid-template-columns: repeat(6, minmax(150px, 1fr));
@@ -961,6 +1044,7 @@ details .detail-body { margin-top: 7px; line-height: 1.55; }
 .footer { color: var(--muted); font-size: 12px; padding: 18px 2px 4px; line-height: 1.6; }
 @media (max-width: 1100px) {
     .cards { grid-template-columns: repeat(3, 1fr); }
+    .header .legend { grid-template-columns: 1fr; }
 }
 @media (max-width: 700px) {
     .container { padding: 12px; }
@@ -999,12 +1083,17 @@ function sortTable(tableId, col) {
 
 [void]$sb.AppendLine('<section class="header">')
 [void]$sb.AppendLine('<h1>Аудит файловых баз 1С / BAS</h1>')
-[void]$sb.AppendLine(('<div class="meta"><b>Сервер:</b> {0}<br><b>ОС:</b> {1}<br><b>Режим:</b> {2}<br><b>Сформирован:</b> {3} &nbsp;•&nbsp; PowerShell {4}</div>' -f
+[void]$sb.AppendLine(('<div class="meta"><b>Сервер:</b> {0} &nbsp;•&nbsp; <b>Сформирован:</b> {1}</div>' -f
     (HtmlEncode $env:COMPUTERNAME),
-    (HtmlEncode $osText),
-    (HtmlEncode $modeText),
-    (HtmlEncode $finished.ToString('dd.MM.yyyy HH:mm:ss')),
-    (HtmlEncode $PSVersionTable.PSVersion.ToString())))
+    (HtmlEncode $finished.ToString('dd.MM.yyyy HH:mm:ss'))))
+[void]$sb.AppendLine('<div class="intro">Этот отчёт подготовлен для ревизии файловых баз 1С/BAS, обнаруженных на сервере и в списках запуска пользователей. Просим проверить перечень ниже и определить, какие базы необходимо сохранить в работе, а какие больше не используются.</div>')
+[void]$sb.AppendLine('<div class="legend">')
+[void]$sb.AppendLine('<div class="legend-item"><strong>OK</strong>База найдена на сервере и прописана в списках запуска (ярлыках) одного или нескольких пользователей.</div>')
+[void]$sb.AppendLine('<div class="legend-item"><strong>Не прописана у пользователей</strong>База существует на сервере, но не прописана в списках запуска пользователей.</div>')
+[void]$sb.AppendLine('<div class="legend-item"><strong>Не найдена</strong>База прописана в списках запуска пользователей, но по указанному пути на сервере не найдена. Возможно, она была удалена или перенесена.</div>')
+[void]$sb.AppendLine('</div>')
+[void]$sb.AppendLine('<div class="client-request"><b>Что нужно сообщить по результатам проверки:</b> для каждой базы укажите, нужна она или больше не используется. Для каждой нужной базы укажите желаемую периодичность резервного копирования.</div>')
+[void]$sb.AppendLine('<div class="backup-warning"><b>Важно по резервному копированию:</b> на время создания резервной копии файловой базы необходимо завершить активные процессы/сеансы 1С/BAS на сервере, чтобы база не изменялась во время копирования. Поэтому такие резервные копии могут выполняться только в нерабочее время. Просим учитывать это при выборе расписания.</div>')
 [void]$sb.AppendLine('</section>')
 
 [void]$sb.AppendLine('<section class="cards">')
@@ -1025,7 +1114,7 @@ foreach ($card in $cards) {
 [void]$sb.AppendLine('<div class="panel-head"><h2>Файловые базы</h2><input id="baseSearch" class="search" type="search" placeholder="Поиск по базе, пути, пользователю, названию…" oninput="filterTable(''baseSearch'',''basesTable'')"></div>')
 [void]$sb.AppendLine('<div class="table-wrap"><table id="basesTable">')
 [void]$sb.AppendLine('<thead><tr>')
-$headers = @('Статус','База / каталог','Путь','Названия у пользователей','Пользователи','Размер','Последнее изменение')
+$headers = @('Статус','База / каталог','Путь','Названия у пользователей','Пользователи','Размер','Дата создания','Последнее изменение')
 for ($i = 0; $i -lt $headers.Count; $i++) {
     [void]$sb.AppendLine(('<th onclick="sortTable(''basesTable'',{0})">{1}</th>' -f $i, (HtmlEncode $headers[$i])))
 }
@@ -1061,6 +1150,7 @@ foreach ($row in $reportRows) {
         $originalPathDetails = '<details><summary>Варианты записи пути</summary><div class="detail-body">' + $pathVariants + '</div></details>'
     }
 
+    $createdSort = if ($null -eq $row.CreationTime) { '00000000000000' } else { $row.CreationTime.ToString('yyyyMMddHHmmss') }
     $dateSort = if ($null -eq $row.LastWriteTime) { '00000000000000' } else { $row.LastWriteTime.ToString('yyyyMMddHHmmss') }
     $sizeSort = if ($null -eq $row.SizeBytes) { '0' } else { ([Int64]$row.SizeBytes).ToString('D20') }
 
@@ -1071,6 +1161,7 @@ foreach ($row in $reportRows) {
     [void]$sb.AppendLine(('<td>{0}</td>' -f $aliasHtml))
     [void]$sb.AppendLine(('<td>{0}</td>' -f $usersHtml))
     [void]$sb.AppendLine(('<td data-sort="{0}">{1}</td>' -f $sizeSort, (HtmlEncode $row.SizeText)))
+    [void]$sb.AppendLine(('<td data-sort="{0}">{1}</td>' -f $createdSort, (HtmlEncode $row.CreationText)))
     [void]$sb.AppendLine(('<td data-sort="{0}">{1}</td>' -f $dateSort, (HtmlEncode $row.LastWriteText)))
     [void]$sb.AppendLine('</tr>')
 }
@@ -1095,7 +1186,7 @@ if ($configProblems.Count -gt 0) {
     [void]$sb.AppendLine('</tbody></table></div></section>')
 }
 
-[void]$sb.AppendLine(('<div class="footer">Проверено профилей: {0}; файлов ibases.v8i: {1}; время выполнения: {2:N1} сек.<br>Размер базы считается по файлу <b>1Cv8.1CD</b>. «Последнее изменение» — LastWriteTime этого файла. Базы, найденные глубоким поиском, но отсутствующие во всех ibases.v8i, помечаются как «Не прописана у пользователей».</div>' -f
+[void]$sb.AppendLine(('<div class="footer">Проверено профилей: {0}; файлов ibases.v8i: {1}; время выполнения: {2:N1} сек.<br>Размер базы считается по файлу <b>1Cv8.1CD</b>. «Дата создания» — CreationTime этого файла, «Последнее изменение» — LastWriteTime. При копировании или восстановлении базы CreationTime может отражать дату появления файла на текущем диске, а не первоначальную дату создания базы. Базы, найденные глубоким поиском, но отсутствующие во всех ibases.v8i, помечаются как «Не прописана у пользователей». Служебные каталоги <b>cfg-cache</b> и <b>cgf-cache</b> исключаются из отчёта.</div>' -f
     $profiles.Count,
     $configFilesFound,
     $duration.TotalSeconds))
