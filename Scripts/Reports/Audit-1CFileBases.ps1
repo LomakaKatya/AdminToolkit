@@ -1212,9 +1212,8 @@ foreach ($row in $reportRows) {
         $usersHtml = '<span class="muted">—</span>'
     }
     else {
-        $userBadges = (($row.Users | ForEach-Object { '<span class="badge">' + (HtmlEncode $_) + '</span>' }) -join '')
         $pairsHtml = (($row.UserAliasPairs | ForEach-Object { '<div>' + (HtmlEncode $_) + '</div>' }) -join '')
-        $usersHtml = $userBadges + '<details><summary>' + $row.UserCount + ' профиль(я/ей): кто как назвал</summary><div class="detail-body">' + $pairsHtml + '</div></details>'
+        $usersHtml = '<details><summary>' + $row.UserCount + ' профиль(я/ей): кто как назвал</summary><div class="detail-body">' + $pairsHtml + '</div></details>'
     }
 
     $originalPathDetails = ''
