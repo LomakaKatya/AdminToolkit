@@ -1018,14 +1018,14 @@ table { width: 100%; border-collapse: collapse; font-size: 13px; }
     table-layout: fixed;
     min-width: 1450px;
 }
-#basesTable col.col-status   { width: 8%; }
+#basesTable col.col-status   { width: 11%; }
 #basesTable col.col-base     { width: 10%; }
-#basesTable col.col-path     { width: 32%; }
+#basesTable col.col-path     { width: 28%; }
 #basesTable col.col-aliases  { width: 12%; }
 #basesTable col.col-users    { width: 15%; }
 #basesTable col.col-size     { width: 6%; }
-#basesTable col.col-created  { width: 8.5%; }
-#basesTable col.col-modified { width: 8.5%; }
+#basesTable col.col-created  { width: 9%; }
+#basesTable col.col-modified { width: 9%; }
 #basesTable th { white-space: normal; }
 th {
     position: sticky;
