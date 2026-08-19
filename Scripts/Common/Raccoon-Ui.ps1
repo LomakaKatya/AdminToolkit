@@ -70,49 +70,39 @@ function Read-RaccoonKey {
     Write-Host "  $Prompt`: " -NoNewline
 
     try {
-        $key = $Host.UI.RawUI.ReadKey(
-            'NoEcho,IncludeKeyDown'
-        )
+        $key = [Console]::ReadKey($true)
 
         $result = ''
 
-        switch ([int]$key.VirtualKeyCode) {
-            27 {
+        switch ($key.Key) {
+            'Escape' {
                 $result = 'esc'
             }
 
-            37 {
+            'LeftArrow' {
                 $result = 'left'
             }
 
-            39 {
+            'RightArrow' {
                 $result = 'right'
             }
 
-            112 {
+            'F1' {
                 $result = 'f1'
             }
 
-            113 {
+            'F2' {
                 $result = 'f2'
             }
 
-            114 {
+            'F3' {
                 $result = 'f3'
             }
 
-            { $_ -ge 48 -and $_ -le 57 } {
-                $result = [string]([int]$key.VirtualKeyCode - 48)
-            }
-
-            { $_ -ge 96 -and $_ -le 105 } {
-                $result = [string]([int]$key.VirtualKeyCode - 96)
-            }
-
             default {
-                if ([int]$key.Character -ne 0) {
+                if ($key.KeyChar -ne [char]0) {
                     $result = (
-                        [string]$key.Character
+                        [string]$key.KeyChar
                     ).ToLowerInvariant()
                 }
             }
@@ -129,6 +119,7 @@ function Read-RaccoonKey {
     }
     catch {
         Write-Host ''
+
         return (
             Microsoft.PowerShell.Utility\Read-Host `
                 -Prompt $Prompt
