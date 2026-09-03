@@ -31,7 +31,7 @@
 <tr><td><code>1. Інтернет і мережа</code></td><td>TCP, Wi-Fi, інтернет, сайти, віддалений доступ і RDP-параметри.</td></tr>
 <tr><td><code>2. Друк</code></td><td>Діагностика друку, Spooler і RPC-сумісність.</td></tr>
 <tr><td><code>3. Перевірка обладнання</code></td><td>Продуктивність комп'ютера та компоненти RDP-сеансу.</td></tr>
-<tr><td><code>4. Аудит серверів</code></td><td>Входи, користувачі, час, профілі, повідомлення та інвентаризація.</td></tr>
+<tr><td><code>4. Аудит серверів</code></td><td>Входи, RDP-сесії, користувачі, час, профілі, повідомлення та інвентаризація.</td></tr>
 <tr><td><code>5. 1С / BAS</code></td><td>Кеш 1С/BAS та аудит файлових баз.</td></tr>
 <tr><td><code>6. Встановлення софту</code></td><td>Server Base Kit, користувачі, кнопка завершення сеансу та BGInfo.</td></tr>
 <tr><td><code>7. FAQ і довідка</code></td><td>Веб-довідка та карта Toolkit.</td></tr>
@@ -74,6 +74,7 @@
 <ul>
 <li>Невдалі спроби входу, подія 4625</li>
 <li>Локальні користувачі та останній вхід</li>
+<li><a href="rdp-session-audit.html">Аудит RDP-сесій</a></li>
 <li>Виправити синхронізацію часу Windows</li>
 <li>Очистити стандартні кеші профілів</li>
 <li>Надіслати повідомлення користувачам</li>
@@ -111,6 +112,13 @@
 </details>
 </section>
 
+<section class="tool" id="audit-rdp">
+<h2>Аудит RDP-сесій</h2>
+<p>WinForms-інструмент реконструює життєвий цикл RDP-сеансів за журналами Terminal Services і, за потреби, Security. Він відрізняє нормальний <strong>Log off</strong> від <strong>Disconnect</strong>, показує reconnect, тривалість, IP/клієнтські дані та якість кореляції.</p>
+<p>GUI запускається в окремому Windows PowerShell STA-процесі, тому основна оболонка Toolkit не забруднюється функціями та WinForms message loop.</p>
+<p><a href="rdp-session-audit.html">Повна довідка по RDP Session Audit →</a></p>
+</section>
+
 <section class="tool" id="audit-1c">
 <h2>Аудит файлових баз 1С/BAS</h2>
 <p>Інструмент читає <code>ibases.v8i</code> у локальних профілях, групує однакові фізичні бази, перевіряє <code>1Cv8.1CD</code>, розмір і дату останньої зміни. За замовчуванням додатково шукає файлові бази на локальних fixed-дисках.</p>
@@ -127,6 +135,8 @@
 <tr><td><code>Scripts/Common/Raccoon-Ui.ps1</code></td><td>Меню, клавіші, пошук, швидкий доступ і запуск інструментів.</td></tr>
 <tr><td><code>Config/ToolkitMenu.json</code></td><td>Функціональна структура меню, картки інструментів, ключові слова та мітки.</td></tr>
 <tr><td><code>Scripts/Network/Set-RdpRedirectionWarningDialog.ps1</code></td><td>Політика <code>RedirectionWarningDialogVersion=1</code>.</td></tr>
+<tr><td><code>Scripts/Reports/Start-RdpSessionAudit.ps1</code></td><td>Окремий STA-launcher для WinForms-аудиту RDP-сесій.</td></tr>
+<tr><td><code>Scripts/Reports/RdpSessionAudit.ps1</code></td><td>GUI RDP Session Audit 1.3.2.</td></tr>
 <tr><td><code>Scripts/Reports/Audit-1CFileBases.ps1</code></td><td>Інвентаризація файлових баз 1С/BAS та HTML-звіт.</td></tr>
 <tr><td><code>Scripts/Users/Create-RegularUsers.ps1</code></td><td>Створення користувачів, OU, паролі, RDP-доступ і RDP-комплекти.</td></tr>
 <tr><td><code>Scripts/Diagnostics/</code></td><td>Існуючі діагностичні модулі.</td></tr>
@@ -159,6 +169,7 @@
 <a href="#audit">4. Аудит серверів</a>
 <a href="#onec">5. 1С / BAS</a>
 <a href="#software">6. Встановлення</a>
+<a href="#audit-rdp">Аудит RDP-сесій</a>
 <a href="#audit-1c">Аудит баз 1С</a>
 <a href="#repository">Фізичні файли</a>
 <a href="#add-tool">Додавання</a>

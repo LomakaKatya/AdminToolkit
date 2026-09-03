@@ -48,6 +48,7 @@
       "toolIds": [
         "failed-logons",
         "local-user-logons",
+        "rdp-session-audit",
         "repair-windows-time",
         "clear-profile-caches",
         "send-user-message",
@@ -130,6 +131,7 @@
       "toolIds": [
         "failed-logons",
         "local-user-logons",
+        "rdp-session-audit",
         "repair-windows-time",
         "clear-profile-caches",
         "send-user-message",
@@ -776,6 +778,45 @@
         "размер базы",
         "html звіт",
         "html отчет"
+      ]
+    },
+    {
+      "id": "rdp-session-audit",
+      "title": "Аудит RDP-сесій",
+      "description": "GUI-аудит входів, виходів, disconnect/reconnect, тривалості та RDP-автентифікації з експортом CSV/HTML.",
+      "path": "Scripts/Reports/Start-RdpSessionAudit.ps1",
+      "requiresAdmin": true,
+      "labels": [
+        "ADMIN",
+        "SAFE",
+        "INTERACTIVE",
+        "CREATES REPORTS"
+      ],
+      "keywords": [
+        "rdp",
+        "remote desktop",
+        "session",
+        "sessions",
+        "сесія",
+        "сесії",
+        "сеанс",
+        "сеансы",
+        "logon",
+        "logoff",
+        "disconnect",
+        "reconnect",
+        "terminal services",
+        "1149",
+        "4624",
+        "4634",
+        "4647",
+        "4778",
+        "4779",
+        "історія rdp",
+        "история rdp",
+        "аудит rdp",
+        "csv",
+        "html"
       ]
     }
   ]

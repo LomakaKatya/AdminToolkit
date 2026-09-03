@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Аудит RDP-сесій | Raccoon Admin Toolkit</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="shell">
+<header class="topbar">
+<a class="brand" href="../index.html">Raccoon Admin Toolkit</a>
+<nav class="topnav">
+<a href="../index.html">Запуск</a>
+<a href="tool-map.html">Карта Toolkit</a>
+<a href="../faq.html">FAQ</a>
+</nav>
+</header>
+
+<section class="hero">
+<p class="eyebrow">Аудит серверів</p>
+<h1>Аудит RDP-сесій</h1>
+<p class="lead">RDP Session Audit 1.3.2 реконструює життєвий цикл сеансів: вхід, reconnect, disconnect, вихід із системи, тривалість і доступні клієнтські дані.</p>
+</section>
+
+<div class="layout">
+<main class="content">
+
+<section class="tool" id="purpose">
+<h2>Що показує інструмент</h2>
+<div class="badges"><span class="badge safe">SAFE</span><span class="badge warn">ADMIN</span><span class="badge safe">CREATES REPORTS</span></div>
+<ul>
+<li>обліковий запис і Session ID;</li>
+<li>початок і завершення сеансу;</li>
+<li>повний час життя сеансу, connected time та disconnected time;</li>
+<li>кількість disconnect/reconnect;</li>
+<li>тип завершення: нормальний Log off, Disconnect або часткові дані;</li>
+<li>IP, client name та джерела подій, якщо вони доступні;</li>
+<li>експорт результатів у CSV та HTML.</li>
+</ul>
+</section>
+
+<section class="tool" id="sources">
+<h2>Джерела подій</h2>
+<p>Основний журнал:</p>
+<pre>Microsoft-Windows-TerminalServices-LocalSessionManager/Operational</pre>
+<table>
+<thead><tr><th>Event ID</th><th>Значення</th></tr></thead>
+<tbody>
+<tr><td><code>21</code></td><td>Logon</td></tr>
+<tr><td><code>23</code></td><td>Logoff</td></tr>
+<tr><td><code>24</code></td><td>Disconnect</td></tr>
+<tr><td><code>25</code></td><td>Reconnect</td></tr>
+<tr><td><code>39</code></td><td>Explicit disconnect / disconnect by another session, якщо журнал містить подію.</td></tr>
+<tr><td><code>40</code></td><td>Disconnect reason code, якщо доступний.</td></tr>
+</tbody>
+</table>
+
+<p>Додатково використовується RemoteConnectionManager <code>1149</code> для успішної RDP-автентифікації.</p>
+<p>У розширеному Security-режимі аналізуються <code>4624</code> LogonType 10, <code>4634</code>, <code>4647</code>, <code>4778</code> та <code>4779</code>.</p>
+</section>
+
+<section class="tool" id="disconnect">
+<h2>Що означає Disconnect</h2>
+<div class="note">Статус <strong>DISCONNECT / session left open</strong> означає, що програма не бачить нормального Log off для цього завершення. Це типова картина при закритті RDP-вікна хрестиком, але так само може виглядати втрата мережі, аварійне закриття клієнта або інший обрив.</div>
+<p>Тому інструмент достовірно розрізняє <strong>Log off</strong> і <strong>Disconnect</strong>, але не стверджує зі 100% точністю, що конкретний Disconnect був саме натисканням на X.</p>
+</section>
+
+<section class="tool" id="options">
+<h2>Додаткові параметри</h2>
+<p><strong>Шукати початок довгої сесії</strong> задає lookback у днях. За замовчуванням використовується 30 днів, щоб знайти початок сеансу, який стартував раніше вибраного періоду.</p>
+<p><strong>Security: розширено</strong> додає Security-журнал для client/auth-даних і кореляції. На серверах із великим Security-журналом цей режим працює повільніше.</p>
+</section>
+
+<section class="tool" id="rights">
+<h2>Права адміністратора</h2>
+<p>Toolkit реєструє інструмент як ADMIN і запускає його з підвищеними правами. Сам GUI може спробувати прочитати Terminal Services-журнали і без elevation, але Security може бути недоступним або неповним.</p>
+</section>
+
+<section class="tool" id="launch">
+<h2>Як він запускається з Toolkit</h2>
+<p>Основна оболонка не виконує великий WinForms-скрипт у своєму процесі. Замість цього <code>Start-RdpSessionAudit.ps1</code> завантажує актуальний <code>RdpSessionAudit.ps1</code>, створює тимчасову копію в:</p>
+<pre>C:\Temp\RaccoonAdminToolkit\RdpSessionAudit</pre>
+<p>і запускає її через окремий <code>powershell.exe -STA</code>. Після закриття GUI тимчасовий PS1 видаляється.</p>
+<div class="note">Для Windows PowerShell 5.1 тимчасова копія записується як UTF-8 з BOM, щоб кириличний UI не перетворювався на «Р…». Репозиторний runtime-файл залишається UTF-8 без BOM.</div>
+</section>
+
+<section class="tool" id="partial">
+<h2>Неповні дані</h2>
+<p>Якщо журнал був очищений або старі події вже перезаписані, частина життєвого циклу може бути позначена як <code>PARTIAL</code>. Це не помилка GUI: потрібних подій уже немає в джерелі.</p>
+</section>
+
+</main>
+
+<aside class="sidebar">
+<strong>На сторінці</strong>
+<a href="#purpose">Що показує</a>
+<a href="#sources">Джерела подій</a>
+<a href="#disconnect">Disconnect</a>
+<a href="#options">Додатково</a>
+<a href="#rights">Права</a>
+<a href="#launch">Запуск із Toolkit</a>
+<a href="#partial">PARTIAL</a>
+</aside>
+</div>
+
+<footer>Raccoon Admin Toolkit. RDP Session Audit 1.3.2.</footer>
+</div>
+<script src="help.js"></script>
+</body>
+</html>
